@@ -1,0 +1,14 @@
+Manual integration of HU-2.1-dev changes into HU-2.1-qa
+
+This commit includes all reviewed and approved changes from HU-2.1 development, specifically:
+
+- Complete documentation for the PostgreSQL database and remote connection
+- Added folder `HU-2.1-Database-Setup` containing:
+  - `README.md` with HU description, table schema, indexes, and initial data
+  - SQL script `database_creation_commands_commands.sql`
+  - PgAdmin screenshot `Creacion_database.png`
+- Remote connection setup via VPN Hamachi documented
+
+Purpose:
+- Ensure that QA branch reflects the reviewed HU-2.1 deliverables
+- Provide all necessary documentation and setup files for QA testing and validation
