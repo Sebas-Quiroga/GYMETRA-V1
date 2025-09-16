@@ -1,7 +1,6 @@
 package com.login.GYMETRA.service;
 
 import com.login.GYMETRA.dto.JwtResponse;
-import com.login.GYMETRA.dto.LoginRequest;
 import com.login.GYMETRA.dto.RegisterRequest;
 import com.login.GYMETRA.entity.Role;
 import com.login.GYMETRA.entity.User;
@@ -16,9 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -44,9 +43,11 @@ public class UserService {
                 .phone(request.getPhone())
                 .status("active")
                 .createdAt(OffsetDateTime.now())
+                .userRoles(new HashSet<>()) // 🔹 aseguramos que no sea null
                 .build();
         userRepository.save(user);
 
+        // Rol Client por defecto
         Role role = roleRepository.findByRoleName("Client")
                 .orElseThrow(() -> new IllegalStateException("Rol 'Client' no encontrado"));
 
@@ -54,14 +55,23 @@ public class UserService {
                 .user(user)
                 .role(role)
                 .build();
+
+        // 🔹 agregamos también en memoria
+        user.getUserRoles().add(userRole);
+
         userRoleRepository.save(userRole);
 
-        String token = jwtService.generateToken(user);
+        // Tomar ese rol
+        Long roleId = role.getRoleId();
 
-        Long roleId = role.getRoleId(); // tomamos el id del rol
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getUserId());
+        claims.put("email", user.getEmail());
+        claims.put("roleId", roleId);
+
+        String token = jwtService.generateToken(claims, user);
 
         return new JwtResponse(token, "Bearer", user.getUserId(), user.getEmail(), roleId);
-
     }
 
     public JwtResponse login(String email, String password) {
@@ -71,23 +81,24 @@ public class UserService {
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new RuntimeException("Contraseña incorrecta");
         }
+        // 🔹 Actualizamos la fecha/hora de último login
+        user.setLastLogin(OffsetDateTime.now());
+        userRepository.save(user);
 
-        String token = jwtService.generateToken(user);
-
-        // Directamente obtenemos el rol del usuario
+        // Tomamos el primer rol asignado (único en este caso)
         Long roleId = user.getUserRoles().stream()
                 .findFirst()
                 .map(ur -> ur.getRole().getRoleId())
                 .orElseThrow(() -> new RuntimeException("Usuario sin rol asignado"));
 
-        return new JwtResponse(
-                token,
-                "Bearer",       // tipo de token
-                user.getUserId(),
-                user.getEmail(),
-                roleId
-        );
+        // Claims del token
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getUserId());
+        claims.put("email", user.getEmail());
+        claims.put("roleId", roleId); // 🔹 solo un rol
+
+        String token = jwtService.generateToken(claims, user);
+
+        return new JwtResponse(token, "Bearer", user.getUserId(), user.getEmail(), roleId);
     }
-
-
 }

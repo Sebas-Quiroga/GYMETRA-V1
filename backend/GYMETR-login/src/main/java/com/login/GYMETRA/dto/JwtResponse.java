@@ -8,7 +8,4 @@ import java.util.List;
 public class JwtResponse {
     private String token;
     private String type; // Bearer
-    private Long userId;
-    private String email;
-    private Long roleId;
 }
