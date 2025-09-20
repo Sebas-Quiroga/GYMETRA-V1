@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia';
 import App from './App.vue'
 import router from './router';
+import { useAuthStore } from '@/stores/auth';
 
 import { IonicVue } from '@ionic/vue';
 
@@ -36,7 +38,10 @@ import './theme/variables.css';
 
 const app = createApp(App)
   .use(IonicVue)
-  .use(router);
+  .use(router)
+  .use(createPinia());
+
+useAuthStore().initializeToken(); // <-- Sincroniza el token al iniciar
 
 router.isReady().then(() => {
   app.mount('#app');

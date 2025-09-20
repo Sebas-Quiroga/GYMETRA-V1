@@ -39,7 +39,7 @@
 
       <!-- Links -->
       <div class="links">
-        <a href="#">Olvidaste tu contraseña?</a>
+        <a href="#" @click.prevent="openForgotModal">Olvidaste tu contraseña?</a>
         <p>
           Nuevo miembro? <a href="#">Regístrate</a>
         </p>
@@ -57,12 +57,88 @@
       <div v-if="errorMessage" class="error-msg">
         {{ errorMessage }}
       </div>
+
+      <!-- Modal Recuperar Contraseña -->
+      <ion-modal :is-open="showForgotModal" @did-dismiss="closeForgotModal">
+        <div class="modal-content">
+          <h2>Recuperar Contraseña</h2>
+
+          <!-- Paso 1: ingresar correo -->
+          <div v-if="forgotStep === 1">
+            <ion-item>
+              <ion-input
+                v-model="forgotEmail"
+                type="email"
+                placeholder="Tu correo"
+                required
+              ></ion-input>
+            </ion-item>
+            <div class="btn-container">
+              <ion-button @click="sendToken" :disabled="forgotLoading">
+                <ion-spinner v-if="forgotLoading" name="crescent"></ion-spinner>
+                <span v-else>Enviar Código</span>
+              </ion-button>
+              <ion-button fill="clear" color="medium" @click="closeForgotModal">Cancelar</ion-button>
+            </div>
+            <div class="message" v-if="forgotMessage">{{ forgotMessage }}</div>
+          </div>
+
+          <!-- Paso 2: ingresar token recibido -->
+          <div v-else-if="forgotStep === 2">
+            <ion-item>
+              <ion-input
+                v-model="forgotToken"
+                type="text"
+                placeholder="Código recibido"
+                required
+              ></ion-input>
+            </ion-item>
+            <div class="btn-container">
+              <ion-button @click="validateToken" :disabled="forgotLoading">
+                <ion-spinner v-if="forgotLoading" name="crescent"></ion-spinner>
+                <span v-else>Validar Código</span>
+              </ion-button>
+              <ion-button fill="clear" color="medium" @click="closeForgotModal">Cancelar</ion-button>
+            </div>
+            <div class="message" v-if="forgotMessage">{{ forgotMessage }}</div>
+          </div>
+
+          <!-- Paso 3: nueva contraseña -->
+          <div v-else-if="forgotStep === 3">
+            <ion-item>
+              <ion-input
+                v-model="forgotNewPassword"
+                type="password"
+                placeholder="Nueva contraseña"
+                required
+              ></ion-input>
+            </ion-item>
+            <div class="btn-container">
+              <ion-button @click="resetPassword" :disabled="forgotLoading">
+                <ion-spinner v-if="forgotLoading" name="crescent"></ion-spinner>
+                <span v-else>Restablecer Contraseña</span>
+              </ion-button>
+              <ion-button fill="clear" color="medium" @click="closeForgotModal">Cancelar</ion-button>
+            </div>
+            <div class="message" v-if="forgotMessage">{{ forgotMessage }}</div>
+          </div>
+
+          <!-- Mensaje final -->
+          <div v-else-if="forgotStep === 4">
+            <div class="message">{{ forgotMessage }}</div>
+            <div class="btn-container">
+              <ion-button @click="closeForgotModal">Cerrar</ion-button>
+            </div>
+          </div>
+        </div>
+      </ion-modal>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import {
   IonPage,
   IonContent,
@@ -71,6 +147,7 @@ import {
   IonButton,
   IonIcon,
   IonSpinner,
+  IonModal,
 } from "@ionic/vue";
 import {
   personOutline,
@@ -78,18 +155,108 @@ import {
   eyeOutline,
   eyeOffOutline,
 } from "ionicons/icons";
-import { login } from "../services/authService"; // ✅ authService.ts conectado
-
-// Campos
+import { login } from "../services/authService";
+import { useAuthStore } from "@/stores/auth";
+import { sendRecoveryToken, validateRecoveryToken, resetPassword as resetPasswordService } from "../services/passwordRecoveryService";
+import '../theme/LoginPage.css';
+// Estado local
 const email = ref("");
 const password = ref("");
 const showPassword = ref(false);
 const loading = ref(false);
 const errorMessage = ref("");
 
+// Modal recuperar contraseña
+const showForgotModal = ref(false);
+const forgotEmail = ref("");
+const forgotLoading = ref(false);
+const forgotMessage = ref("");
+const forgotStep = ref(1);
+const forgotToken = ref("");
+const forgotNewPassword = ref("");
+
+// Router y store
+const router = useRouter();
+const auth = useAuthStore();
+
 // Alternar visibilidad de la contraseña
 const togglePassword = () => {
   showPassword.value = !showPassword.value;
+};
+
+// Abrir/Cerrar modal
+const openForgotModal = () => {
+  showForgotModal.value = true;
+  forgotEmail.value = "";
+  forgotMessage.value = "";
+  forgotStep.value = 1;
+  forgotToken.value = "";
+  forgotNewPassword.value = "";
+};
+const closeForgotModal = () => {
+  showForgotModal.value = false;
+  forgotEmail.value = "";
+  forgotMessage.value = "";
+  forgotStep.value = 1;
+  forgotToken.value = "";
+  forgotNewPassword.value = "";
+};
+
+// Paso 1: enviar correo para generar token
+const sendToken = async () => {
+  forgotMessage.value = "";
+  if (!forgotEmail.value) {
+    forgotMessage.value = "Por favor ingresa tu correo.";
+    return;
+  }
+  forgotLoading.value = true;
+  try {
+    const msg = await sendRecoveryToken(forgotEmail.value);
+    forgotStep.value = 2;
+    forgotMessage.value = msg;
+  } catch (err: any) {
+    forgotMessage.value = err.message || "Error enviando correo";
+  } finally {
+    forgotLoading.value = false;
+  }
+};
+
+// Paso 2: validar token ingresado por usuario
+const validateToken = async () => {
+  forgotMessage.value = "";
+  if (!forgotToken.value) {
+    forgotMessage.value = "Por favor ingresa el código recibido.";
+    return;
+  }
+  forgotLoading.value = true;
+  try {
+    await validateRecoveryToken(forgotToken.value);
+    forgotStep.value = 3;
+    forgotMessage.value = "Código válido";
+  } catch (err: any) {
+    forgotMessage.value = err.message || "Error validando código";
+  } finally {
+    forgotLoading.value = false;
+  }
+};
+
+// Paso 3: enviar nueva contraseña
+const resetPassword = async () => {
+  forgotMessage.value = "";
+  if (!forgotNewPassword.value) {
+    forgotMessage.value = "Por favor ingresa una nueva contraseña.";
+    return;
+  }
+  forgotLoading.value = true;
+  try {
+    const msg = await resetPasswordService(forgotToken.value, forgotNewPassword.value);
+    forgotMessage.value = msg;
+    forgotStep.value = 4;
+  } catch (err: any) {
+    forgotMessage.value = err.message || "Error restableciendo contraseña";
+  } finally {
+    forgotLoading.value = false;
+  }
 };
 
 // Manejar login
@@ -98,7 +265,11 @@ const handleLogin = async () => {
   loading.value = true;
 
   try {
-    await login(email.value, password.value); // ✅ llama authService
+    const res = await login(email.value, password.value);
+    if (res.token) {
+      auth.setToken(res.token);
+      router.push("/home");
+    }
   } catch (err: any) {
     errorMessage.value = err.message || "Error al iniciar sesión";
   } finally {
@@ -106,83 +277,3 @@ const handleLogin = async () => {
   }
 };
 </script>
-
-<style scoped>
-/* Fondo de toda la página */
-.login-page {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 100%;
-}
-
-/* Logo centrado y responsivo */
-.logo-container {
-  display: flex;
-  justify-content: center;
-  margin: 40px 0 30px;
-}
-
-.logo {
-  width: 60%;
-  max-width: 300px;
-  height: auto;
-}
-
-@media (max-width: 768px) {
-  .logo {
-    width: 80%;
-    max-width: 250px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .logo {
-    width: 40%;
-    max-width: 350px;
-  }
-}
-
-/* Inputs */
-ion-item {
-  margin-bottom: 15px;
-  border-radius: 10px;
-}
-
-/* Links */
-.links {
-  text-align: center;
-  margin: 20px 0;
-}
-.links a {
-  color: red;
-  text-decoration: none;
-  font-weight: bold;
-}
-.links p {
-  margin-top: 10px;
-  color: white;
-}
-
-/* Botón personalizado */
-.btn-container {
-  display: flex;
-  justify-content: center;
-}
-
-.login-btn {
-  --background: black;
-  --color: white;
-  border-radius: 25px;
-  width: 80%;
-  max-width: 300px;
-}
-
-/* Error */
-.error-msg {
-  margin-top: 15px;
-  color: #ff4d4f;
-  font-weight: bold;
-  text-align: center;
-}
-</style>

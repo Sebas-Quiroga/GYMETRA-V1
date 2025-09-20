@@ -1,7 +1,10 @@
-import { createRouter, createWebHistory } from '@ionic/vue-router';
-import { RouteRecordRaw } from 'vue-router';
+// src/router/index.ts
+import { createRouter, createWebHistory } from '@ionic/vue-router'
+import { RouteRecordRaw } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
 import LoginPage from '../views/LoginPage.vue'
+import RegisterPage from '../views/RegisterPage.vue'
+import { isAuthenticated } from '@/services/authService' // ✅ usamos la función del servicio
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -18,7 +21,13 @@ const routes: Array<RouteRecordRaw> = [
     path: '/login',
     name: 'Login',
     component: LoginPage
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: RegisterPage
   }
+
 ]
 
 const router = createRouter({
@@ -26,10 +35,11 @@ const router = createRouter({
   routes
 })
 
+// ===============================
 // Protección de rutas
+// ===============================
 router.beforeEach((to, from, next) => {
-  const isAuth = localStorage.getItem('auth') === 'true'
-  if (to.meta.requiresAuth && !isAuth) {
+  if (to.meta.requiresAuth && !isAuthenticated()) {
     next('/login')
   } else {
     next()
