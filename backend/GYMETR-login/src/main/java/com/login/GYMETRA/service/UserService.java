@@ -16,8 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,11 +44,9 @@ public class UserService {
                 .phone(request.getPhone())
                 .status("active")
                 .createdAt(OffsetDateTime.now())
-                .userRoles(new HashSet<>()) // 🔹 aseguramos que no sea null
                 .build();
         userRepository.save(user);
 
-        // Rol Client por defecto
         Role role = roleRepository.findByRoleName("Client")
                 .orElseThrow(() -> new IllegalStateException("Rol 'Client' no encontrado"));
 
@@ -55,23 +54,19 @@ public class UserService {
                 .user(user)
                 .role(role)
                 .build();
-
-        // 🔹 agregamos también en memoria
-        user.getUserRoles().add(userRole);
-
         userRoleRepository.save(userRole);
 
-        // Tomar ese rol
-        Long roleId = role.getRoleId();
-
+        // Construimos los claims para el token
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getUserId());
         claims.put("email", user.getEmail());
-        claims.put("roleId", roleId);
+        claims.put("roleIds", user.getUserRoles().stream()
+                .map(ur -> ur.getRole().getRoleId())
+                .collect(Collectors.toList()));
 
         String token = jwtService.generateToken(claims, user);
 
-        return new JwtResponse(token, "Bearer", user.getUserId(), user.getEmail(), roleId);
+        return new JwtResponse(token, "Bearer");
     }
 
     public JwtResponse login(String email, String password) {
@@ -81,24 +76,23 @@ public class UserService {
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new RuntimeException("Contraseña incorrecta");
         }
-        // 🔹 Actualizamos la fecha/hora de último login
-        user.setLastLogin(OffsetDateTime.now());
-        userRepository.save(user);
 
-        // Tomamos el primer rol asignado (único en este caso)
+        // Construimos los claims para el token
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getUserId());
+        claims.put("email", user.getEmail());
+        claims.put("roleIds", user.getUserRoles().stream()
+                .map(ur -> ur.getRole().getRoleId())
+                .collect(Collectors.toList()));
+
+        String token = jwtService.generateToken(claims, user);
+
+        // Tomamos el primer rol asignado (si hay más, puedes ajustarlo)
         Long roleId = user.getUserRoles().stream()
                 .findFirst()
                 .map(ur -> ur.getRole().getRoleId())
                 .orElseThrow(() -> new RuntimeException("Usuario sin rol asignado"));
 
-        // Claims del token
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getUserId());
-        claims.put("email", user.getEmail());
-        claims.put("roleId", roleId); // 🔹 solo un rol
-
-        String token = jwtService.generateToken(claims, user);
-
-        return new JwtResponse(token, "Bearer", user.getUserId(), user.getEmail(), roleId);
+        return new JwtResponse(token, "Bearer");
     }
 }

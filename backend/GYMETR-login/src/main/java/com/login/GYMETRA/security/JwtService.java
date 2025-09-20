@@ -30,9 +30,11 @@ public class JwtService {
     public String generateToken(Map<String, Object> extraClaims, User user) {
         Map<String, Object> claims = new HashMap<>(extraClaims);
 
-        // Guardar userId, email y roleIds
         claims.put("userId", user.getUserId());
         claims.put("email", user.getEmail());
+        claims.put("firstName", user.getFirstName());
+        claims.put("lastName", user.getLastName());
+        claims.put("status", user.getStatus());
         claims.put("roleIds", user.getUserRoles().stream()
                 .map(ur -> ur.getRole().getRoleId())
                 .collect(Collectors.toList()));
