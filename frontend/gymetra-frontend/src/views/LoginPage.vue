@@ -41,7 +41,7 @@
       <div class="links">
         <a href="#" @click.prevent="openForgotModal">Olvidaste tu contraseña?</a>
         <p>
-          Nuevo miembro? <a href="#">Regístrate</a>
+          Nuevo miembro? <router-link to="/register">Regístrate</router-link>
         </p>
       </div>
 
