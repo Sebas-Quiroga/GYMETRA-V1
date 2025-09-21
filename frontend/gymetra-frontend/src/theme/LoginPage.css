@@ -253,7 +253,7 @@
 /* Contenedor principal del modal */
 .modal-content {
   padding: 30px 25px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #372fa3 100%);
   border-radius: 20px;
   margin: 20px;
   position: relative;
@@ -283,7 +283,7 @@
   margin-bottom: 25px;
   font-size: 1.5rem;
   font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(240, 220, 220, 0.3);
   position: relative;
 }
 
@@ -378,19 +378,19 @@
 
 /* Botón cancelar */
 .modal-content ion-button[fill="clear"] {
-  --color: rgba(255, 255, 255, 0.8);
+  --color: rgba(0, 0, 0, 0.8);
   font-weight: 500;
   height: 45px;
   width: 150px;
   transition: all 0.3s ease;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(0, 0, 0, 0.3);
   --border-radius: 22px;
 }
 
 .modal-content ion-button[fill="clear"]:hover {
   --color: white;
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.5);
 }
 
 /* Spinner del modal */

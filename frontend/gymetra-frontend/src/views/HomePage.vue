@@ -25,7 +25,19 @@
             </div>
             <div class="profile-avatar">
               <div class="avatar-circle">
-                <ion-icon :icon="personOutline"></ion-icon>
+                <!-- Mostrar foto si existe, sino mostrar icono -->
+                <img 
+                  v-if="userPhotoUrl" 
+                  :src="userPhotoUrl" 
+                  alt="Foto de perfil"
+                  class="avatar-image"
+                  @error="handleImageError"
+                />
+                <ion-icon 
+                  v-else 
+                  :icon="personOutline"
+                  class="avatar-icon"
+                ></ion-icon>
               </div>
             </div>
           </div>
@@ -106,9 +118,13 @@ const userData = ref({
   lastName: "",
   status: "",
   roleIds: [],
+  photoUrl: "", // Agregar campo photoUrl
   exp: null,
   iat: null,
 });
+
+// Estado para la URL de la foto decodificada
+const userPhotoUrl = ref<string>('');
 
 const chartData = ref([
   { day: 'L', height: 60, isActive: false },
@@ -133,6 +149,31 @@ const decodeJWT = (token: string) => {
     console.error('Error decodificando JWT:', error);
     return null;
   }
+};
+
+// Función para decodificar base64 y crear URL de imagen
+const decodeBase64Image = (base64String: string): string => {
+  try {
+    if (!base64String) return '';
+    
+    // Si ya tiene el prefijo data:, devolverlo tal como está
+    if (base64String.startsWith('data:')) {
+      return base64String;
+    }
+    
+    // Si es solo la cadena base64, agregar el prefijo apropiado
+    // Asumimos que es una imagen JPEG por defecto, pero puedes ajustarlo
+    return `data:image/jpeg;base64,${base64String}`;
+  } catch (error) {
+    console.error('Error decodificando imagen base64:', error);
+    return '';
+  }
+};
+
+// Función para manejar errores de carga de imagen
+const handleImageError = () => {
+  console.warn('Error cargando la imagen de perfil, mostrando icono por defecto');
+  userPhotoUrl.value = '';
 };
 
 const userFirstName = computed(() => {
@@ -168,9 +209,16 @@ const loadUserData = () => {
         lastName: decoded.lastName || "",
         status: decoded.status || "",
         roleIds: decoded.roleIds || [],
+        photoUrl: decoded.photoUrl || "", // Extraer photoUrl del token
         exp: decoded.exp,
         iat: decoded.iat,
       };
+      
+      // Decodificar y establecer la URL de la foto
+      if (userData.value.photoUrl) {
+        userPhotoUrl.value = decodeBase64Image(userData.value.photoUrl);
+      }
+      
       if (decoded.exp) {
         const now = Math.floor(Date.now() / 1000);
         if (decoded.exp < now) {
@@ -280,9 +328,19 @@ ion-buttons ion-button {
   justify-content: center;
   border: 2px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
+  overflow: hidden; /* Para que la imagen se recorte en círculo */
 }
 
-.avatar-circle ion-icon {
+/* Estilos para la imagen de avatar */
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Estilos para el icono cuando no hay foto */
+.avatar-icon {
   font-size: 28px;
   color: rgba(255, 255, 255, 0.8);
 }
