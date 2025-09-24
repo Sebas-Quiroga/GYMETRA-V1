@@ -6,36 +6,39 @@
         <img src="/logo.png" alt="Gymetra Logo" class="logo" />
       </div>
 
-      <!-- Campo Usuario -->
-      <ion-item>
-        <ion-icon slot="start" :icon="personOutline"></ion-icon>
-        <ion-input
-          v-model="email"
-          label="Usuario"
-          label-placement="floating"
-          fill="outline"
-          placeholder="Correo electrónico"
-        ></ion-input>
-      </ion-item>
+      <!-- Agrupa los campos en input-card -->
+      <div class="input-card">
+        <!-- Campo Usuario -->
+        <ion-item>
+          <ion-icon slot="start" :icon="personOutline"></ion-icon>
+          <ion-input
+            v-model="email"
+            label="Usuario"
+            label-placement="floating"
+            fill="outline"
+            placeholder="Correo electrónico"
+          ></ion-input>
+        </ion-item>
 
-      <!-- Campo Contraseña -->
-      <ion-item>
-        <ion-icon slot="start" :icon="keyOutline"></ion-icon>
-        <ion-input
-          v-model="password"
-          :type="showPassword ? 'text' : 'password'"
-          label="Contraseña"
-          label-placement="floating"
-          fill="outline"
-          placeholder="Contraseña"
-        ></ion-input>
-        <ion-icon
-          slot="end"
-          :icon="showPassword ? eyeOffOutline : eyeOutline"
-          @click="togglePassword"
-          style="cursor: pointer"
-        ></ion-icon>
-      </ion-item>
+        <!-- Campo Contraseña -->
+        <ion-item>
+          <ion-icon slot="start" :icon="keyOutline"></ion-icon>
+          <ion-input
+            v-model="password"
+            :type="showPassword ? 'text' : 'password'"
+            label="Contraseña"
+            label-placement="floating"
+            fill="outline"
+            placeholder="Contraseña"
+          ></ion-input>
+          <ion-icon
+            slot="end"
+            :icon="showPassword ? eyeOffOutline : eyeOutline"
+            @click="togglePassword"
+            style="cursor: pointer"
+          ></ion-icon>
+        </ion-item>
+      </div>
 
       <!-- Links -->
       <div class="links">
