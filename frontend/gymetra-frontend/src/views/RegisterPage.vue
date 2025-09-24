@@ -27,7 +27,8 @@
         <div class="notification-progress" :style="{ width: notification.progress + '%' }"></div>
       </div>
 
-      <div class="register-card">
+      <div class="register-container">
+        <div class="register-card">
         
         <!-- Header de la tarjeta -->
         <div class="card-header">
@@ -208,14 +209,19 @@
           </ion-item>
 
           <!-- Checkbox con mejor texto -->
-          <div class="checkbox-container" @click="toggleAcceptData">
-            <ion-checkbox v-model="formData.acceptData" class="custom-checkbox" :disabled="registerLoading"></ion-checkbox>
-            <div class="checkbox-content">
+          <div class="checkbox-container">
+            <ion-checkbox 
+              v-model="formData.acceptData" 
+              class="custom-checkbox" 
+              :disabled="registerLoading"
+              @ionChange="validateField('acceptData')"
+            ></ion-checkbox>
+            <div class="checkbox-content" @click="toggleAcceptData">
               <span class="checkbox-text">
                 Acepto los 
-                <a href="#" @click.stop="showTerms" class="terms-link">términos y condiciones</a>
+                <span @click.stop="showTerms" class="terms-link">términos y condiciones</span>
                 y el 
-                <a href="#" @click.stop="showPrivacy" class="terms-link">tratamiento de datos personales</a>
+                <span @click.stop="showPrivacy" class="terms-link">tratamiento de datos personales</span>
               </span>
             </div>
           </div>
@@ -256,87 +262,118 @@
           </p>
         </div>
       </div>
+      </div>
 
-      <!-- Modales (sin cambios significativos) -->
+      <!-- Modal seleccionar foto -->
       <ion-modal :is-open="showPhotoModal" @did-dismiss="closePhotoModal">
-        <ion-header>
-          <ion-toolbar>
-            <ion-title>Seleccionar Foto</ion-title>
-            <ion-buttons slot="end">
-              <ion-button @click="closePhotoModal" fill="clear">
-                <ion-icon :icon="closeOutline"></ion-icon>
-              </ion-button>
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="photo-modal-content">
-          <div class="photo-modal">
-            <div class="photo-instructions">
-              <ion-icon :icon="informationCircleOutline" class="info-icon"></ion-icon>
-              <p>Selecciona una foto para tu perfil. Solo se permiten archivos PNG, JPG o JPEG.</p>
-            </div>
-            
-            <div class="photo-options">
-              <ion-button fill="outline" @click="selectFromGallery" class="photo-option-btn">
-                <ion-icon :icon="imagesOutline" slot="start"></ion-icon>
-                Desde Galería
-              </ion-button>
-              <ion-button fill="outline" @click="takePhoto" class="photo-option-btn">
-                <ion-icon :icon="cameraOutline" slot="start"></ion-icon>
-                Tomar Foto
-              </ion-button>
-            </div>
-            
-            <div v-if="photoPreview" class="current-photo">
-              <h4>Vista Previa:</h4>
-              <img :src="photoPreview" alt="Foto seleccionada" class="preview-large" />
-              <ion-button fill="clear" @click="removePhoto" color="danger">
-                <ion-icon :icon="trashOutline" slot="start"></ion-icon>
-                Eliminar foto
-              </ion-button>
-            </div>
+        <div class="modal-content">
+          <h2>Seleccionar Foto</h2>
+          
+          <div class="photo-instructions">
+            <ion-icon :icon="informationCircleOutline" class="info-icon"></ion-icon>
+            <p>Selecciona una foto para tu perfil. Solo se permiten archivos PNG, JPG o JPEG.</p>
           </div>
-        </ion-content>
+          
+          <div class="btn-container">
+            <ion-button @click="selectFromGallery">
+              <ion-icon :icon="imagesOutline" slot="start"></ion-icon>
+              Desde Galería
+            </ion-button>
+            <ion-button @click="takePhoto">
+              <ion-icon :icon="cameraOutline" slot="start"></ion-icon>
+              Tomar Foto
+            </ion-button>
+          </div>
+          
+          <div v-if="photoPreview" class="current-photo">
+            <h4>Vista Previa:</h4>
+            <img :src="photoPreview" alt="Foto seleccionada" class="preview-large" />
+            <ion-button fill="clear" @click="removePhoto" color="danger">
+              <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+              Eliminar foto
+            </ion-button>
+          </div>
+          
+          <div class="btn-container">
+            <ion-button @click="closePhotoModal" fill="clear" color="medium">
+              Cancelar
+            </ion-button>
+          </div>
+        </div>
       </ion-modal>
 
       <!-- Modal de términos y condiciones -->
       <ion-modal :is-open="showTermsModal" @did-dismiss="closeTermsModal">
-        <ion-header>
-          <ion-toolbar>
-            <ion-title>Términos y Condiciones</ion-title>
-            <ion-buttons slot="end">
-              <ion-button @click="closeTermsModal" fill="clear">
-                <ion-icon :icon="closeOutline"></ion-icon>
-              </ion-button>
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="ion-padding">
-          <div class="terms-content">
-            <h3>Términos y Condiciones de Uso</h3>
-            <p>Al crear una cuenta, aceptas cumplir con nuestros términos de servicio...</p>
+        <div class="modal-content">
+          <h2>Términos y Condiciones</h2>
+          <div class="modal-scroll-content">
+            <p><strong>1. Aceptación:</strong> Al crear tu cuenta en GYMETRA, aceptas estos términos de uso.</p>
+            
+            <p><strong>2. Uso del servicio:</strong> Destinado a mayores de 18 años para mejorar su condición física.</p>
+            
+            <p><strong>3. Tus responsabilidades:</strong><br>
+            • Proporcionar información precisa<br>
+            • Mantener la confidencialidad de tu cuenta<br>
+            • No compartir contenido inapropiado<br>
+            • Seguir las recomendaciones de seguridad</p>
+            
+            <p><strong>4. Limitación de responsabilidad:</strong> GYMETRA no se hace responsable por lesiones durante el ejercicio. Consulta a un médico antes de comenzar.</p>
+            
+            <p><strong>5. Modificaciones:</strong> Nos reservamos el derecho de modificar estos términos. Te notificaremos los cambios.</p>
+            
+            <p><strong>6. Terminación:</strong> Podemos suspender tu cuenta si violas estos términos.</p>
+            
+            <p>Al continuar, aceptas estos términos.</p>
           </div>
-        </ion-content>
+          
+          <div class="btn-container">
+            <ion-button @click="closeTermsModal" fill="solid">
+              Cerrar
+            </ion-button>
+          </div>
+        </div>
       </ion-modal>
 
       <!-- Modal de política de privacidad -->
       <ion-modal :is-open="showPrivacyModal" @did-dismiss="closePrivacyModal">
-        <ion-header>
-          <ion-toolbar>
-            <ion-title>Política de Privacidad</ion-title>
-            <ion-buttons slot="end">
-              <ion-button @click="closePrivacyModal" fill="clear">
-                <ion-icon :icon="closeOutline"></ion-icon>
-              </ion-button>
-            </ion-buttons>
-          </ion-toolbar>
-        </ion-header>
-        <ion-content class="ion-padding">
-          <div class="privacy-content">
-            <h3>Política de Tratamiento de Datos Personales</h3>
-            <p>Tu privacidad es importante para nosotros. Esta política explica cómo recopilamos y usamos tu información...</p>
+        <div class="modal-content">
+          <h2>Política de Privacidad</h2>
+          <div class="modal-scroll-content">
+            <p><strong>1. Responsable:</strong> GYMETRA es responsable del tratamiento de tus datos personales.</p>
+            
+            <p><strong>2. Datos que recopilamos:</strong><br>
+            • Información de identificación (nombre, documento, email)<br>
+            • Datos de contacto (teléfono)<br>
+            • Información de salud y fitness (opcional)<br>
+            • Fotografía de perfil (opcional)</p>
+            
+            <p><strong>3. Finalidad:</strong><br>
+            • Crear y gestionar tu cuenta<br>
+            • Personalizar tu experiencia<br>
+            • Enviar notificaciones relevantes<br>
+            • Mejorar nuestros servicios</p>
+            
+            <p><strong>4. Base legal:</strong> El tratamiento se basa en tu consentimiento y la ejecución del contrato.</p>
+            
+            <p><strong>5. Conservación:</strong> Tus datos se conservarán mientras mantengas tu cuenta activa y hasta 5 años después.</p>
+            
+            <p><strong>6. Tus derechos:</strong><br>
+            • Acceder a tus datos<br>
+            • Rectificar información incorrecta<br>
+            • Solicitar la eliminación<br>
+            • Revocar el consentimiento</p>
+            
+            <p><strong>7. Seguridad:</strong> Implementamos medidas técnicas y organizativas para proteger tus datos.</p>
+            
+            <p>Para ejercer tus derechos, contáctanos a través de la aplicación.</p>
           </div>
-        </ion-content>
+          
+          <div class="btn-container">
+            <ion-button @click="closePrivacyModal" fill="solid">
+              Cerrar
+            </ion-button>
+          </div>
+        </div>
       </ion-modal>
 
       <!-- Input de archivo oculto -->
@@ -1087,491 +1124,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.register-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-  background: linear-gradient(135deg, #07B7E0, #667eea);
-  position: relative;
-}
-
-.register-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  padding: 30px 20px;
-  border-radius: 16px;
-  width: 100%;
-  max-width: 500px;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-  position: relative;
-  z-index: 1;
-}
-
-/* Estilos de la notificación personalizada */
-.notification-toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  left: 20px;
-  max-width: 400px;
-  margin: 0 auto;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(10px);
-  z-index: 9999;
-  transform: translateY(-100px);
-  animation: slideInDown 0.4s ease-out forwards;
-  border-left: 4px solid var(--notification-color);
-}
-
-.notification-toast.success {
-  --notification-color: #10dc60;
-  background: linear-gradient(135deg, rgba(16, 220, 96, 0.1), rgba(255, 255, 255, 0.95));
-}
-
-.notification-toast.error {
-  --notification-color: #f04141;
-  background: linear-gradient(135deg, rgba(240, 65, 65, 0.1), rgba(255, 255, 255, 0.95));
-}
-
-.notification-toast.warning {
-  --notification-color: #ffce00;
-  background: linear-gradient(135deg, rgba(255, 206, 0, 0.1), rgba(255, 255, 255, 0.95));
-}
-
-.notification-toast.info {
-  --notification-color: #3880ff;
-  background: linear-gradient(135deg, rgba(56, 128, 255, 0.1), rgba(255, 255, 255, 0.95));
-}
-
-.notification-content {
-  display: flex;
-  align-items: flex-start;
-  padding: 16px 20px;
-  gap: 12px;
-}
-
-.notification-icon {
-  font-size: 24px;
-  color: var(--notification-color);
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.notification-text {
-  flex: 1;
-}
-
-.notification-text h4 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.notification-text p {
-  margin: 0;
-  font-size: 14px;
-  color: #666;
-  line-height: 1.4;
-}
-
-.notification-progress {
-  height: 3px;
-  background: var(--notification-color);
-  border-radius: 0 0 8px 8px;
-  transition: width 0.1s linear;
-}
-
-@keyframes slideInDown {
-  from {
-    transform: translateY(-100px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideOutUp {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(-100px);
-    opacity: 0;
-  }
-}
-
-.card-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.card-header h2 {
-  color: #2c3e50;
-  margin: 0 0 8px 0;
-  font-weight: 700;
-  font-size: 1.8rem;
-}
-
-.card-header p {
-  color: #7f8c8d;
-  margin: 0;
-  font-size: 1rem;
-}
-
-.name-row {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-@media (min-width: 768px) {
-  .name-row {
-    flex-direction: row;
-  }
-  
-  .notification-toast {
-    right: 20px;
-    left: auto;
-    margin: 0;
-  }
-}
-
-.name-item {
-  flex: 1;
-}
-
-.field-error {
-  color: #f04141;
-  font-size: 12px;
-  margin-top: -8px;
-  margin-bottom: 16px;
-  margin-left: 16px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.field-error::before {
-  content: "⚠️";
-  font-size: 10px;
-}
-
-.password-toggle {
-  cursor: pointer;
-  color: #666;
-  transition: color 0.3s ease;
-}
-
-.password-toggle:hover {
-  color: #07B7E0;
-}
-
-.password-strength {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: -12px;
-  margin-bottom: 20px;
-}
-
-.strength-bar {
-  flex: 1;
-  height: 6px;
-  background: rgba(0,0,0,0.05);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.strength-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.4s ease, background-color 0.4s ease;
-}
-
-.strength-fill.weak {
-  background: #f04141;
-}
-
-.strength-fill.medium {
-  background: #ffce00;
-}
-
-.strength-fill.good {
-  background: #2196F3;
-}
-
-.strength-fill.excellent {
-  background: #10dc60;
-}
-
-.strength-text {
-  font-size: 12px;
-  font-weight: 500;
-  min-width: 60px;
-  text-align: right;
-}
-
-.strength-text.weak { color: #f04141; }
-.strength-text.medium { color: #ffce00; }
-.strength-text.good { color: #2196F3; }
-.strength-text.excellent { color: #10dc60; }
-
-.photo-item {
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.photo-item:hover {
-  background: rgba(7, 183, 224, 0.05);
-}
-
-.photo-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: rgba(0,0,0,0.05);
-  overflow: hidden;
-}
-
-.preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.camera-icon {
-  font-size: 20px;
-  color: #666;
-}
-
-.checkbox-container {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin: 20px 0;
-  padding: 16px;
-  background: rgba(7, 183, 224, 0.05);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.checkbox-container:hover {
-  background: rgba(7, 183, 224, 0.1);
-}
-
-.custom-checkbox {
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.checkbox-content {
-  flex: 1;
-}
-
-.checkbox-text {
-  font-size: 14px;
-  line-height: 1.4;
-  color: #2c3e50;
-}
-
-.terms-link {
-  color: #07B7E0;
-  text-decoration: underline;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.terms-link:hover {
-  color: #0591b8;
-}
-
-.form-progress {
-  margin: 20px 0;
-  text-align: center;
-}
-
-.progress-bar {
-  height: 6px;
-  background: rgba(0,0,0,0.05);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #07B7E0, #667eea);
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
-
-.progress-text {
-  font-size: 12px;
-  color: #666;
-  font-weight: 500;
-}
-
-.btn-container {
-  margin: 24px 0;
-}
-
-.register-btn {
-  --border-radius: 12px;
-  font-weight: 600;
-  height: 50px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.register-btn:not(.loading):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(7, 183, 224, 0.3);
-}
-
-.register-btn.loading {
-  opacity: 0.8;
-}
-
-.btn-icon {
-  margin-right: 8px;
-}
-
-.card-footer {
-  text-align: center;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(0,0,0,0.05);
-}
-
-.card-footer p {
-  margin: 0;
-  color: #666;
-  font-size: 14px;
-}
-
-.login-link {
-  color: #07B7E0;
-  text-decoration: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.login-link:hover {
-  color: #0591b8;
-}
-
-/* Estilos de modales */
-.photo-modal {
-  padding: 20px;
-}
-
-.photo-instructions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding: 16px;
-  background: rgba(56, 128, 255, 0.1);
-  border-radius: 8px;
-  border-left: 4px solid #3880ff;
-}
-
-.info-icon {
-  font-size: 24px;
-  color: #3880ff;
-  flex-shrink: 0;
-}
-
-.photo-instructions p {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.photo-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.photo-option-btn {
-  --border-width: 2px;
-  --border-radius: 8px;
-  height: 50px;
-}
-
-.current-photo {
-  text-align: center;
-  padding: 20px;
-  background: rgba(0,0,0,0.02);
-  border-radius: 8px;
-}
-
-.current-photo h4 {
-  margin: 0 0 16px 0;
-  color: #2c3e50;
-}
-
-.preview-large {
-  width: 120px;
-  height: 120px;
-  border-radius: 12px;
-  object-fit: cover;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-/* Responsive */
-@media (max-width: 360px) {
-  .register-card {
-    padding: 20px 15px;
-  }
-  
-  .card-header h2 { 
-    font-size: 1.5rem; 
-  }
-  
-  .card-header p { 
-    font-size: 0.9rem; 
-  }
-  
-  .notification-toast {
-    left: 10px;
-    right: 10px;
-    top: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .photo-options {
-    flex-direction: column;
-  }
-  
-  .notification-content {
-    padding: 12px 16px;
-  }
-  
-  .notification-text h4 {
-    font-size: 14px;
-  }
-  
-  .notification-text p {
-    font-size: 13px;
-  }
-}
+/* Los estilos están en el archivo CSS externo */
+@import "@/theme/RegisterPage.css";
 </style>
