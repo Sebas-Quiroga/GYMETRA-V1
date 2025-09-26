@@ -18,6 +18,12 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/Pasarelapago',
+    name: 'PasarelaPago',
+    component: () => import('../views/PasarelaPago.vue')
+    // meta: { requiresAuth: true } // Actívalo si la pasarela requiere login
+  },
+  {
     path: '/login',
     name: 'Login',
     component: LoginPage
@@ -26,8 +32,23 @@ const routes: Array<RouteRecordRaw> = [
     path: '/register',
     name: 'register',
     component: RegisterPage
+  },
+  {
+    path: '/perfil',
+    name: 'Perfil',
+    component: () => import('../views/PerfilPage.vue')
+    // meta: { requiresAuth: true } // Desactivado temporalmente para pruebas visuales
+  },
+  {
+    path: '/Planes',
+    name: 'Planes',
+    component: () => import('../views/PlanesPage.vue')
+  },
+  {
+    path: '/qr',
+    name: 'Qr',
+    component: () => import('../views/QrPage.vue')
   }
-
 ]
 
 const router = createRouter({
