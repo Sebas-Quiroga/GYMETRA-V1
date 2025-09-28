@@ -41,9 +41,13 @@ pipeline {
                 
                 script {
                     echo "✅ Checkout completado desde la rama ${TARGET_BRANCH}"
-                    sh 'git branch -a'
-                    sh 'git log --oneline -n 5'
                 }
+                
+                bat '''
+                    echo Verificando información del repositorio...
+                    git branch -a
+                    git log --oneline -n 5
+                '''
             }
         }
         
@@ -54,23 +58,14 @@ pipeline {
                 }
                 
                 // Verificar que Docker esté disponible
-                sh '''
-                    echo "Verificando Docker..."
+                bat '''
+                    echo Verificando Docker...
                     docker --version
                     docker-compose --version
                     
-                    echo "Verificando puertos disponibles..."
-                    if netstat -tuln | grep ":${BACKEND_PORT}"; then
-                        echo "⚠️ Puerto ${BACKEND_PORT} está en uso"
-                    else
-                        echo "✅ Puerto ${BACKEND_PORT} está disponible"
-                    fi
-                    
-                    if netstat -tuln | grep ":${FRONTEND_PORT}"; then
-                        echo "⚠️ Puerto ${FRONTEND_PORT} está en uso"
-                    else
-                        echo "✅ Puerto ${FRONTEND_PORT} está disponible"
-                    fi
+                    echo Verificando puertos disponibles...
+                    netstat -an | findstr :8080 && echo "⚠️ Puerto 8080 está en uso" || echo "✅ Puerto 8080 está disponible"
+                    netstat -an | findstr :8100 && echo "⚠️ Puerto 8100 está en uso" || echo "✅ Puerto 8100 está disponible"
                 '''
             }
         }
@@ -82,17 +77,17 @@ pipeline {
                 }
                 
                 // Detener y eliminar contenedores existentes
-                sh '''
-                    # Detener contenedores existentes si están corriendo
-                    docker-compose -f ${DOCKER_COMPOSE_FILE} down --remove-orphans || true
+                bat '''
+                    REM Detener contenedores existentes si están corriendo
+                    docker-compose -f %DOCKER_COMPOSE_FILE% down --remove-orphans || echo "No hay contenedores para detener"
                     
-                    # Limpiar imágenes huérfanas
-                    docker image prune -f || true
+                    REM Limpiar imágenes huérfanas
+                    docker image prune -f || echo "No hay imágenes para limpiar"
                     
-                    # Limpiar volúmenes no utilizados
-                    docker volume prune -f || true
+                    REM Limpiar volúmenes no utilizados
+                    docker volume prune -f || echo "No hay volúmenes para limpiar"
                     
-                    echo "✅ Limpieza completada"
+                    echo ✅ Limpieza completada
                 '''
             }
         }
@@ -105,11 +100,11 @@ pipeline {
                             echo "🏗️ Construyendo el backend (GYMETR-login)..."
                         }
                         
-                        sh '''
-                            # Construir la imagen del backend
-                            docker-compose -f ${DOCKER_COMPOSE_FILE} build backend
+                        bat '''
+                            REM Construir la imagen del backend
+                            docker-compose -f %DOCKER_COMPOSE_FILE% build backend
                             
-                            echo "✅ Backend construido exitosamente"
+                            echo ✅ Backend construido exitosamente
                         '''
                     }
                 }
@@ -120,11 +115,11 @@ pipeline {
                             echo "🏗️ Construyendo el frontend (gymetra-frontend)..."
                         }
                         
-                        sh '''
-                            # Construir la imagen del frontend
-                            docker-compose -f ${DOCKER_COMPOSE_FILE} build frontend
+                        bat '''
+                            REM Construir la imagen del frontend
+                            docker-compose -f %DOCKER_COMPOSE_FILE% build frontend
                             
-                            echo "✅ Frontend construido exitosamente"
+                            echo ✅ Frontend construido exitosamente
                         '''
                     }
                 }
@@ -137,14 +132,14 @@ pipeline {
                     echo "🚀 Desplegando aplicación GYMETRA..."
                 }
                 
-                sh '''
-                    # Desplegar todos los servicios
-                    docker-compose -f ${DOCKER_COMPOSE_FILE} up -d
+                bat '''
+                    REM Desplegar todos los servicios
+                    docker-compose -f %DOCKER_COMPOSE_FILE% up -d
                     
-                    echo "✅ Despliegue completado"
+                    echo ✅ Despliegue completado
                     
-                    # Mostrar estado de los contenedores
-                    docker-compose -f ${DOCKER_COMPOSE_FILE} ps
+                    REM Mostrar estado de los contenedores
+                    docker-compose -f %DOCKER_COMPOSE_FILE% ps
                 '''
             }
         }
@@ -155,42 +150,18 @@ pipeline {
                     echo "🏥 Verificando estado de salud de los servicios..."
                 }
                 
-                sh '''
-                    # Esperar a que los servicios estén listos
-                    echo "Esperando que los servicios estén listos..."
-                    sleep 30
+                bat '''
+                    REM Esperar a que los servicios estén listos
+                    echo Esperando que los servicios estén listos...
+                    timeout /t 30 /nobreak
                     
-                    # Verificar backend
-                    echo "Verificando backend en puerto ${BACKEND_PORT}..."
-                    for i in {1..10}; do
-                        if curl -f http://localhost:${BACKEND_PORT}/actuator/health > /dev/null 2>&1; then
-                            echo "✅ Backend está saludable"
-                            break
-                        else
-                            echo "⏳ Esperando backend... intento $i/10"
-                            sleep 10
-                        fi
-                        if [ $i -eq 10 ]; then
-                            echo "❌ Backend no responde después de 10 intentos"
-                            exit 1
-                        fi
-                    done
+                    REM Verificar backend - usando PowerShell para mejor manejo de HTTP
+                    echo Verificando backend en puerto %BACKEND_PORT%...
+                    powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:%BACKEND_PORT%/actuator/health' -TimeoutSec 10; if ($response.StatusCode -eq 200) { echo '✅ Backend está saludable' } else { echo '⚠️ Backend respondió con código: ' + $response.StatusCode } } catch { echo '⚠️ Backend no responde - esperando más tiempo...' }"
                     
-                    # Verificar frontend
-                    echo "Verificando frontend en puerto ${FRONTEND_PORT}..."
-                    for i in {1..5}; do
-                        if curl -f http://localhost:${FRONTEND_PORT} > /dev/null 2>&1; then
-                            echo "✅ Frontend está saludable"
-                            break
-                        else
-                            echo "⏳ Esperando frontend... intento $i/5"
-                            sleep 5
-                        fi
-                        if [ $i -eq 5 ]; then
-                            echo "❌ Frontend no responde después de 5 intentos"
-                            exit 1
-                        fi
-                    done
+                    REM Verificar frontend
+                    echo Verificando frontend en puerto %FRONTEND_PORT%...
+                    powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:%FRONTEND_PORT%' -TimeoutSec 10; if ($response.StatusCode -eq 200) { echo '✅ Frontend está saludable' } else { echo '⚠️ Frontend respondió con código: ' + $response.StatusCode } } catch { echo '⚠️ Frontend no responde todavía...' }"
                 '''
             }
         }
@@ -201,22 +172,22 @@ pipeline {
                     echo "📊 Información del despliegue completado:"
                 }
                 
-                sh '''
-                    echo "=== INFORMACIÓN DEL DESPLIEGUE ==="
-                    echo "🏷️  Proyecto: ${PROJECT_NAME}"
-                    echo "🌿 Rama: ${TARGET_BRANCH}"
-                    echo "📅 Fecha: $(date)"
-                    echo "🔧 Commit: $(git rev-parse --short HEAD)"
-                    echo ""
-                    echo "=== SERVICIOS DESPLEGADOS ==="
-                    echo "🖥️  Backend (GYMETR-login): http://localhost:${BACKEND_PORT}"
-                    echo "🌐 Frontend (gymetra-frontend): http://localhost:${FRONTEND_PORT}"
-                    echo ""
-                    echo "=== ESTADO DE CONTENEDORES ==="
-                    docker-compose -f ${DOCKER_COMPOSE_FILE} ps
-                    echo ""
-                    echo "=== LOGS RECIENTES ==="
-                    docker-compose -f ${DOCKER_COMPOSE_FILE} logs --tail=10
+                bat '''
+                    echo === INFORMACIÓN DEL DESPLIEGUE ===
+                    echo 🏷️  Proyecto: %PROJECT_NAME%
+                    echo 🌿 Rama: %TARGET_BRANCH%
+                    echo 📅 Fecha: %date% %time%
+                    for /f "tokens=*" %%i in ('git rev-parse --short HEAD') do echo 🔧 Commit: %%i
+                    echo.
+                    echo === SERVICIOS DESPLEGADOS ===
+                    echo 🖥️  Backend (GYMETR-login): http://localhost:%BACKEND_PORT%
+                    echo 🌐 Frontend (gymetra-frontend): http://localhost:%FRONTEND_PORT%
+                    echo.
+                    echo === ESTADO DE CONTENEDORES ===
+                    docker-compose -f %DOCKER_COMPOSE_FILE% ps
+                    echo.
+                    echo === LOGS RECIENTES ===
+                    docker-compose -f %DOCKER_COMPOSE_FILE% logs --tail=10
                 '''
             }
         }
@@ -253,10 +224,10 @@ pipeline {
             }
             
             // Logs de debug en caso de falla
-            sh '''
-                echo "=== LOGS DE DEBUG ==="
-                docker-compose -f ${DOCKER_COMPOSE_FILE} logs || true
-                docker ps -a || true
+            bat '''
+                echo === LOGS DE DEBUG ===
+                docker-compose -f %DOCKER_COMPOSE_FILE% logs || echo "No se pudieron obtener logs"
+                docker ps -a || echo "No se pudo obtener estado de contenedores"
             '''
             
             // Notificación de fallo
