@@ -58,17 +58,33 @@ pipeline {
                 }
                 
                 // Verificar que Docker esté disponible
-                bat '''
-                    echo Verificando Docker...
-                    docker --version
-                    docker-compose --version
-                    
-                    echo Verificando puertos disponibles...
-                    netstat -an | findstr :8080 && echo "Puerto 8080 esta en uso" || echo "Puerto 8080 esta disponible"
-                    netstat -an | findstr :8100 && echo "Puerto 8100 esta en uso" || echo "Puerto 8100 esta disponible"
-                    
-                    echo Verificacion de entorno completada
-                '''
+                script {
+                    bat '''
+                        echo Verificando Docker...
+                        docker --version
+                        docker-compose --version
+                        
+                        echo Verificando puertos disponibles...
+                        
+                        REM Verificar puerto 8080
+                        netstat -an | findstr :8080 >nul 2>&1
+                        if %errorlevel% equ 0 (
+                            echo Puerto 8080 esta en uso
+                        ) else (
+                            echo Puerto 8080 esta disponible
+                        )
+                        
+                        REM Verificar puerto 8100  
+                        netstat -an | findstr :8100 >nul 2>&1
+                        if %errorlevel% equ 0 (
+                            echo Puerto 8100 esta en uso
+                        ) else (
+                            echo Puerto 8100 esta disponible
+                        )
+                        
+                        echo Verificacion de entorno completada exitosamente
+                    '''
+                }
             }
         }
         
