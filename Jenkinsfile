@@ -26,27 +26,44 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    echo "Iniciando checkout de la rama ${TARGET_BRANCH}"
+                    echo "Iniciando checkout optimizado de la rama ${TARGET_BRANCH}"
                 }
                 
-                // Checkout del código desde la rama develop
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: "*/${TARGET_BRANCH}"]],
-                    userRemoteConfigs: [[
-                        url: "${GIT_REPO_URL}",
-                        credentialsId: 'github-credentials' // Configurar en Jenkins si el repo es privado
-                    ]]
-                ])
+                // Checkout específico evitando node_modules
+                script {
+                    bat '''
+                        echo Limpiando workspace...
+                        if exist .git rmdir /s /q .git || echo "No .git directory"
+                        if exist node_modules rmdir /s /q node_modules || echo "No node_modules directory"
+                        
+                        echo Clonando repositorio con sparse-checkout...
+                        git clone --filter=blob:none --sparse https://github.com/Sebas-Quiroga/GYMETRA-V1.git temp_repo
+                        cd temp_repo
+                        git sparse-checkout init --cone
+                        git sparse-checkout set backend frontend/*.* docker-compose.yml Jenkinsfile *.md *.dockerfile *.yml *.json
+                        git checkout develop
+                        
+                        echo Copiando archivos necesarios...
+                        xcopy /E /I /Y backend ..\\backend\\
+                        xcopy /E /I /Y frontend\\gymetra-frontend\\src ..\\frontend\\gymetra-frontend\\src\\
+                        xcopy /E /I /Y frontend\\gymetra-frontend\\public ..\\frontend\\gymetra-frontend\\public\\
+                        copy frontend\\gymetra-frontend\\*.* ..\\frontend\\gymetra-frontend\\ 2>nul || echo "Copied frontend config files"
+                        copy *.* ..\\ 2>nul || echo "Copied root files"
+                        
+                        cd ..
+                        rmdir /s /q temp_repo || echo "Cleanup temp repo"
+                    '''
+                }
                 
                 script {
                     echo "Checkout completado desde la rama ${TARGET_BRANCH}"
                 }
                 
                 bat '''
-                    echo Verificando información del repositorio...
-                    git branch -a
-                    git log --oneline -n 5
+                    echo Verificando archivos copiados...
+                    dir /s backend 2>nul || echo "Backend directory"
+                    dir /s frontend 2>nul || echo "Frontend directory"  
+                    dir docker-compose.yml 2>nul || echo "Docker compose file"
                 '''
             }
         }
