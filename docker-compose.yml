@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   backend:
     build: 
@@ -21,7 +19,7 @@ services:
       dockerfile: Dockerfile
     container_name: gymetra_frontend
     ports:
-      - "8100:80"   # Frontend accesible en http://localhost:8100
+      - "8100:80"
     depends_on:
       - backend
     restart: unless-stopped
