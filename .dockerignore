@@ -1,0 +1,30 @@
+# Archivos de Git
+.git
+.gitignore
+
+# Archivos de documentación
+README.md
+*.md
+doc/
+docs/
+
+# Archivos de configuración del IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Archivos de logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Archivos de backup
+*.bak
+*.backup
