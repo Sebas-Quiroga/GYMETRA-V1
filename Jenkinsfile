@@ -43,8 +43,13 @@ pipeline {
                 script {
                     // Capturar commit corto y hora de build para etiquetar imágenes
                     def shortSha = bat(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    if(!shortSha || shortSha.trim().length()==0){
+                        shortSha = 'unknown'
+                    }
                     env.GIT_COMMIT_SHORT = shortSha
-                    env.BUILD_TIME = new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")
+                    if(!env.BUILD_TIME || env.BUILD_TIME.trim().length()==0){
+                        env.BUILD_TIME = new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")
+                    }
                     echo "Commit: ${shortSha}  BuildTime: ${env.BUILD_TIME}"
                 }
                 script {
@@ -119,7 +124,11 @@ pipeline {
                                     set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build backend
                                     if %errorlevel% neq 0 exit /b %errorlevel%
-                                    docker image tag gymetra/backend:latest gymetra/backend:%GIT_COMMIT_SHORT%
+                                                if not "%GIT_COMMIT_SHORT%"=="" (
+                                                    docker image tag gymetra/backend:latest gymetra/backend:%GIT_COMMIT_SHORT%
+                                                ) else (
+                                                    echo WARNING: GIT_COMMIT_SHORT vacío, se omite tag secundario backend
+                                                )
                                     echo Backend built successfully
                                 '''
                                 env.BACKEND_BUILD_SUCCESS = 'true'
@@ -141,7 +150,11 @@ pipeline {
                                     set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build frontend
                                     if %errorlevel% neq 0 exit /b %errorlevel%
-                                    docker image tag gymetra/frontend:latest gymetra/frontend:%GIT_COMMIT_SHORT%
+                                                if not "%GIT_COMMIT_SHORT%"=="" (
+                                                    docker image tag gymetra/frontend:latest gymetra/frontend:%GIT_COMMIT_SHORT%
+                                                ) else (
+                                                    echo WARNING: GIT_COMMIT_SHORT vacío, se omite tag secundario frontend
+                                                )
                                     echo Frontend built successfully
                                 '''
                                 env.FRONTEND_BUILD_SUCCESS = 'true'
