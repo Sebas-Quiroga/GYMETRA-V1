@@ -44,6 +44,9 @@ pipeline {
                         
                         cd ..
                         rmdir /s /q temp_repo || echo "Cleanup temp repo"
+                        
+                        echo Checkout process completed successfully
+                        exit /b 0
                     '''
                 }
                 
