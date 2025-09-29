@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    
+
     environment {
         GIT_REPO_URL = 'https://github.com/Sebas-Quiroga/GYMETRA-V1.git'
         DOCKER_COMPOSE_FILE = 'docker-compose.yml'
@@ -15,18 +15,18 @@ pipeline {
         GIT_COMMIT_SHORT = ''
         BUILD_TIME = ''
     }
-    
+
     triggers {
         pollSCM('H/5 * * * *')
     }
-    
+
     options {
         timeout(time: 30, unit: 'MINUTES')
         retry(1)
         skipStagesAfterUnstable()
         skipDefaultCheckout(true) // evitamos el checkout automático para usar la lógica personalizada abajo
     }
-    
+
     stages {
         stage('Checkout') {
             steps {
@@ -41,17 +41,16 @@ pipeline {
                     ]
                 ])
                 script {
-                    // Capturar commit corto (última línea) y hora UTC ISO 8601 usando PowerShell (evita sandbox java.time)
-                    def revOut = bat(script: '@echo off\r\ngit rev-parse --short HEAD', returnStdout: true)
-                    def lines = revOut.readLines().findAll { it?.trim() }
-                    def shortSha = lines ? lines.last().trim() : ''
-                    if(!shortSha) { shortSha = 'unknown' }
+                    // Capturar commit corto y hora de build para etiquetar imágenes
+                    def shortSha = bat(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    if(!shortSha || shortSha.trim().length()==0){
+                        shortSha = 'unknown'
+                    }
                     env.GIT_COMMIT_SHORT = shortSha
-                    // PowerShell 5.1 (Windows default) no soporta -AsUTC; usamos [DateTime]::UtcNow
-                    def bt = bat(script: 'powershell -NoLogo -NoProfile -Command "[DateTime]::UtcNow.ToString(\"yyyy-MM-ddTHH:mm:ssZ\")"', returnStdout: true).trim()
-                    if(!bt) { bt = 'unknown' }
-                    env.BUILD_TIME = bt
-                    echo "Commit(short): ${env.GIT_COMMIT_SHORT}  BuildTime(UTC): ${env.BUILD_TIME}"
+                    if(!env.BUILD_TIME || env.BUILD_TIME.trim().length()==0){
+                        env.BUILD_TIME = new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")
+                    }
+                    echo "Commit: ${shortSha}  BuildTime: ${env.BUILD_TIME}"
                 }
                 script {
                     // Confirmar presencia de archivos clave
@@ -59,13 +58,13 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Environment Check') {
             steps {
                 script {
                     echo "Checking deployment environment..."
                 }
-                
+
                 // Verificar que Docker este disponible
                 script {
                     // IMPORTANTE: En Windows el último ERRORLEVEL se conserva; si un findstr no encuentra coincidencias deja ERRORLEVEL=1 y el step falla.
@@ -93,7 +92,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Pre-deploy Cleanup') {
             steps {
                 script {
@@ -112,7 +111,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Build Services') {
             parallel {
                 stage('Build Backend') {
@@ -125,17 +124,16 @@ pipeline {
                                     set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build backend
                                     if %errorlevel% neq 0 exit /b %errorlevel%
-                                                if "%BUILD_TIME%"=="" for /f %%d in ('powershell -NoLogo -NoProfile -Command "[DateTime]::UtcNow.ToString(\"yyyy-MM-ddTHH:mm:ssZ\")"') do set BUILD_TIME=%%d
-                                                if "%GIT_COMMIT_SHORT%"=="" (
-                                                    for /f %%i in ('git rev-parse --short HEAD') do set GIT_COMMIT_SHORT=%%i
-                                                )
+
+
+
                                                 if not "%GIT_COMMIT_SHORT%"=="" (
                                                     docker image tag gymetra/backend:latest gymetra/backend:%GIT_COMMIT_SHORT%
                                                 ) else (
-                                                    echo WARNING: GIT_COMMIT_SHORT vacío (fallback también falló), se omite tag secundario backend
+                                                    echo WARNING: GIT_COMMIT_SHORT vacío, se omite tag secundario backend
                                                 )
-                                                echo DEBUG Backend image tags:
-                                                docker images --format "table {{.Repository}}\t{{.Tag}}" | findstr /i "gymetra/backend"
+
+
                                     echo Backend built successfully
                                 '''
                                 env.BACKEND_BUILD_SUCCESS = 'true'
@@ -146,7 +144,7 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Build Frontend') {
                     steps {
                         script {
@@ -157,17 +155,16 @@ pipeline {
                                     set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build frontend
                                     if %errorlevel% neq 0 exit /b %errorlevel%
-                                                if "%BUILD_TIME%"=="" for /f %%d in ('powershell -NoLogo -NoProfile -Command "[DateTime]::UtcNow.ToString(\"yyyy-MM-ddTHH:mm:ssZ\")"') do set BUILD_TIME=%%d
-                                                if "%GIT_COMMIT_SHORT%"=="" (
-                                                    for /f %%i in ('git rev-parse --short HEAD') do set GIT_COMMIT_SHORT=%%i
-                                                )
+
+
+
                                                 if not "%GIT_COMMIT_SHORT%"=="" (
                                                     docker image tag gymetra/frontend:latest gymetra/frontend:%GIT_COMMIT_SHORT%
                                                 ) else (
-                                                    echo WARNING: GIT_COMMIT_SHORT vacío (fallback también falló), se omite tag secundario frontend
+                                                    echo WARNING: GIT_COMMIT_SHORT vacío, se omite tag secundario frontend
                                                 )
-                                                echo DEBUG Frontend image tags:
-                                                docker images --format "table {{.Repository}}\t{{.Tag}}" | findstr /i "gymetra/frontend"
+
+
                                     echo Frontend built successfully
                                 '''
                                 env.FRONTEND_BUILD_SUCCESS = 'true'
@@ -182,27 +179,27 @@ pipeline {
             post {
                 always {
                     script {
-                        // Verificación adicional basada en la existencia de imágenes (corrige flags si hubo problema de propagación de env vars)
-                        def backendImg = bat(script: '@echo off\r\nfor /f "tokens=*" %%%%i in (\"docker images -q gymetra/backend:latest\") do @echo FOUND', returnStdout: true).contains('FOUND')
-                        def frontendImg = bat(script: '@echo off\r\nfor /f "tokens=*" %%%%i in (\"docker images -q gymetra/frontend:latest\") do @echo FOUND', returnStdout: true).contains('FOUND')
-                        if (backendImg && env.BACKEND_BUILD_SUCCESS != 'true') { env.BACKEND_BUILD_SUCCESS = 'true'; echo 'INFO: Backend flag corregido por verificación de imagen.' }
-                        if (frontendImg && env.FRONTEND_BUILD_SUCCESS != 'true') { env.FRONTEND_BUILD_SUCCESS = 'true'; echo 'INFO: Frontend flag corregido por verificación de imagen.' }
-                        echo "DEBUG flags -> BACKEND_BUILD_SUCCESS=${env.BACKEND_BUILD_SUCCESS} FRONTEND_BUILD_SUCCESS=${env.FRONTEND_BUILD_SUCCESS}"
+
+
+
+
+
+
                         if (env.BACKEND_BUILD_SUCCESS == 'true' && env.FRONTEND_BUILD_SUCCESS == 'true') {
                             env.BUILD_SUCCESS = 'true'
-                            echo 'All services built successfully'
+                            echo "All services built successfully"
                         } else if (env.BACKEND_BUILD_SUCCESS == 'true' || env.FRONTEND_BUILD_SUCCESS == 'true') {
                             env.BUILD_SUCCESS = 'partial'
-                            echo 'Some services built successfully'
+                            echo "Some services built successfully"
                         } else {
                             env.BUILD_SUCCESS = 'false'
-                            echo 'Build failed'
+                            echo "Build failed"
                         }
                     }
                 }
             }
         }
-        
+
         stage('Deploy') {
             steps {
                 script {
@@ -228,7 +225,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Health Check') {
             steps {
                 script {
@@ -254,7 +251,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Post-deploy Info') {
             steps {
                 script {
@@ -283,7 +280,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             script {
@@ -301,7 +298,7 @@ pipeline {
                 }
             }
         }
-        
+
         success {
             script {
                 echo "Successful deployment of GYMETRA!"
@@ -310,13 +307,13 @@ pipeline {
                 echo "Deployment completed at: ${new Date()}"
             }
         }
-        
+
         failure {
             script {
                 echo "Error in GYMETRA deployment"
                 echo "Please check the logs below for details:"
             }
-            
+
             script {
                 try {
                     bat '''
@@ -335,7 +332,7 @@ pipeline {
                 }
             }
         }
-        
+
         unstable {
             script {
                 echo "Unstable deployment of GYMETRA"
@@ -347,7 +344,7 @@ pipeline {
                 }
             }
         }
-        
+
         cleanup {
             script {
                 echo "Performing cleanup tasks..."
@@ -355,4 +352,3 @@ pipeline {
             }
         }
     }
-}
