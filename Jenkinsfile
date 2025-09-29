@@ -47,7 +47,8 @@ pipeline {
                     def shortSha = lines ? lines.last().trim() : ''
                     if(!shortSha) { shortSha = 'unknown' }
                     env.GIT_COMMIT_SHORT = shortSha
-                    def bt = bat(script: 'powershell -NoLogo -NoProfile -Command "Get-Date -AsUTC -Format yyyy-MM-ddTHH:mm:ssZ"', returnStdout: true).trim()
+                    // PowerShell 5.1 (Windows default) no soporta -AsUTC; usamos [DateTime]::UtcNow
+                    def bt = bat(script: 'powershell -NoLogo -NoProfile -Command "[DateTime]::UtcNow.ToString(\"yyyy-MM-ddTHH:mm:ssZ\")"', returnStdout: true).trim()
                     if(!bt) { bt = 'unknown' }
                     env.BUILD_TIME = bt
                     echo "Commit(short): ${env.GIT_COMMIT_SHORT}  BuildTime(UTC): ${env.BUILD_TIME}"
@@ -124,7 +125,7 @@ pipeline {
                                     set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build backend
                                     if %errorlevel% neq 0 exit /b %errorlevel%
-                                                if "%BUILD_TIME%"=="" for /f %%d in ('powershell -NoLogo -NoProfile -Command "Get-Date -AsUTC -Format yyyy-MM-ddTHH:mm:ssZ"') do set BUILD_TIME=%%d
+                                                if "%BUILD_TIME%"=="" for /f %%d in ('powershell -NoLogo -NoProfile -Command "[DateTime]::UtcNow.ToString(\"yyyy-MM-ddTHH:mm:ssZ\")"') do set BUILD_TIME=%%d
                                                 if "%GIT_COMMIT_SHORT%"=="" (
                                                     for /f %%i in ('git rev-parse --short HEAD') do set GIT_COMMIT_SHORT=%%i
                                                 )
@@ -156,7 +157,7 @@ pipeline {
                                     set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build frontend
                                     if %errorlevel% neq 0 exit /b %errorlevel%
-                                                if "%BUILD_TIME%"=="" for /f %%d in ('powershell -NoLogo -NoProfile -Command "Get-Date -AsUTC -Format yyyy-MM-ddTHH:mm:ssZ"') do set BUILD_TIME=%%d
+                                                if "%BUILD_TIME%"=="" for /f %%d in ('powershell -NoLogo -NoProfile -Command "[DateTime]::UtcNow.ToString(\"yyyy-MM-ddTHH:mm:ssZ\")"') do set BUILD_TIME=%%d
                                                 if "%GIT_COMMIT_SHORT%"=="" (
                                                     for /f %%i in ('git rev-parse --short HEAD') do set GIT_COMMIT_SHORT=%%i
                                                 )
