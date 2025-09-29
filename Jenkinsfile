@@ -32,14 +32,12 @@ pipeline {
                         git clone --filter=blob:none --sparse https://github.com/Sebas-Quiroga/GYMETRA-V1.git temp_repo
                         cd temp_repo
                         git sparse-checkout init --cone
-                        git sparse-checkout set backend frontend/*.* docker-compose.yml Jenkinsfile *.md *.dockerfile *.yml *.json
+                        git sparse-checkout set backend frontend docker-compose.yml Jenkinsfile *.md *.dockerfile *.yml *.json
                         git checkout develop
                         
                         echo Copying necessary files...
                         xcopy /E /I /Y backend ..\\backend\\
-                        xcopy /E /I /Y frontend\\gymetra-frontend\\src ..\\frontend\\gymetra-frontend\\src\\
-                        xcopy /E /I /Y frontend\\gymetra-frontend\\public ..\\frontend\\gymetra-frontend\\public\\
-                        copy frontend\\gymetra-frontend\\*.* ..\\frontend\\gymetra-frontend\\ 2>nul || echo "Copied frontend config files"
+                        xcopy /E /I /Y frontend ..\\frontend\\
                         copy *.* ..\\ 2>nul || echo "Copied root files"
                         
                         cd ..
