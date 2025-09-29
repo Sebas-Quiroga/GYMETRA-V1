@@ -74,7 +74,7 @@ pipeline {
                     echo "Verificando el entorno de despliegue..."
                 }
                 
-                // Verificar que Docker esté disponible
+                // Verificar que Docker este disponible
                 script {
                     bat '''
                         echo Verificando Docker...
@@ -113,13 +113,13 @@ pipeline {
                 
                 // Detener y eliminar contenedores existentes
                 bat '''
-                    REM Detener contenedores existentes si están corriendo
+                    REM Detener contenedores existentes si estan corriendo
                     docker-compose -f %DOCKER_COMPOSE_FILE% down --remove-orphans || echo "No hay contenedores para detener"
                     
-                    REM Limpiar imágenes huérfanas
+                    REM Limpiar imagenes huerfanas
                     docker image prune -f || echo "No hay imagenes para limpiar"
                     
-                    REM Limpiar volúmenes no utilizados
+                    REM Limpiar volumenes no utilizados
                     docker volume prune -f || echo "No hay volumenes para limpiar"
                     
                     echo Limpieza completada
@@ -186,7 +186,7 @@ pipeline {
                 }
                 
                 bat '''
-                    REM Esperar a que los servicios estén listos
+                    REM Esperar a que los servicios esten listos
                     echo Esperando que los servicios esten listos...
                     timeout /t 30 /nobreak
                     
