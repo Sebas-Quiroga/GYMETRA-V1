@@ -24,21 +24,24 @@ RUN --mount=type=cache,target=/root/.m2 \
 FROM eclipse-temurin:17-jdk AS build
 WORKDIR /workspace
 
-COPY --from=deps /root/.m2 /root/.m2
-COPY --from=deps /workspace /workspace
+# Reutilizamos el cache de dependencias (no copiamos /root/.m2 porque el mount no persiste en la capa)
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw mvnw
+COPY mvnw.cmd mvnw.cmd
 
-# Ahora sí copiamos el código fuente
+# Copiamos el código fuente completo (invalidará cache sólo cuando cambia src)
 COPY src src
 
 ARG SKIP_TESTS=true
 ENV MAVEN_SKIP_TESTS=${SKIP_TESTS}
 
 RUN --mount=type=cache,target=/root/.m2 \
-		if [ "$MAVEN_SKIP_TESTS" = "true" ]; then \
-			./mvnw -q -DskipTests clean package; \
-		else \
-			./mvnw -q clean package; \
-		fi
+    if [ "$MAVEN_SKIP_TESTS" = "true" ]; then \
+        ./mvnw -q -DskipTests clean package; \
+    else \
+        ./mvnw -q clean package; \
+    fi
 
 ###############################
 # Etapa 3: Runtime

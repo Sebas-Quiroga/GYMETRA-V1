@@ -43,12 +43,12 @@
             <ion-icon :icon="cardOutline" slot="start"></ion-icon>
             <ion-input
               v-model="formData.identification"
-              type="number"
+              type="text"
               label="Identificación"
               label-placement="floating"
               fill="outline"
               placeholder="Número de identificación"
-              maxlength="12"
+              :maxlength="12"
               :class="{ 'ion-invalid': errors.identification }"
               @ion-blur="validateField('identification')"
               @keydown="preventInvalidChars"
@@ -72,7 +72,7 @@
                 :class="{ 'ion-invalid': errors.firstName }"
                 @ion-blur="validateField('firstName')"
                 autocomplete="given-name"
-                maxlength="50"
+                :maxlength="50"
                 :disabled="registerLoading"
               ></ion-input>
             </ion-item>
@@ -89,7 +89,7 @@
                 :class="{ 'ion-invalid': errors.lastName }"
                 @ion-blur="validateField('lastName')"
                 autocomplete="family-name"
-                maxlength="50"
+                :maxlength="50"
                 :disabled="registerLoading"
               ></ion-input>
             </ion-item>
@@ -109,7 +109,7 @@
               :class="{ 'ion-invalid': errors.email }"
               @ion-blur="validateField('email')"
               autocomplete="email"
-              maxlength="100"
+              :maxlength="100"
               :disabled="registerLoading"
             ></ion-input>
           </ion-item>
@@ -128,7 +128,7 @@
               :class="{ 'ion-invalid': errors.password }"
               @ion-blur="validateField('password')"
               autocomplete="new-password"
-              maxlength="100"
+              :maxlength="100"
               :disabled="registerLoading"
             ></ion-input>
             <ion-icon
@@ -165,7 +165,7 @@
               :class="{ 'ion-invalid': errors.confirmPassword }"
               @ion-blur="validateField('confirmPassword')"
               autocomplete="new-password"
-              maxlength="100"
+              :maxlength="100"
               :disabled="registerLoading"
             ></ion-input>
             <ion-icon
@@ -191,7 +191,7 @@
               @ion-blur="validateField('phone')"
               @ion-input="formatPhone"
               autocomplete="tel"
-              maxlength="15"
+              :maxlength="15"
               :disabled="registerLoading"
             ></ion-input>
           </ion-item>
