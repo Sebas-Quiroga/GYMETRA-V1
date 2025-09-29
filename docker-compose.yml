@@ -1,8 +1,13 @@
 services:
   backend:
-    build: 
+    image: gymetra/backend:latest
+    build:
       context: ./backend/GYMETR-login
       dockerfile: Dockerfile
+      args:
+        - GIT_COMMIT=${GIT_COMMIT:-local}
+        - BUILD_TIME=${BUILD_TIME:-unknown}
+        - SKIP_TESTS=true
     container_name: gymetra_backend
     ports:
       - "8080:8080"
@@ -12,11 +17,17 @@ services:
     restart: unless-stopped
     networks:
       - gymetra-net
+    labels:
+      com.gymetra.service: "backend"
 
   frontend:
-    build: 
+    image: gymetra/frontend:latest
+    build:
       context: ./frontend/gymetra-frontend
       dockerfile: Dockerfile
+      args:
+        - GIT_COMMIT=${GIT_COMMIT:-local}
+        - BUILD_TIME=${BUILD_TIME:-unknown}
     container_name: gymetra_frontend
     ports:
       - "8100:80"
@@ -27,6 +38,8 @@ services:
       - gymetra-net
     environment:
       - NODE_ENV=production
+    labels:
+      com.gymetra.service: "frontend"
 
 networks:
   gymetra-net:

@@ -1,46 +1,71 @@
-# Usar imagen base de OpenJDK 17 para construcción
-FROM openjdk:17-jdk-slim as build
+###############################
+# Etapa 1: Resolución de dependencias
+###############################
+FROM eclipse-temurin:17-jdk AS deps
+WORKDIR /workspace
 
-# Instalar Maven
-RUN apt-get update && apt-get install -y maven
+# ARG para inyectar metadata
+ARG BUILD_TIME
+ARG GIT_COMMIT
 
-# Establecer directorio de trabajo
+# Copiamos sólo lo necesario para cachear dependencias
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw mvnw
+COPY mvnw.cmd mvnw.cmd
+
+# Descargamos dependencias (sin código fuente aún) para maximizar cache
+RUN --mount=type=cache,target=/root/.m2 \
+		./mvnw -q -B dependency:go-offline
+
+###############################
+# Etapa 2: Build
+###############################
+FROM eclipse-temurin:17-jdk AS build
+WORKDIR /workspace
+
+COPY --from=deps /root/.m2 /root/.m2
+COPY --from=deps /workspace /workspace
+
+# Ahora sí copiamos el código fuente
+COPY src src
+
+ARG SKIP_TESTS=true
+ENV MAVEN_SKIP_TESTS=${SKIP_TESTS}
+
+RUN --mount=type=cache,target=/root/.m2 \
+		if [ "$MAVEN_SKIP_TESTS" = "true" ]; then \
+			./mvnw -q -DskipTests clean package; \
+		else \
+			./mvnw -q clean package; \
+		fi
+
+###############################
+# Etapa 3: Runtime
+###############################
+FROM eclipse-temurin:17-jre-alpine AS runtime
 WORKDIR /app
 
-# Copiar archivos de configuración de Maven
-COPY pom.xml .
-COPY mvnw .
-COPY mvnw.cmd .
-COPY .mvn .mvn
-
-# Descargar dependencias
-RUN mvn dependency:go-offline -B
-
-# Copiar código fuente
-COPY src ./src
-
-# Construir la aplicación
-RUN mvn clean package -DskipTests
-
-# Imagen final de producción
-FROM openjdk:17-jre-slim
-
-# Crear usuario no-root para seguridad
-RUN addgroup --system spring && adduser --system spring --ingroup spring
+# Crear usuario no-root seguro
+RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
-# Establecer directorio de trabajo
-WORKDIR /app
+ARG GIT_COMMIT
+ARG BUILD_TIME
 
-# Copiar el JAR construido desde la etapa de build
-COPY --from=build /app/target/*.jar app.jar
+LABEL org.opencontainers.image.title="gymetra-backend" \
+			org.opencontainers.image.source="https://github.com/Sebas-Quiroga/GYMETRA-V1" \
+			org.opencontainers.image.revision="$GIT_COMMIT" \
+			org.opencontainers.image.created="$BUILD_TIME" \
+			org.opencontainers.image.description="Backend GYMETRA (Login)"
 
-# Exponer puerto 8080
+COPY --from=build /workspace/target/*.jar app.jar
+
 EXPOSE 8080
 
-# Configurar variables de entorno
-ENV SPRING_PROFILES_ACTIVE=prod
-ENV JAVA_OPTS="-Xmx512m -Xms256m"
+ENV SPRING_PROFILES_ACTIVE=prod \
+		JAVA_OPTS="-Xmx512m -Xms256m"
 
-# Comando para ejecutar la aplicación
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

@@ -9,6 +9,11 @@ pipeline {
         FRONTEND_PORT = '8100'
         TARGET_BRANCH = 'develop'
         BUILD_SUCCESS = 'false'
+        BACKEND_BUILD_SUCCESS = 'false'
+        FRONTEND_BUILD_SUCCESS = 'false'
+        DEPLOY_SUCCESS = 'false'
+        GIT_COMMIT_SHORT = ''
+        BUILD_TIME = ''
     }
     
     triggers {
@@ -19,54 +24,33 @@ pipeline {
         timeout(time: 30, unit: 'MINUTES')
         retry(1)
         skipStagesAfterUnstable()
+        skipDefaultCheckout(true) // evitamos el checkout automático para usar la lógica personalizada abajo
     }
     
     stages {
         stage('Checkout') {
             steps {
+                script { echo "Checkout (shallow) de rama ${TARGET_BRANCH}" }
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${TARGET_BRANCH}"]],
+                    userRemoteConfigs: [[url: GIT_REPO_URL]],
+                    extensions: [
+                        [$class: 'WipeWorkspace'],
+                        [$class: 'CloneOption', depth: 1, noTags: true, shallow: true]
+                    ]
+                ])
                 script {
-                    echo "Starting optimized checkout from ${TARGET_BRANCH} branch"
+                    // Capturar commit corto y hora de build para etiquetar imágenes
+                    def shortSha = bat(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.GIT_COMMIT_SHORT = shortSha
+                    env.BUILD_TIME = new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")
+                    echo "Commit: ${shortSha}  BuildTime: ${env.BUILD_TIME}"
                 }
-                
-                // Checkout especifico evitando node_modules
                 script {
-                    bat '''
-                        echo Cleaning workspace...
-                        if exist .git rmdir /s /q .git || echo "No .git directory"
-                        if exist node_modules rmdir /s /q node_modules || echo "No node_modules directory"
-                        
-                        echo Cloning repository without sparse-checkout...
-                        git clone --depth 1 --branch develop https://github.com/Sebas-Quiroga/GYMETRA-V1.git temp_repo
-                        cd temp_repo
-                        
-                        echo Removing node_modules to save space...
-                        if exist frontend\\gymetra-frontend\\node_modules rmdir /s /q frontend\\gymetra-frontend\\node_modules || echo "No node_modules in frontend"
-                        
-                        echo Copying necessary files...
-                        xcopy /E /I /Y backend ..\\backend\\
-                        xcopy /E /I /Y frontend ..\\frontend\\
-                        copy docker-compose.yml ..\\ 2>nul || echo "Copied docker-compose.yml"
-                        copy Jenkinsfile ..\\ 2>nul || echo "Copied Jenkinsfile"
-                        copy *.md ..\\ 2>nul || echo "Copied markdown files"
-                        
-                        cd ..
-                        rmdir /s /q temp_repo || echo "Cleanup temp repo"
-                        
-                        echo Checkout process completed successfully
-                        exit /b 0
-                    '''
+                    // Confirmar presencia de archivos clave
+                    bat 'if exist docker-compose.yml (echo docker-compose.yml OK) else (echo FALTA docker-compose.yml & exit /b 2)'
                 }
-                
-                script {
-                    echo "Checkout completed from ${TARGET_BRANCH} branch"
-                }
-                
-                bat '''
-                    echo Verifying copied files...
-                    dir /s backend 2>nul || echo "Backend directory"
-                    dir /s frontend 2>nul || echo "Frontend directory"  
-                    dir docker-compose.yml 2>nul || echo "Docker compose file"
-                '''
             }
         }
         
@@ -78,28 +62,27 @@ pipeline {
                 
                 // Verificar que Docker este disponible
                 script {
+                    // IMPORTANTE: En Windows el último ERRORLEVEL se conserva; si un findstr no encuentra coincidencias deja ERRORLEVEL=1 y el step falla.
+                    // Añadimos for loop y reset explícito del ERRORLEVEL al final.
                     bat '''
+                        @echo off
                         echo Checking Docker...
-                        docker --version
-                        docker-compose --version
-                        
+                        docker --version || exit /b 10
+                        docker-compose --version || exit /b 11
+
                         echo Checking available ports...
-                        
-                        netstat -an | findstr :8080 >nul 2>&1
-                        if %errorlevel% equ 0 (
-                            echo Port 8080 is in use
-                        ) else (
-                            echo Port 8080 is available
+                        for %%P in (8080 8100) do (
+                            netstat -an | findstr :%%P >nul 2>&1
+                            if errorlevel 1 (
+                                echo Port %%P is available
+                            ) else (
+                                echo Port %%P is in use
+                            )
                         )
-                        
-                        netstat -an | findstr :8100 >nul 2>&1
-                        if %errorlevel% equ 0 (
-                            echo Port 8100 is in use
-                        ) else (
-                            echo Port 8100 is available
-                        )
-                        
+
                         echo Environment check completed successfully
+                        rem Forzamos exit code 0 para que el stage no falle por un ERRORLEVEL heredado
+                        cmd /c exit /b 0
                     '''
                 }
             }
@@ -132,7 +115,11 @@ pipeline {
                             echo "Building backend (GYMETR-login)..."
                             try {
                                 bat '''
+                                    set GIT_COMMIT=%GIT_COMMIT_SHORT%
+                                    set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build backend
+                                    if %errorlevel% neq 0 exit /b %errorlevel%
+                                    docker image tag gymetra/backend:latest gymetra/backend:%GIT_COMMIT_SHORT%
                                     echo Backend built successfully
                                 '''
                                 env.BACKEND_BUILD_SUCCESS = 'true'
@@ -150,7 +137,11 @@ pipeline {
                             echo "Building frontend (gymetra-frontend)..."
                             try {
                                 bat '''
+                                    set GIT_COMMIT=%GIT_COMMIT_SHORT%
+                                    set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build frontend
+                                    if %errorlevel% neq 0 exit /b %errorlevel%
+                                    docker image tag gymetra/frontend:latest gymetra/frontend:%GIT_COMMIT_SHORT%
                                     echo Frontend built successfully
                                 '''
                                 env.FRONTEND_BUILD_SUCCESS = 'true'
@@ -187,6 +178,8 @@ pipeline {
                     if (env.BUILD_SUCCESS == 'true' || env.BUILD_SUCCESS == 'partial') {
                         try {
                             bat '''
+                                set GIT_COMMIT=%GIT_COMMIT_SHORT%
+                                set BUILD_TIME=%BUILD_TIME%
                                 docker-compose -f %DOCKER_COMPOSE_FILE% up -d
                                 echo Deployment completed
                                 docker-compose -f %DOCKER_COMPOSE_FILE% ps

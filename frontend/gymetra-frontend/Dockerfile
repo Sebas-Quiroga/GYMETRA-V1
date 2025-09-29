@@ -1,83 +1,74 @@
-# Etapa de construcción
-FROM node:18-alpine as build
-
-# Establecer directorio de trabajo
+###############################
+# Etapa 1: Dependencias base
+###############################
+FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Copiar archivos de configuración de npm
+ARG BUILD_TIME
+ARG GIT_COMMIT
+
 COPY package*.json ./
 COPY ionic.config.json ./
 COPY tsconfig*.json ./
 COPY vite.config.ts ./
 
-# Instalar dependencias
-RUN npm ci --only=production
+# Instalar TODAS las dependencias (prod+dev) para permitir build correcto
+RUN npm ci
 
-# Copiar código fuente
-COPY src ./src
-COPY public ./public
+###############################
+# Etapa 2: Build
+###############################
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY --from=deps /app /app
+COPY src src
+COPY public public
 COPY index.html ./
 
-# Construir la aplicación para producción
+ENV NODE_ENV=production
 RUN npm run build
 
-# Etapa de producción
-FROM nginx:alpine
+###############################
+# Etapa 3: Runtime Nginx optimizado
+###############################
+FROM nginx:1.27-alpine AS runtime
+WORKDIR /usr/share/nginx/html
 
-# Copiar archivos construidos al directorio de nginx
-COPY --from=build /app/dist /usr/share/nginx/html
+ARG GIT_COMMIT
+ARG BUILD_TIME
+LABEL org.opencontainers.image.title="gymetra-frontend" \
+      org.opencontainers.image.source="https://github.com/Sebas-Quiroga/GYMETRA-V1" \
+      org.opencontainers.image.revision="$GIT_COMMIT" \
+      org.opencontainers.image.created="$BUILD_TIME" \
+      org.opencontainers.image.description="Frontend GYMETRA (SPA)"
 
-# Copiar configuración personalizada de nginx
-COPY <<EOF /etc/nginx/nginx.conf
-user nginx;
-worker_processes auto;
-error_log /var/log/nginx/error.log notice;
-pid /var/run/nginx.pid;
+COPY --from=build /app/dist .
 
-events {
-    worker_connections 1024;
-}
+# Configuración nginx minimalista para SPA
+RUN rm /etc/nginx/conf.d/default.conf || true
+COPY <<'EOF' /etc/nginx/conf.d/app.conf
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
 
-http {
-    include       /etc/nginx/mime.types;
-    default_type  application/octet-stream;
-    
-    log_format main '\$remote_addr - \$remote_user [\$time_local] "\$request" '
-                    '\$status \$body_bytes_sent "\$http_referer" '
-                    '"\$http_user_agent" "\$http_x_forwarded_for"';
-    
-    access_log /var/log/nginx/access.log main;
-    
-    sendfile on;
-    keepalive_timeout 65;
-    
-    server {
-        listen 80;
-        server_name localhost;
-        root /usr/share/nginx/html;
-        index index.html;
-        
-        # Configuración para SPA (Single Page Application)
-        location / {
-            try_files \$uri \$uri/ /index.html;
-        }
-        
-        # Configuración de headers para mejor rendimiento
-        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
-        
-        # Configuración de seguridad
-        add_header X-Frame-Options "SAMEORIGIN";
-        add_header X-Content-Type-Options "nosniff";
-        add_header X-XSS-Protection "1; mode=block";
+    location / {
+        try_files $uri $uri/ /index.html;
     }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+    }
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
 }
 EOF
 
-# Exponer puerto 80
 EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD wget -qO- http://localhost/ || exit 1
 
-# Comando para ejecutar nginx
 CMD ["nginx", "-g", "daemon off;"]
