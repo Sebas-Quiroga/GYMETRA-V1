@@ -46,9 +46,10 @@ pipeline {
                     if(!shortSha || shortSha.trim().length()==0){
                         shortSha = 'unknown'
                     }
+                    def buildTime = new Date().format("yyyy-MM-dd-HH-mm-ss")
                     env.GIT_COMMIT_SHORT = shortSha
-                    env.BUILD_TIME = new Date().format("yyyy-MM-dd'T'HH:mm:ssXXX")
-                    echo "Commit: ${shortSha}  BuildTime: ${env.BUILD_TIME}"
+                    env.BUILD_TIME = buildTime
+                    echo "Commit: ${shortSha}  BuildTime: ${buildTime}"
                 }
                 script {
                     // Confirmar presencia de archivos clave
@@ -183,11 +184,8 @@ pipeline {
             post {
                 always {
                     script {
-
-
-
-
-
+                        echo "DEBUG: BACKEND_BUILD_SUCCESS = ${env.BACKEND_BUILD_SUCCESS}"
+                        echo "DEBUG: FRONTEND_BUILD_SUCCESS = ${env.FRONTEND_BUILD_SUCCESS}"
 
                         if (env.BACKEND_BUILD_SUCCESS == 'true' && env.FRONTEND_BUILD_SUCCESS == 'true') {
                             env.BUILD_SUCCESS = 'true'
