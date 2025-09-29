@@ -7,14 +7,7 @@ pipeline {
         PROJECT_NAME = 'gymetra'
         BACKEND_PORT = '8080'
         FRONTEND_PORT = '8100'
-        TARGET_                        echo "Build: SUCCESS"
-                } else {
-                    echo "Build: FAILED"
-                }
-                if (env.DEPLOY_SUCCESS == 'true') {
-                    echo "Deploy: SUCCESS"
-                } else {
-                    echo "Deploy: FAILED" 'develop'
+        TARGET_BRANCH = 'develop'
         BUILD_SUCCESS = 'false'
     }
     
@@ -35,7 +28,7 @@ pipeline {
                     echo "Starting optimized checkout from ${TARGET_BRANCH} branch"
                 }
                 
-                // Checkout específico evitando node_modules
+                // Checkout especifico evitando node_modules
                 script {
                     bat '''
                         echo Cleaning workspace...
@@ -286,14 +279,14 @@ pipeline {
                 echo "Executing post-deployment actions..."
                 echo "Build Status: ${currentBuild.currentResult}"
                 if (env.BUILD_SUCCESS == 'true') {
-                    echo "✅ Build: SUCCESS"
+                    echo "Build: SUCCESS"
                 } else {
-                    echo "❌ Build: FAILED"
+                    echo "Build: FAILED"
                 }
                 if (env.DEPLOY_SUCCESS == 'true') {
-                    echo "✅ Deploy: SUCCESS"
+                    echo "Deploy: SUCCESS"
                 } else {
-                    echo "❌ Deploy: FAILED"
+                    echo "Deploy: FAILED"
                 }
             }
         }
