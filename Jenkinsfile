@@ -120,13 +120,16 @@ pipeline {
                             try {
                                 withEnv(["GIT_COMMIT=${env.GIT_COMMIT_SHORT}", "BUILD_TIME=${env.BUILD_TIME}"]) {
                                     def result = bat(returnStatus: true, script: '''
+                                        echo DEBUG: GIT_COMMIT_SHORT = %GIT_COMMIT%
+                                        echo DEBUG: BUILD_TIME = %BUILD_TIME%
                                         docker-compose -f %DOCKER_COMPOSE_FILE% build backend
                                         if %errorlevel% neq 0 exit /b %errorlevel%
                                         
-                                        if not "%GIT_COMMIT%"=="" (
+                                        if not "%GIT_COMMIT%"=="null" (
                                             docker image tag gymetra/backend:latest gymetra/backend:%GIT_COMMIT%
+                                            echo Tagged backend image with: %GIT_COMMIT%
                                         ) else (
-                                            echo WARNING: GIT_COMMIT vacío, se omite tag secundario backend
+                                            echo WARNING: GIT_COMMIT es null, se omite tag secundario backend
                                         )
                                         
                                         echo Backend built successfully
@@ -154,13 +157,16 @@ pipeline {
                             try {
                                 withEnv(["GIT_COMMIT=${env.GIT_COMMIT_SHORT}", "BUILD_TIME=${env.BUILD_TIME}"]) {
                                     def result = bat(returnStatus: true, script: '''
+                                        echo DEBUG: GIT_COMMIT_SHORT = %GIT_COMMIT%
+                                        echo DEBUG: BUILD_TIME = %BUILD_TIME%
                                         docker-compose -f %DOCKER_COMPOSE_FILE% build frontend
                                         if %errorlevel% neq 0 exit /b %errorlevel%
                                         
-                                        if not "%GIT_COMMIT%"=="" (
+                                        if not "%GIT_COMMIT%"=="null" (
                                             docker image tag gymetra/frontend:latest gymetra/frontend:%GIT_COMMIT%
+                                            echo Tagged frontend image with: %GIT_COMMIT%
                                         ) else (
-                                            echo WARNING: GIT_COMMIT vacío, se omite tag secundario frontend
+                                            echo WARNING: GIT_COMMIT es null, se omite tag secundario frontend
                                         )
                                         
                                         echo Frontend built successfully
