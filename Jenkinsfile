@@ -44,7 +44,7 @@ pipeline {
                     // Capturar commit corto y hora de build para etiquetar imágenes
                     def shortSha = bat(script: '@echo off && git rev-parse --short HEAD', returnStdout: true).trim()
                     if(!shortSha || shortSha.trim().length()==0){
-                        shortSha = 'unknown'
+                        shortSha = 'local'
                     }
                     def buildTime = new Date().format("yyyy-MM-dd-HH-mm-ss")
                     env.GIT_COMMIT_SHORT = shortSha
