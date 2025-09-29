@@ -118,29 +118,27 @@ pipeline {
                         script {
                             echo "Building backend (GYMETR-login)..."
                             try {
-                                withEnv(["GIT_COMMIT=${env.GIT_COMMIT_SHORT}", "BUILD_TIME=${env.BUILD_TIME}"]) {
-                                    def result = bat(returnStatus: true, script: '''
-                                        echo DEBUG: GIT_COMMIT_SHORT = %GIT_COMMIT%
-                                        echo DEBUG: BUILD_TIME = %BUILD_TIME%
-                                        docker-compose -f %DOCKER_COMPOSE_FILE% build backend
-                                        if %errorlevel% neq 0 exit /b %errorlevel%
-                                        
-                                        if not "%GIT_COMMIT%"=="null" (
-                                            docker image tag gymetra/backend:latest gymetra/backend:%GIT_COMMIT%
-                                            echo Tagged backend image with: %GIT_COMMIT%
-                                        ) else (
-                                            echo WARNING: GIT_COMMIT es null, se omite tag secundario backend
-                                        )
-                                        
-                                        echo Backend built successfully
-                                    ''')
-                                    if (result == 0) {
-                                        env.BACKEND_BUILD_SUCCESS = 'true'
-                                        echo "Backend build completed successfully"
-                                    } else {
-                                        env.BACKEND_BUILD_SUCCESS = 'false'
-                                        echo "Backend build failed with exit code: ${result}"
-                                    }
+                                def result = bat(returnStatus: true, script: """
+                                    echo DEBUG: GIT_COMMIT_SHORT from env = ${env.GIT_COMMIT_SHORT}
+                                    echo DEBUG: BUILD_TIME from env = ${env.BUILD_TIME}
+                                    docker-compose -f %DOCKER_COMPOSE_FILE% build backend
+                                    if %errorlevel% neq 0 exit /b %errorlevel%
+                                    
+                                    if not "${env.GIT_COMMIT_SHORT}"=="null" if not "${env.GIT_COMMIT_SHORT}"=="" (
+                                        docker image tag gymetra/backend:latest gymetra/backend:${env.GIT_COMMIT_SHORT}
+                                        echo Tagged backend image with: ${env.GIT_COMMIT_SHORT}
+                                    ) else (
+                                        echo WARNING: GIT_COMMIT_SHORT es null o vacio, se omite tag secundario backend
+                                    )
+                                    
+                                    echo Backend built successfully
+                                """)
+                                if (result == 0) {
+                                    env.BACKEND_BUILD_SUCCESS = 'true'
+                                    echo "Backend build completed successfully"
+                                } else {
+                                    env.BACKEND_BUILD_SUCCESS = 'false'
+                                    echo "Backend build failed with exit code: ${result}"
                                 }
                             } catch (Exception e) {
                                 echo "Backend build failed: ${e.getMessage()}"
@@ -155,29 +153,27 @@ pipeline {
                         script {
                             echo "Building frontend (gymetra-frontend)..."
                             try {
-                                withEnv(["GIT_COMMIT=${env.GIT_COMMIT_SHORT}", "BUILD_TIME=${env.BUILD_TIME}"]) {
-                                    def result = bat(returnStatus: true, script: '''
-                                        echo DEBUG: GIT_COMMIT_SHORT = %GIT_COMMIT%
-                                        echo DEBUG: BUILD_TIME = %BUILD_TIME%
-                                        docker-compose -f %DOCKER_COMPOSE_FILE% build frontend
-                                        if %errorlevel% neq 0 exit /b %errorlevel%
-                                        
-                                        if not "%GIT_COMMIT%"=="null" (
-                                            docker image tag gymetra/frontend:latest gymetra/frontend:%GIT_COMMIT%
-                                            echo Tagged frontend image with: %GIT_COMMIT%
-                                        ) else (
-                                            echo WARNING: GIT_COMMIT es null, se omite tag secundario frontend
-                                        )
-                                        
-                                        echo Frontend built successfully
-                                    ''')
-                                    if (result == 0) {
-                                        env.FRONTEND_BUILD_SUCCESS = 'true'
-                                        echo "Frontend build completed successfully"
-                                    } else {
-                                        env.FRONTEND_BUILD_SUCCESS = 'false'
-                                        echo "Frontend build failed with exit code: ${result}"
-                                    }
+                                def result = bat(returnStatus: true, script: """
+                                    echo DEBUG: GIT_COMMIT_SHORT from env = ${env.GIT_COMMIT_SHORT}
+                                    echo DEBUG: BUILD_TIME from env = ${env.BUILD_TIME}
+                                    docker-compose -f %DOCKER_COMPOSE_FILE% build frontend
+                                    if %errorlevel% neq 0 exit /b %errorlevel%
+                                    
+                                    if not "${env.GIT_COMMIT_SHORT}"=="null" if not "${env.GIT_COMMIT_SHORT}"=="" (
+                                        docker image tag gymetra/frontend:latest gymetra/frontend:${env.GIT_COMMIT_SHORT}
+                                        echo Tagged frontend image with: ${env.GIT_COMMIT_SHORT}
+                                    ) else (
+                                        echo WARNING: GIT_COMMIT_SHORT es null o vacio, se omite tag secundario frontend
+                                    )
+                                    
+                                    echo Frontend built successfully
+                                """)
+                                if (result == 0) {
+                                    env.FRONTEND_BUILD_SUCCESS = 'true'
+                                    echo "Frontend build completed successfully"
+                                } else {
+                                    env.FRONTEND_BUILD_SUCCESS = 'false'
+                                    echo "Frontend build failed with exit code: ${result}"
                                 }
                             } catch (Exception e) {
                                 echo "Frontend build failed: ${e.getMessage()}"
@@ -214,13 +210,13 @@ pipeline {
                     echo "Deploying GYMETRA application..."
                     if (env.BUILD_SUCCESS == 'true' || env.BUILD_SUCCESS == 'partial') {
                         try {
-                            withEnv(["GIT_COMMIT=${env.GIT_COMMIT_SHORT}", "BUILD_TIME=${env.BUILD_TIME}"]) {
-                                bat '''
-                                    docker-compose -f %DOCKER_COMPOSE_FILE% up -d
-                                    echo Deployment completed
-                                    docker-compose -f %DOCKER_COMPOSE_FILE% ps
-                                '''
-                            }
+                            bat """
+                                echo Deploying with GIT_COMMIT: ${env.GIT_COMMIT_SHORT}
+                                echo Deploying with BUILD_TIME: ${env.BUILD_TIME}
+                                docker-compose -f %DOCKER_COMPOSE_FILE% up -d
+                                echo Deployment completed
+                                docker-compose -f %DOCKER_COMPOSE_FILE% ps
+                            """
                             env.DEPLOY_SUCCESS = 'true'
                         } catch (Exception e) {
                             echo "Deployment failed: ${e.getMessage()}"
