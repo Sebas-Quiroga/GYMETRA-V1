@@ -41,13 +41,15 @@ pipeline {
                     ]
                 ])
                 script {
-                    // Capturar commit corto (última línea del output) y hora UTC ISO 8601
+                    // Capturar commit corto (última línea) y hora UTC ISO 8601 usando PowerShell (evita sandbox java.time)
                     def revOut = bat(script: '@echo off\r\ngit rev-parse --short HEAD', returnStdout: true)
                     def lines = revOut.readLines().findAll { it?.trim() }
                     def shortSha = lines ? lines.last().trim() : ''
                     if(!shortSha) { shortSha = 'unknown' }
                     env.GIT_COMMIT_SHORT = shortSha
-                    env.BUILD_TIME = java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC).toString()
+                    def bt = bat(script: 'powershell -NoLogo -NoProfile -Command "Get-Date -AsUTC -Format yyyy-MM-ddTHH:mm:ssZ"', returnStdout: true).trim()
+                    if(!bt) { bt = 'unknown' }
+                    env.BUILD_TIME = bt
                     echo "Commit(short): ${env.GIT_COMMIT_SHORT}  BuildTime(UTC): ${env.BUILD_TIME}"
                 }
                 script {
@@ -122,6 +124,7 @@ pipeline {
                                     set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build backend
                                     if %errorlevel% neq 0 exit /b %errorlevel%
+                                                if "%BUILD_TIME%"=="" for /f %%d in ('powershell -NoLogo -NoProfile -Command "Get-Date -AsUTC -Format yyyy-MM-ddTHH:mm:ssZ"') do set BUILD_TIME=%%d
                                                 if "%GIT_COMMIT_SHORT%"=="" (
                                                     for /f %%i in ('git rev-parse --short HEAD') do set GIT_COMMIT_SHORT=%%i
                                                 )
@@ -153,6 +156,7 @@ pipeline {
                                     set BUILD_TIME=%BUILD_TIME%
                                     docker-compose -f %DOCKER_COMPOSE_FILE% build frontend
                                     if %errorlevel% neq 0 exit /b %errorlevel%
+                                                if "%BUILD_TIME%"=="" for /f %%d in ('powershell -NoLogo -NoProfile -Command "Get-Date -AsUTC -Format yyyy-MM-ddTHH:mm:ssZ"') do set BUILD_TIME=%%d
                                                 if "%GIT_COMMIT_SHORT%"=="" (
                                                     for /f %%i in ('git rev-parse --short HEAD') do set GIT_COMMIT_SHORT=%%i
                                                 )
