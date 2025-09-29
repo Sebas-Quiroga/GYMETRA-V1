@@ -7,7 +7,14 @@ pipeline {
         PROJECT_NAME = 'gymetra'
         BACKEND_PORT = '8080'
         FRONTEND_PORT = '8100'
-        TARGET_BRANCH = 'develop'
+        TARGET_                        echo "Build: SUCCESS"
+                } else {
+                    echo "Build: FAILED"
+                }
+                if (env.DEPLOY_SUCCESS == 'true') {
+                    echo "Deploy: SUCCESS"
+                } else {
+                    echo "Deploy: FAILED" 'develop'
         BUILD_SUCCESS = 'false'
     }
     
@@ -293,7 +300,7 @@ pipeline {
         
         success {
             script {
-                echo "🎉 Successful deployment of GYMETRA!"
+                echo "Successful deployment of GYMETRA!"
                 echo "Backend available at: http://localhost:${BACKEND_PORT}"
                 echo "Frontend available at: http://localhost:${FRONTEND_PORT}"
                 echo "Deployment completed at: ${new Date()}"
@@ -302,7 +309,7 @@ pipeline {
         
         failure {
             script {
-                echo "❌ Error in GYMETRA deployment"
+                echo "Error in GYMETRA deployment"
                 echo "Please check the logs below for details:"
             }
             
@@ -327,7 +334,7 @@ pipeline {
         
         unstable {
             script {
-                echo "⚠️ Unstable deployment of GYMETRA"
+                echo "Unstable deployment of GYMETRA"
                 echo "Some components may not be fully functional"
                 if (env.BACKEND_BUILD_SUCCESS == 'true' && env.FRONTEND_BUILD_SUCCESS != 'true') {
                     echo "Backend deployed successfully, but frontend had issues"
