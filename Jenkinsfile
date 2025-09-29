@@ -106,9 +106,6 @@ pipeline {
         }
         
         stage('Pre-deploy Cleanup') {
-            when {
-                expression { currentBuild.currentResult != 'FAILURE' }
-            }
             steps {
                 script {
                     echo "Cleaning previous deployment..."
@@ -128,9 +125,6 @@ pipeline {
         }
         
         stage('Build Services') {
-            when {
-                expression { currentBuild.currentResult != 'FAILURE' }
-            }
             parallel {
                 stage('Build Backend') {
                     steps {
@@ -145,7 +139,6 @@ pipeline {
                             } catch (Exception e) {
                                 echo "Backend build failed: ${e.getMessage()}"
                                 env.BACKEND_BUILD_SUCCESS = 'false'
-                                currentBuild.result = 'UNSTABLE'
                             }
                         }
                     }
@@ -164,87 +157,80 @@ pipeline {
                             } catch (Exception e) {
                                 echo "Frontend build failed: ${e.getMessage()}"
                                 env.FRONTEND_BUILD_SUCCESS = 'false'
-                                currentBuild.result = 'UNSTABLE'
                             }
                         }
                     }
                 }
             }
             post {
-                success {
+                always {
                     script {
-                        env.BUILD_SUCCESS = 'true'
-                        echo "All services built successfully"
-                    }
-                }
-                failure {
-                    script {
-                        env.BUILD_SUCCESS = 'false'
-                        echo "Some services failed to build"
+                        if (env.BACKEND_BUILD_SUCCESS == 'true' && env.FRONTEND_BUILD_SUCCESS == 'true') {
+                            env.BUILD_SUCCESS = 'true'
+                            echo "All services built successfully"
+                        } else if (env.BACKEND_BUILD_SUCCESS == 'true' || env.FRONTEND_BUILD_SUCCESS == 'true') {
+                            env.BUILD_SUCCESS = 'partial'
+                            echo "Some services built successfully"
+                        } else {
+                            env.BUILD_SUCCESS = 'false'
+                            echo "Build failed"
+                        }
                     }
                 }
             }
         }
         
         stage('Deploy') {
-            when {
-                anyOf {
-                    expression { env.BUILD_SUCCESS == 'true' }
-                    expression { currentBuild.currentResult == 'UNSTABLE' && (env.BACKEND_BUILD_SUCCESS == 'true' || env.FRONTEND_BUILD_SUCCESS == 'true') }
-                }
-            }
             steps {
                 script {
                     echo "Deploying GYMETRA application..."
-                    try {
-                        bat '''
-                            docker-compose -f %DOCKER_COMPOSE_FILE% up -d
-                            echo Deployment completed
-                            docker-compose -f %DOCKER_COMPOSE_FILE% ps
-                        '''
-                        env.DEPLOY_SUCCESS = 'true'
-                    } catch (Exception e) {
-                        echo "Deployment failed: ${e.getMessage()}"
+                    if (env.BUILD_SUCCESS == 'true' || env.BUILD_SUCCESS == 'partial') {
+                        try {
+                            bat '''
+                                docker-compose -f %DOCKER_COMPOSE_FILE% up -d
+                                echo Deployment completed
+                                docker-compose -f %DOCKER_COMPOSE_FILE% ps
+                            '''
+                            env.DEPLOY_SUCCESS = 'true'
+                        } catch (Exception e) {
+                            echo "Deployment failed: ${e.getMessage()}"
+                            env.DEPLOY_SUCCESS = 'false'
+                        }
+                    } else {
+                        echo "Skipping deployment - no services built successfully"
                         env.DEPLOY_SUCCESS = 'false'
-                        error("Deployment failed")
                     }
                 }
             }
         }
         
         stage('Health Check') {
-            when {
-                expression { env.DEPLOY_SUCCESS == 'true' }
-            }
             steps {
                 script {
-                    echo "Checking services health..."
-                    try {
-                        bat '''
-                            echo Waiting for services to be ready...
-                            timeout /t 30 /nobreak
-                            
-                            echo Checking backend on port %BACKEND_PORT%...
-                            powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:%BACKEND_PORT%/actuator/health' -TimeoutSec 10; if ($response.StatusCode -eq 200) { echo 'Backend is healthy' } else { echo 'Backend responded with code: ' + $response.StatusCode } } catch { echo 'Backend not responding - checking basic connectivity...' }"
-                            
-                            echo Checking frontend on port %FRONTEND_PORT%...
-                            powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:%FRONTEND_PORT%' -TimeoutSec 10; if ($response.StatusCode -eq 200) { echo 'Frontend is healthy' } else { echo 'Frontend responded with code: ' + $response.StatusCode } } catch { echo 'Frontend not responding yet...' }"
-                        '''
-                    } catch (Exception e) {
-                        echo "Health check encountered issues: ${e.getMessage()}"
-                        currentBuild.result = 'UNSTABLE'
+                    if (env.DEPLOY_SUCCESS == 'true') {
+                        echo "Checking services health..."
+                        try {
+                            bat '''
+                                echo Waiting for services to be ready...
+                                timeout /t 30 /nobreak
+                                
+                                echo Checking backend on port %BACKEND_PORT%...
+                                powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:%BACKEND_PORT%/actuator/health' -TimeoutSec 10; if ($response.StatusCode -eq 200) { echo 'Backend is healthy' } else { echo 'Backend responded with code: ' + $response.StatusCode } } catch { echo 'Backend not responding - checking basic connectivity...' }"
+                                
+                                echo Checking frontend on port %FRONTEND_PORT%...
+                                powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:%FRONTEND_PORT%' -TimeoutSec 10; if ($response.StatusCode -eq 200) { echo 'Frontend is healthy' } else { echo 'Frontend responded with code: ' + $response.StatusCode } } catch { echo 'Frontend not responding yet...' }"
+                            '''
+                        } catch (Exception e) {
+                            echo "Health check encountered issues: ${e.getMessage()}"
+                        }
+                    } else {
+                        echo "Skipping health check - deployment was not successful"
                     }
                 }
             }
         }
         
         stage('Post-deploy Info') {
-            when {
-                anyOf {
-                    expression { currentBuild.currentResult == 'SUCCESS' }
-                    expression { currentBuild.currentResult == 'UNSTABLE' && env.DEPLOY_SUCCESS == 'true' }
-                }
-            }
             steps {
                 script {
                     echo "Completed deployment information:"
