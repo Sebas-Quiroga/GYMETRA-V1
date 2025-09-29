@@ -28,17 +28,19 @@ pipeline {
                         if exist .git rmdir /s /q .git || echo "No .git directory"
                         if exist node_modules rmdir /s /q node_modules || echo "No node_modules directory"
                         
-                        echo Cloning repository with sparse-checkout...
-                        git clone --filter=blob:none --sparse https://github.com/Sebas-Quiroga/GYMETRA-V1.git temp_repo
+                        echo Cloning repository without sparse-checkout...
+                        git clone --depth 1 --branch develop https://github.com/Sebas-Quiroga/GYMETRA-V1.git temp_repo
                         cd temp_repo
-                        git sparse-checkout init --cone
-                        git sparse-checkout set backend frontend docker-compose.yml Jenkinsfile *.md *.dockerfile *.yml *.json
-                        git checkout develop
+                        
+                        echo Removing node_modules to save space...
+                        if exist frontend\\gymetra-frontend\\node_modules rmdir /s /q frontend\\gymetra-frontend\\node_modules || echo "No node_modules in frontend"
                         
                         echo Copying necessary files...
                         xcopy /E /I /Y backend ..\\backend\\
                         xcopy /E /I /Y frontend ..\\frontend\\
-                        copy *.* ..\\ 2>nul || echo "Copied root files"
+                        copy docker-compose.yml ..\\ 2>nul || echo "Copied docker-compose.yml"
+                        copy Jenkinsfile ..\\ 2>nul || echo "Copied Jenkinsfile"
+                        copy *.md ..\\ 2>nul || echo "Copied markdown files"
                         
                         cd ..
                         rmdir /s /q temp_repo || echo "Cleanup temp repo"
