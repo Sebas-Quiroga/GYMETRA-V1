@@ -15,11 +15,10 @@ pipeline {
                     echo 'Iniciando servidor para presentación GYMETRA...'
                     dir('doc/manual/Presentacion GYMETRA') {
                         // Servir el index.html usando Python HTTP server
-                        sh '''
+                        bat '''
                             echo "Sirviendo presentación en http://localhost:8081"
-                            python3 -m http.server 8081 &
-                            echo $! > server.pid
-                            sleep 5
+                            start /B python -m http.server 8081
+                            timeout /t 5 >nul
                             echo "Servidor iniciado correctamente"
                         '''
                     }
@@ -31,9 +30,8 @@ pipeline {
             steps {
                 script {
                     echo 'Verificando que la presentación esté disponible...'
-                    sh '''
-                        curl -f http://localhost:8081/ || exit 1
-                        echo "✅ Presentación disponible en http://localhost:8081"
+                    bat '''
+                        powershell -Command "try { Invoke-WebRequest -Uri http://localhost:8081 -UseBasicParsing | Out-Null; Write-Host 'Presentación disponible en http://localhost:8081' } catch { exit 1 }"
                     '''
                 }
             }
@@ -49,11 +47,8 @@ pipeline {
         }
         always {
             echo 'Limpiando procesos...'
-            sh '''
-                if [ -f "doc/manual/Presentacion GYMETRA/server.pid" ]; then
-                    kill $(cat "doc/manual/Presentacion GYMETRA/server.pid") || true
-                    rm "doc/manual/Presentacion GYMETRA/server.pid" || true
-                fi
+            bat '''
+                for /f "tokens=5" %%a in ('netstat -aon ^| find ":8081" ^| find "LISTENING"') do taskkill /F /PID %%a 2>nul || echo "No hay procesos en puerto 8081"
             '''
         }
     }
