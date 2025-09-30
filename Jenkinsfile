@@ -14,12 +14,23 @@ pipeline {
                 script {
                     echo 'Iniciando servidor para presentación GYMETRA...'
                     dir('doc/manual/Presentacion GYMETRA') {
-                        // Servir el index.html usando Python HTTP server
+                        // Matar proceso anterior si existe
                         bat '''
-                            echo "Sirviendo presentación en http://localhost:8081"
-                            start /B python -m http.server 8081
+                            netstat -aon | find ":8081" | find "LISTENING" > temp_processes.txt 2>nul
+                            if exist temp_processes.txt (
+                                for /f "tokens=5" %%a in (temp_processes.txt) do (
+                                    taskkill /F /PID %%a 2>nul || echo "Proceso %%a no encontrado"
+                                )
+                                del temp_processes.txt
+                            )
+                        '''
+                        
+                        // Iniciar servidor persistente
+                        bat '''
+                            echo "Iniciando servidor persistente en puerto 8081"
+                            start /B cmd /c "python -m http.server 8081"
                             ping 127.0.0.1 -n 6 > nul
-                            echo "Servidor iniciado correctamente"
+                            echo "Servidor iniciado en background"
                         '''
                     }
                 }
@@ -43,23 +54,13 @@ pipeline {
     post {
         success {
             echo '🎉 Deploy exitoso! Presentación GYMETRA disponible en http://localhost:8081'
+            echo 'El servidor se mantiene ejecutándose en background'
         }
         failure {
             echo '❌ Error en el deploy de la presentación'
         }
         always {
-            echo 'Limpiando procesos...'
-            bat '''
-                netstat -aon | find ":8081" | find "LISTENING" > temp_processes.txt 2>nul
-                if exist temp_processes.txt (
-                    for /f "tokens=5" %%a in (temp_processes.txt) do (
-                        taskkill /F /PID %%a 2>nul || echo "Proceso %%a no encontrado"
-                    )
-                    del temp_processes.txt
-                ) else (
-                    echo "No hay procesos en puerto 8081"
-                )
-            '''
+            echo 'Pipeline completado. Servidor manteniéndose activo en puerto 8081'
         }
     }
 }
