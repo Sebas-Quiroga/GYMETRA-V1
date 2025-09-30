@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  gymetra-presentation:
+    build: .
+    container_name: gymetra-presentation
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    networks:
+      - gymetra-network
+
+networks:
+  gymetra-network:
+    driver: bridge

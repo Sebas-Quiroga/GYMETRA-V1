@@ -9,30 +9,30 @@ pipeline {
             }
         }
         
-        stage('Deploy Presentation') {
+        stage('Stop Previous Container') {
             steps {
                 script {
-                    echo 'Iniciando servidor para presentación GYMETRA...'
-                    dir('doc/manual/Presentacion GYMETRA') {
-                        // Matar proceso anterior si existe
-                        bat '''
-                            netstat -aon | find ":8081" | find "LISTENING" > temp_processes.txt 2>nul
-                            if exist temp_processes.txt (
-                                for /f "tokens=5" %%a in (temp_processes.txt) do (
-                                    taskkill /F /PID %%a 2>nul || echo "Proceso %%a no encontrado"
-                                )
-                                del temp_processes.txt
-                            )
-                        '''
-                        
-                        // Iniciar servidor persistente
-                        bat '''
-                            echo "Iniciando servidor persistente en puerto 8081"
-                            start /B cmd /c "python -m http.server 8081"
-                            ping 127.0.0.1 -n 6 > nul
-                            echo "Servidor iniciado en background"
-                        '''
-                    }
+                    echo 'Deteniendo contenedor anterior si existe...'
+                    bat '''
+                        docker-compose down || echo "No hay contenedor previo"
+                        docker system prune -f || echo "Limpieza de sistema completada"
+                    '''
+                }
+            }
+        }
+        
+        stage('Build & Deploy with Docker') {
+            steps {
+                script {
+                    echo 'Construyendo y desplegando con Docker Compose...'
+                    bat '''
+                        echo "Construyendo imagen Docker..."
+                        docker-compose build
+                        echo "Iniciando contenedor..."
+                        docker-compose up -d
+                        echo "Esperando que el servicio esté listo..."
+                        timeout /t 10 /nobreak
+                    '''
                 }
             }
         }
@@ -43,8 +43,9 @@ pipeline {
                     echo 'Verificando que la presentación esté disponible...'
                     bat '''
                         echo "Verificando servidor en http://localhost:8081"
-                        ping 127.0.0.1 -n 3 > nul
-                        powershell -Command "try { $response = Invoke-WebRequest -Uri http://localhost:8081 -UseBasicParsing -TimeoutSec 10; Write-Host 'Presentación disponible en http://localhost:8081'; exit 0 } catch { Write-Host 'Servidor no disponible aún'; exit 0 }"
+                        powershell -Command "try { $response = Invoke-WebRequest -Uri http://localhost:8081 -UseBasicParsing -TimeoutSec 15; Write-Host 'Presentación disponible en http://localhost:8081'; exit 0 } catch { Write-Host 'Servidor no disponible aún'; exit 0 }"
+                        echo "Verificando estado del contenedor..."
+                        docker-compose ps
                     '''
                 }
             }
@@ -54,13 +55,19 @@ pipeline {
     post {
         success {
             echo '🎉 Deploy exitoso! Presentación GYMETRA disponible en http://localhost:8081'
-            echo 'El servidor se mantiene ejecutándose en background'
+            echo '🐳 Contenedor Docker ejecutándose de forma persistente'
+            bat 'docker-compose ps'
         }
         failure {
             echo '❌ Error en el deploy de la presentación'
+            bat '''
+                echo "Logs del contenedor:"
+                docker-compose logs || echo "No hay logs disponibles"
+            '''
         }
         always {
-            echo 'Pipeline completado. Servidor manteniéndose activo en puerto 8081'
+            echo '📊 Estado final del contenedor:'
+            bat 'docker-compose ps || echo "Docker compose no disponible"'
         }
     }
 }

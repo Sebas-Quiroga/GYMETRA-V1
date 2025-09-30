@@ -1,0 +1,12 @@
+# Archivos a ignorar en el build de Docker
+.git
+.gitignore
+README.md
+Jenkinsfile
+backend/
+frontend/
+data/
+doc/architecture/
+doc/backlog/
+doc/other/
+*.md
