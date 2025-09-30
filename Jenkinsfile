@@ -118,7 +118,11 @@ pipeline {
                         script {
                             echo "Building backend (GYMETR-login)..."
                             try {
-                                bat 'docker-compose -f %DOCKER_COMPOSE_FILE% build backend'
+                                bat '''
+                                    set DOCKER_BUILDKIT=1
+                                    set COMPOSE_DOCKER_CLI_BUILD=1
+                                    docker-compose -f %DOCKER_COMPOSE_FILE% build --progress=plain backend
+                                '''
                                 env.BACKEND_BUILD_SUCCESS = 'true'
                                 echo "Backend build completed successfully"
                             } catch (Exception e) {
@@ -135,7 +139,11 @@ pipeline {
                         script {
                             echo "Building frontend (gymetra-frontend)..."
                             try {
-                                bat 'docker-compose -f %DOCKER_COMPOSE_FILE% build frontend'
+                                bat '''
+                                    set DOCKER_BUILDKIT=1
+                                    set COMPOSE_DOCKER_CLI_BUILD=1
+                                    docker-compose -f %DOCKER_COMPOSE_FILE% build --progress=plain frontend
+                                '''
                                 env.FRONTEND_BUILD_SUCCESS = 'true'
                                 echo "Frontend build completed successfully"
                             } catch (Exception e) {

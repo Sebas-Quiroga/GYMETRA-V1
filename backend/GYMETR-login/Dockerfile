@@ -1,7 +1,7 @@
 ###############################
 # Etapa 1: Resolución de dependencias
 ###############################
-FROM eclipse-temurin:17-jdk AS deps
+FROM eclipse-temurin:17-jdk-alpine AS deps
 WORKDIR /workspace
 
 # ARG para inyectar metadata
@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/root/.m2 \
 ###############################
 # Etapa 2: Build
 ###############################
-FROM eclipse-temurin:17-jdk AS build
+FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /workspace
 
 # Reutilizamos el cache de dependencias (no copiamos /root/.m2 porque el mount no persiste en la capa)

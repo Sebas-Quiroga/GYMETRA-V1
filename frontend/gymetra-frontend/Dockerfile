@@ -13,7 +13,9 @@ COPY tsconfig*.json ./
 COPY vite.config.ts ./
 
 # Instalar TODAS las dependencias (prod+dev) para permitir build correcto
-RUN npm ci
+# Usar cache mount para npm para acelerar builds subsecuentes
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
 
 ###############################
 # Etapa 2: Build

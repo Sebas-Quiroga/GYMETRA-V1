@@ -23,6 +23,7 @@ services:
       context: ./backend/GYMETR-login
       dockerfile: Dockerfile
       args:
+        - DOCKER_BUILDKIT=1
         - GIT_COMMIT=${GIT_COMMIT:-local}
         - BUILD_TIME=${BUILD_TIME:-unknown}
         - SKIP_TESTS=true
@@ -47,6 +48,7 @@ services:
       context: ./frontend/gymetra-frontend
       dockerfile: Dockerfile
       args:
+        - DOCKER_BUILDKIT=1
         - GIT_COMMIT=${GIT_COMMIT:-local}
         - BUILD_TIME=${BUILD_TIME:-unknown}
     container_name: gymetra_frontend
