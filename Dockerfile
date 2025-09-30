@@ -2,7 +2,7 @@
 FROM nginx:alpine
 
 # Copiar los archivos de la presentación
-COPY doc/manual/Presentacion\ GYMETRA/ /usr/share/nginx/html/
+COPY ["doc/manual/Presentacion GYMETRA/", "/usr/share/nginx/html/"]
 
 # Exponer el puerto 80
 EXPOSE 80

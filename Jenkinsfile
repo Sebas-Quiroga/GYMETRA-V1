@@ -31,7 +31,7 @@ pipeline {
                         echo "Iniciando contenedor..."
                         docker-compose up -d
                         echo "Esperando que el servicio esté listo..."
-                        timeout /t 10 /nobreak
+                        ping 127.0.0.1 -n 11 > nul
                     '''
                 }
             }
