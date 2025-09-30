@@ -1,0 +1,146 @@
+
+/* Fuente y colores del sistema */
+body, .perfil-content, .perfil-toolbar, .perfil-avatar-section, .perfil-info-card, .perfil-edit-btn, .perfil-username, .perfil-info-card ion-item {
+  font-family: var(--input-font-family, 'Nunito', sans-serif) !important;
+  color: var(--input-color, #222) !important;
+}
+
+.perfil-content {
+  --background: #f6f6f6;
+  padding: 0;
+}
+
+.perfil-toolbar {
+  font-family: var(--input-font-family, 'Nunito', sans-serif) !important;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.perfil-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 32px;
+  margin-bottom: 16px;
+}
+
+.perfil-avatar {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(4,184,229,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.perfil-avatar img {
+  width: 155px;
+  height: 155px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.add-icon {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  background: var(--ion-color-primary);
+  color: #fff;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  box-shadow: 0 4px 18px rgba(4,184,229,0.28);
+  border: 2px solid #fff;
+}
+.perfil-username {
+  margin-top: 12px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  font-family: var(--input-font-family, 'Nunito', sans-serif);
+}
+
+.perfil-info-card {
+  margin: 0 auto;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(4,184,229,0.08);
+  padding: 8px 0 0 0;
+}
+.perfil-info-card ion-list {
+  background: transparent;
+}
+.perfil-info-card ion-item {
+  font-family: var(--input-font-family, 'Nunito', sans-serif) !important;
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: #8c8686 !important;
+  --color: #8c8686 !important;
+  --background: transparent !important;
+  border-radius: 12px;
+  margin-bottom: 6px;
+  box-shadow: none;
+  border: none;
+}
+
+.perfil-edit-btn {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+.perfil-edit-btn ion-button {
+  --background: var(--ion-color-primary);
+  --color: #fff;
+  --border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 1.3rem;
+  box-shadow: 0 2px 8px rgba(4,184,229,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive: tablet y desktop */
+@media (min-width: 600px) {
+  .perfil-content {
+    padding: 0 24px;
+  }
+  .perfil-avatar-section {
+    margin-top: 48px;
+    margin-bottom: 24px;
+  }
+  .perfil-info-card {
+    max-width: 420px;
+    padding: 16px 0 0 0;
+  }
+}
+
+@media (min-width: 900px) {
+  .perfil-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0 0 32px 0;
+  }
+  .perfil-avatar-section {
+    margin-top: 64px;
+    margin-bottom: 32px;
+  }
+  .perfil-info-card {
+    max-width: 520px;
+    padding: 24px 0 0 0;
+    box-shadow: 0 4px 16px rgba(4,184,229,0.10);
+  }
+  .perfil-edit-btn {
+    margin-top: 32px;
+  }
+}
