@@ -43,9 +43,16 @@ public class User {
     @Column(name = "last_login")
     private OffsetDateTime lastLogin;
 
+    @Column(name = "identification", unique = true, nullable = false)
+    private Long identification;  // ahora numérico
+
+    @Column(name = "photo_url")
+    private String photoUrl;
+
     // Relación con la tabla pivote
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<UserRole> userRoles = new HashSet<>();
+
 
     @PrePersist
     protected void onCreate() {
@@ -56,4 +63,6 @@ public class User {
     protected void onUpdate() {
         lastLogin = OffsetDateTime.now();
     }
+
+
 }
