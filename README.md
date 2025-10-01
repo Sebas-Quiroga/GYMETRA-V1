@@ -172,13 +172,6 @@ gym-membership-system/
 - `test:` Tests
 - `chore:` Maintenance
 
-## 🔗 Useful Links
-
-- [📝 JIRA Board](https://gymetra.atlassian.net/jira/software/projects/SCRUM/boards/1)  
-- [🎨 Figma Design](https://www.figma.com/design/6wvsYaVryxBWp2NIUM2zci/GYMETRA-PRIN?node-id=0-1&p=f&t=JSPiUM0bfykeal7f-0)  
-- [📂 GitHub Repository](https://github.com/Sebas-Quiroga/GYMETRA-V1)  
-
-
 ## 📄 License
 
 This project is developed for academic purposes at Corporación Universitaria del Huila.
