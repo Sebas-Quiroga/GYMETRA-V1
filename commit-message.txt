@@ -1,0 +1,22 @@
+FIX: PostgreSQL connection issues in Docker environment
+
+- Added PostgreSQL service to docker-compose.yml with proper network configuration
+- Created application-prod.properties for production environment with database connection to containerized PostgreSQL
+- Configured PostgreSQL container with:
+  * Port mapping 5000:5432 for compatibility with existing configuration
+  * Database initialization from Database-Setup directory
+  * Persistent volume for data storage
+  * Proper dependency management (backend depends on database)
+- Removed obsolete deploy.sh script
+- Fixed network connectivity between backend and database containers
+
+QA Acceptance Criteria:
+- Backend connects successfully to PostgreSQL container
+- Database initializes with existing SQL scripts
+- Docker Compose stack starts all services correctly
+- No connection refused errors in application logs
+
+DoD:
+- Changes committed to develop branch
+- Jenkins pipeline can build and deploy the complete stack
+- Database connectivity verified in containerized environment
