@@ -1,33 +1,76 @@
-# Frontend Dockerfile
-FROM node:18-alpine AS build
-
+###############################
+# Etapa 1: Dependencias base
+###############################
+FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Copiar archivos de configuración
+ARG BUILD_TIME
+ARG GIT_COMMIT
+
 COPY package*.json ./
 COPY ionic.config.json ./
 COPY tsconfig*.json ./
 COPY vite.config.ts ./
-COPY capacitor.config.ts ./
 
-# Instalar dependencias
-RUN npm ci
+# Instalar TODAS las dependencias (prod+dev) para permitir build correcto
+# Usar cache mount para npm para acelerar builds subsecuentes
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
 
-# Copiar código fuente
-COPY . .
+###############################
+# Etapa 2: Build
+###############################
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY --from=deps /app /app
+COPY src src
+COPY public public
+COPY index.html ./
 
-# Build de la aplicación
+ENV NODE_ENV=production
 RUN npm run build
 
-# Etapa de producción con nginx
-FROM nginx:alpine
+###############################
+# Etapa 3: Runtime Nginx optimizado
+###############################
+FROM nginx:1.27-alpine AS runtime
+WORKDIR /usr/share/nginx/html
 
-# Copiar archivos build
-COPY --from=build /app/dist /usr/share/nginx/html
+ARG GIT_COMMIT
+ARG BUILD_TIME
+LABEL org.opencontainers.image.title="gymetra-frontend" \
+      org.opencontainers.image.source="https://github.com/Sebas-Quiroga/GYMETRA-V1" \
+      org.opencontainers.image.revision="$GIT_COMMIT" \
+      org.opencontainers.image.created="$BUILD_TIME" \
+      org.opencontainers.image.description="Frontend GYMETRA (SPA)"
 
-# Copiar configuración nginx personalizada
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist .
+
+# Configuración nginx minimalista para SPA
+RUN rm /etc/nginx/conf.d/default.conf || true
+COPY <<'EOF' /etc/nginx/conf.d/app.conf
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+    }
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+}
+EOF
 
 EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 CMD wget -qO- http://localhost/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

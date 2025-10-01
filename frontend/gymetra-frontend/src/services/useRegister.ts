@@ -61,23 +61,13 @@ export function useRegister(): UseRegisterReturn {
       };
 
       // Usar el servicio de API
-      const response = await apiPost<RegisterResponse>(
+      const apiResp = await apiPost<RegisterResponse>(
         API_ENDPOINTS.AUTH.REGISTER,
         registerPayload
       );
 
-      console.log('✅ Registro exitoso:', response);
-      
-      // Si la respuesta no tiene formato estándar, crearla
-      if (!response.hasOwnProperty('success')) {
-        return {
-          success: true,
-          message: response.message || 'Usuario registrado correctamente',
-          data: response.data || response
-        };
-      }
-      
-      return response;
+      console.log('✅ Registro exitoso:', apiResp);
+      return apiResp;
 
     } catch (err: any) {
       console.error('💥 Error en registro:', err);
