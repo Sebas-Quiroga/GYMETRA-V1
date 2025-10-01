@@ -1,0 +1,22 @@
+# Override para staging
+version: '3.8'
+
+services:
+  gymetra-login:
+    environment:
+      SPRING_PROFILES_ACTIVE: staging
+      LOGGING_LEVEL_ROOT: DEBUG
+    
+  gymetra-core:
+    environment:
+      SPRING_PROFILES_ACTIVE: staging
+      LOGGING_LEVEL_ROOT: DEBUG
+      
+  gymetra-membership:
+    environment:
+      SPRING_PROFILES_ACTIVE: staging
+      LOGGING_LEVEL_ROOT: DEBUG
+      
+  postgres:
+    environment:
+      POSTGRES_DB: gymdb_staging
