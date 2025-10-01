@@ -2,11 +2,10 @@
 .git
 .gitignore
 
-# Archivos de documentación
-README.md
-*.md
+# Archivos de documentación (mantener solo los necesarios)
 doc/
 docs/
+# NO bloquear *.md ya que pueden ser necesarios
 
 # Archivos de configuración del IDE
 .vscode/
@@ -28,3 +27,17 @@ Thumbs.db
 # Archivos de backup
 *.bak
 *.backup
+
+# Archivos específicos para ignorar en Docker builds
+node_modules/
+target/
+dist/
+.next/
+coverage/
+.nyc_output/
+
+# Variables de entorno locales
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

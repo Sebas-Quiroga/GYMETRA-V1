@@ -7,7 +7,7 @@ pipeline {
         PROJECT_NAME = 'gymetra'
         BACKEND_PORT = '8080'
         FRONTEND_PORT = '8100'
-        TARGET_BRANCH = 'develop'
+        TARGET_BRANCH = 'qa-jenkis'
         BUILD_SUCCESS = 'false'
         BACKEND_BUILD_SUCCESS = 'false'
         FRONTEND_BUILD_SUCCESS = 'false'
