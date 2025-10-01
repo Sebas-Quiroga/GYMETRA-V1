@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Membresías del GYM 🏋️‍♂️ – Proyecto</title>
+  <link rel="stylesheet" href="asset/css/estilos.css" />
+  <script>
+    function openTab(evt, tabName, skipHash) {
+      var i, sections, buttons;
+      sections = document.querySelectorAll("section");
+      for (i = 0; i < sections.length; i++) {
+        sections[i].classList.remove("active");
+      }
+      buttons = document.querySelectorAll('nav[role="tablist"] button');
+      for (i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove("active");
+        buttons[i].setAttribute("aria-selected", "false");
+      }
+      var targetSection = document.getElementById(tabName);
+      if (targetSection) targetSection.classList.add("active");
+      if (evt && evt.currentTarget) {
+        evt.currentTarget.classList.add("active");
+        evt.currentTarget.setAttribute("aria-selected", "true");
+      }
+      if (!skipHash) {
+        try {
+          location.hash = tabName;
+        } catch (e) { }
+      }
+    }
+    function openSubTab(elmnt, contentId) {
+      var i, contents, buttons;
+      contents = document.getElementsByClassName("subcontent");
+      for (i = 0; i < contents.length; i++) {
+        contents[i].classList.remove("active");
+      }
+      buttons = elmnt.parentElement.querySelectorAll("button");
+      for (i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove("active");
+      }
+      document.getElementById(contentId).classList.add("active");
+      elmnt.classList.add("active");
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      // Initialize tabs from hash
+      var initial = (location.hash || "").replace("#", "") || "presentation";
+      var initialBtn =
+        document.querySelector("nav button[data-tab='" + initial + "']") ||
+        document.querySelector("nav button");
+      if (initialBtn) {
+        openTab(
+          { currentTarget: initialBtn },
+          initialBtn.getAttribute("data-tab") || "presentation",
+          true
+        );
+      }
+
+      // Filter modules by search
+      var search = document.getElementById("moduleSearch");
+      if (search) {
+        var items = Array.prototype.slice.call(
+          document.querySelectorAll(".modules-grid a.card")
+        );
+        search.addEventListener("input", function () {
+          var q = (search.value || "").toLowerCase().trim();
+          items.forEach(function (el) {
+            var text = el.textContent.toLowerCase();
+            el.style.display = text.indexOf(q) > -1 ? "" : "none";
+          });
+        });
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <header>
+    <h1>GYMETRA-PRIN: Gestión de Membresías de Gimnasio 🏋️‍♂️</h1>
+  </header>
+  <nav role="tablist" aria-label="Navegación de secciones">
+    <button role="tab" aria-controls="presentation" aria-selected="true" class="active" data-tab="presentation"
+      onclick="openTab(event, 'presentation')">
+      Presentación
+    </button>
+    <button role="tab" aria-controls="diagrams" aria-selected="false" data-tab="diagrams"
+      onclick="openTab(event, 'diagrams')">
+      Diagramas
+    </button>
+    <button role="tab" aria-controls="hu" aria-selected="false" data-tab="hu" onclick="openTab(event, 'hu')">
+      Tablero HU
+    </button>
+    <button role="tab" aria-controls="moscow" aria-selected="false" data-tab="moscow"
+      onclick="openTab(event, 'moscow')">
+      MoSCoW
+    </button>
+    <button role="tab" aria-controls="phases" aria-selected="false" data-tab="phases"
+      onclick="openTab(event, 'phases')">
+      Fases & Estimación
+    </button>
+  </nav>
+  <section id="presentation" class="active">
+    <div class="card" style="margin-top: 8px">
+      <h2 style="margin-top: 0">Presentación del Proyecto</h2>
+      <p>
+        Este sistema gestiona de manera integral las operaciones de un
+        gimnasio: desde el registro de usuarios y la administración de
+        membresías hasta el control de accesos y la gestión de pagos. Incluye
+        módulos de autenticación y seguridad, administración de membresías,
+        procesamiento de pagos, validación de accesos mediante códigos QR,
+        generación de reportes administrativos y envío de notificaciones a los
+        clientes.
+      </p>
+
+      <h2 style="margin-top: 0">Mockups UI web y móvil</h2>
+      <iframe style="border: 1px solid rgba(0, 0, 0, 0.1)" width="800" height="450"
+        src="https://embed.figma.com/design/6wvsYaVryxBWp2NIUM2zci/GYMETRA-PRIN?node-id=0-1&embed-host=share"
+        allowfullscreen></iframe>
+    </div>
+  </section>
+
+
+  <section id="diagrams">
+    <h2>Diagramas</h2>
+    <div class="subtabs">
+      <button class="active" onclick="openSubTab(this,'diagram-content-0')">
+        Package Diagram</button><button class="" onclick="openSubTab(this,'diagram-content-1')">
+        Class Diagram</button><button class="" onclick="openSubTab(this,'diagram-content-2')">
+        Sequence Diagram</button><button class="" onclick="openSubTab(this,'diagram-content-3')">
+        Deployment Diagram</button><button class="" onclick="openSubTab(this,'diagram-content-4')">
+        Use Case Diagram</button><button class="" onclick="openSubTab(this,'diagram-content-5')">
+        ER Diagram Database
+      </button>
+    </div>
+
+    <div id="diagram-content-0" class="subcontent active">
+      <h3>Package Diagram</h3>
+      <img src="asset/doc/proyecto/packeage/Packeage.png" alt="Package Diagram"
+        style="max-width: 100%; height: auto; border: 1px solid #e5e7eb" />
+      <h4>PlantUML Source</h4>
+
+      <pre><code>@startuml
+title Diagrama de Paquetes - Microservicios
+
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor White
+  BorderColor Black
+  FontStyle Bold
+}
+
+' =====================
+' Infraestructura
+' =====================
+package "Infraestructura" {
+  [Service Registry]
+  [Config Server]
+  [API Gateway]
+  [RabbitMQ/Kafka]
+  [PostgreSQL]
+}
+
+' =====================
+' Auth & Users
+' =====================
+package "Auth & Users" {
+  [AuthService]
+  [UserService]
+  [RolService]
+  [AuthService] --> [UserService]
+  [UserService] --> [RolService]
+}
+
+' =====================
+' Membership Management
+' =====================
+package "Membership Management" {
+  [MemberShipService]
+  [AssignmentService]
+  [RenewalService]
+  [MemberShipService] --> [AssignmentService]
+  [MemberShipService] --> [RenewalService]
+}
+
+' =====================
+' Payments
+' =====================
+package "Payments" {
+  [PaymentsService]
+  [BillingService]
+  [NotificationService]
+  [PaymentsService] --> [BillingService]
+  [PaymentsService] --> [NotificationService]
+}
+
+' =====================
+' QR Access
+' =====================
+package "QR Access" {
+  [AccessService]
+  [ValidationService]
+  [AccessService] --> [ValidationService]
+}
+
+' =====================
+' Reports & Admin
+' =====================
+package "Reports & Admin" {
+  [ReportsService]
+  [DashboardService]
+  [ExportService]
+  [ReportsService] --> [DashboardService]
+  [ReportsService] --> [ExportService]
+}
+
+' =====================
+' Relaciones entre paquetes
+' =====================
+[Service Registry] --> [AuthService]
+[Config Server] --> [AuthService]
+[API Gateway] --> [AuthService]
+[RabbitMQ/Kafka] --> [NotificationService]
+[PostgreSQL] --> [MemberShipService]
+
+[AuthService] --> [MemberShipService]
+[AuthService] --> [PaymentsService]
+[AuthService] --> [AccessService]
+
+[MemberShipService] --> [PaymentsService]
+[MemberShipService] --> [AccessService]
+
+[AuthService] --> [ReportsService]
+[MemberShipService] --> [ReportsService]
+[PaymentsService] --> [ReportsService]
+[AccessService] --> [ReportsService]
+@enduml
+
+
+</code></pre>
+
+
+    </div>
+
+    <div id="diagram-content-1" class="subcontent">
+      <h3>Class Diagram</h3>
+      <img src="asset/doc/proyecto/class/class.png" alt="Class Diagram"
+        style="max-width: 100%; height: auto; border: 1px solid #e5e7eb" />
+      <h4>PlantUML Source</h4>
+      <pre><code>@startuml
+title Diagrama de Clases - Sistema de Gestión de Gimnasio
+
+' =====================
+' Clase User
+' =====================
+class User {
+  +user_id : int <<PK>>
+  +first_name : varchar(50)
+  +last_name : varchar(50)
+  +email : varchar(100) <<unique>>
+  +password : varchar(255) <<encrypted>>
+  +phone : varchar(20)
+  +status : varchar(20) <<active/inactive/suspended>>
+  +created_at : datetime
+  +last_login : datetime
+}
+
+' =====================
+' Clase Role
+' =====================
+class Role {
+  +role_id : int <<PK>>
+  +role_name : varchar(50) <<Admin/Client>>
+  +description : text
+}
+
+' =====================
+' Tabla intermedia UserRole (N:M)
+' =====================
+class UserRole {
+  +user_id : int <<FK>>
+  +role_id : int <<FK>>
+}
+
+' =====================
+' Clase Membership
+' =====================
+class Membership {
+  +membership_id : int <<PK>>
+  +plan_name : varchar(50) <<Monthly/Quarterly/Yearly>>
+  +description : text
+  +price : decimal(10,2)
+  +duration_days : int
+  +status : varchar(20) <<available/unavailable>>
+}
+
+' =====================
+' Clase UserMembership
+' =====================
+class UserMembership {
+  +user_membership_id : int <<PK>>
+  +user_id : int <<FK>>
+  +membership_id : int <<FK>>
+  +start_date : date
+  +end_date : date
+  +status : varchar(20) <<active/suspended/canceled/expired>>
+}
+
+' =====================
+' Clase Payment
+' =====================
+class Payment {
+  +payment_id : int <<PK>>
+  +user_membership_id : int <<FK>>
+  +amount : decimal(10,2)
+  +payment_method : varchar(20) <<cash/card/gateway>>
+  +payment_date : datetime
+  +transaction_reference : varchar(100)
+  +payment_status : varchar(20) <<pending/confirmed/failed>>
+}
+
+' =====================
+' Clase QrAccess
+' =====================
+class QrAccess {
+  +qr_id : int <<PK>>
+  +user_id : int <<FK>>
+  +qr_code : text <<base64>>
+  +generated_at : datetime
+  +status : varchar(20) <<active/inactive/expired>>
+}
+
+' =====================
+' Clase AccessLog
+' =====================
+class AccessLog {
+  +log_id : int <<PK>>
+  +user_id : int <<FK>>
+  +qr_id : int <<FK>>
+  +timestamp : datetime
+  +result : varchar(20) <<granted/denied>>
+  +notes : text
+}
+
+' =====================
+' Relaciones
+' =====================
+User "1" -- "N" UserRole
+Role "1" -- "N" UserRole
+
+User "1" -- "N" UserMembership
+Membership "1" -- "N" UserMembership
+
+UserMembership "1" -- "N" Payment
+
+User "1" -- "N" QrAccess
+QrAccess "1" -- "N" AccessLog
+User "1" -- "N" AccessLog
+@enduml
+
+</code></pre>
+
+
+    </div>
+
+    <div id="diagram-content-2" class="subcontent">
+      <h3>Sequence Diagram</h3>
+      <img src="asset/doc/proyecto/secuence/Secuence.png" alt="Sequence Diagram"
+        style="max-width: 100%; height: auto; border: 1px solid #e5e7eb" />
+      <h4>PlantUML Source</h4>
+      <pre><code>@startuml
+title GYMETRA Booking – Sequence Diagram
+
+actor Client
+boundary MobileApp as App
+control Gateway
+control AuthService
+control MembershipsService
+control PaymentsService
+control AccessService
+database PostgreSQL
+
+== Registration/Login ==
+Client -> App : Enter credentials
+App -> Gateway : POST /auth/login
+Gateway -> AuthService : validateCredentials()
+AuthService -> PostgreSQL : query user
+AuthService --> Gateway : JWT Token
+Gateway --> App : JWT Token
+
+== Membership Renewal ==
+Client -> App : Select renew plan
+App -> Gateway : POST /membership/renew (JWT)
+Gateway -> MembershipsService : renewMembership()
+MembershipsService -> PaymentsService : createPaymentOrder()
+PaymentsService -> PaymentGateway : processPayment()
+PaymentGateway --> PaymentsService : confirmation
+PaymentsService -> PostgreSQL : register payment
+PaymentsService -> MembershipsService : event payment-confirmed
+MembershipsService -> PostgreSQL : update validity
+MembershipsService --> Gateway : OK
+Gateway --> App : Membership renewed ✅
+
+== QR Access ==
+Client -> App : Generate QR code
+App -> Gateway : GET /access/validate (QR)
+Gateway -> AccessService : validateAccess(QR, JWT)
+AccessService -> AuthService : verify user
+AccessService -> MembershipsService : verify active membership
+AccessService -> PostgreSQL : register access
+AccessService --> Gateway : access granted
+Gateway --> App : access allowed 🚪
+@enduml
+
+</code></pre>
+    </div>
+
+    <div id="diagram-content-3" class="subcontent">
+      <h3>Deployment Diagram</h3>
+      <img src="asset/doc/proyecto/deploy/deploy.png" alt="Deployment Diagram"
+        style="max-width: 100%; height: auto; border: 1px solid #e5e7eb" />
+      <h4>PlantUML Source</h4>
+      <pre><code>@startuml
+title GYMETRA System – Deployment Diagram
+
+node "Client" {
+  node "Mobile Device" {
+    component "Mobile App (Ionic+Vue)" as MobileApp
+  }
+  node "PC/Browser" {
+    component "Web App (Vue.js)" as WebApp
+  }
+}
+
+node "Cloud Kubernetes Cluster" {
+  node "API Gateway" {
+    component "Spring Cloud Gateway"
+  }
+
+  node "Service Registry" {
+    component "Eureka/Consul"
+  }
+
+  node "Microservices" {
+    component "AuthService\n(Spring Boot)" as Auth
+    component "UsersService\n(Spring Boot)" as Users
+    component "MembershipsService\n(Spring Boot)" as Memberships
+    component "PaymentsService\n(Spring Boot)" as Payments
+    component "AccessService\n(Spring Boot)" as Access
+    component "ReportsService\n(Spring Boot)" as Reports
+  }
+
+  node "Messaging" {
+    component "RabbitMQ/Kafka"
+  }
+
+  node "Database" {
+    database "PostgreSQL"
+  }
+
+  node "Observability" {
+    component "Prometheus"
+    component "Grafana"
+    component "ELK/EFK"
+  }
+}
+
+MobileApp --> "Spring Cloud Gateway"
+WebApp --> "Spring Cloud Gateway"
+"Spring Cloud Gateway" --> Auth
+"Spring Cloud Gateway" --> Users
+"Spring Cloud Gateway" --> Memberships
+"Spring Cloud Gateway" --> Payments
+"Spring Cloud Gateway" --> Access
+"Spring Cloud Gateway" --> Reports
+
+Auth --> "PostgreSQL"
+Users --> "PostgreSQL"
+Memberships --> "PostgreSQL"
+Payments --> "PostgreSQL"
+Access --> "PostgreSQL"
+Reports --> "PostgreSQL"
+
+Payments --> "RabbitMQ/Kafka"
+Access --> "RabbitMQ/Kafka"
+Memberships --> "RabbitMQ/Kafka"
+@enduml
+
+</code> </pre>
+    </div>
+
+    <div id="diagram-content-4" class="subcontent">
+      <h3>Use Case Diagram</h3>
+      <img src="asset/doc/proyecto/use_case/use_case.png" alt="Use Case Diagram"
+        style="max-width: 100%; height: auto; border: 1px solid #e5e7eb" />
+      <h4>PlantUML Source</h4>
+      <pre><code>
+@startuml
+title GYMETRA System – Use Case Diagram
+actor "Cliente" as Cliente
+actor "Administrador" as Admin
+
+rectangle "Sistema Membresías GYM" {
+  
+  ' --- Casos de uso del Cliente ---
+  usecase "Registrarse" as UC1
+  usecase "Iniciar Sesión" as UC2
+  usecase "Ver Planes de Membresía" as UC3
+  usecase "Renovar Membresía" as UC4
+  usecase "Realizar Pago" as UC5
+  usecase "Ingresar con Código QR" as UC6
+  usecase "Consultar Historial de Asistencias" as UC7
+  usecase "Consultar Vigencia de Membresía" as UC8
+  
+  ' --- Casos de uso del Administrador ---
+  usecase "Gestionar Membresías (crear, suspender, renovar)" as UC9
+  usecase "Ver Reporte de Ingresos" as UC10
+  usecase "Ver Estadísticas de Asistencia" as UC11
+}
+
+' Relaciones Cliente
+Cliente --> UC1
+Cliente --> UC2
+Cliente --> UC3
+Cliente --> UC4
+Cliente --> UC5
+Cliente --> UC6
+Cliente --> UC7
+Cliente --> UC8
+
+' Relaciones Administrador
+Admin --> UC9
+Admin --> UC10
+Admin --> UC11
+@enduml
+
+</code></pre>
+    </div>
+
+  <div id="diagram-content-5" class="subcontent">
+      <h3>ER Diagram Database</h3>
+       <img src="asset/doc/proyecto/er/er.png" alt="ER Diagram Database"
+        style="max-width: 100%; height: auto; border: 1px solid #e5e7eb" />
+      <h4>PlantUML Source</h4>
+      <pre><code>
+@startuml
+'===============================================================================
+' Modelo ER inicial (PostgreSQL) - Sistema Membresías del GYM
+' Organización por dominios: Usuarios/Roles | Membresías/Pagos | Accesos/Logs
+'===============================================================================
+
+hide circle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+'===============================================================================
+' ENTIDADES: USUARIOS Y ROLES
+'===============================================================================
+entity "User" as User {
+  * user_id : BIGSERIAL <<PK>>
+  --
+  first_name    : VARCHAR(100)
+  last_name     : VARCHAR(100)
+  email         : VARCHAR(150) <<UNIQUE>>
+  password_hash : VARCHAR(255) -- bcrypt
+  phone         : VARCHAR(30)
+  status        : VARCHAR(20) -- ('active','inactive','suspended')
+  created_at    : TIMESTAMPTZ
+  last_login    : TIMESTAMPTZ
+}
+
+entity "Role" as Role {
+  * role_id : BIGSERIAL <<PK>>
+  --
+  role_name   : VARCHAR(50) <<UNIQUE>> -- ('Admin','Client')
+  description : TEXT
+}
+
+entity "UserRole" as UserRole {
+  * user_role_id : BIGSERIAL <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  role_id : BIGINT <<FK>>
+}
+
+'===============================================================================
+' ENTIDADES: MEMBRESÍAS Y PAGOS
+'===============================================================================
+entity "Membership" as Membership {
+  * membership_id : BIGSERIAL <<PK>>
+  --
+  plan_name     : VARCHAR(50)  -- Monthly, Quarterly, Yearly
+  description   : TEXT
+  price         : NUMERIC(10,2)
+  duration_days : INTEGER
+  status        : VARCHAR(20) -- ('available','unavailable')
+  created_at    : TIMESTAMPTZ
+}
+
+entity "UserMembership" as UserMembership {
+  * user_membership_id : BIGSERIAL <<PK>>
+  --
+  user_id       : BIGINT <<FK>>
+  membership_id : BIGINT <<FK>>
+  start_date    : DATE
+  end_date      : DATE
+  status        : VARCHAR(20) -- ('active','suspended','canceled','expired')
+  created_at    : TIMESTAMPTZ
+}
+
+entity "Payment" as Payment {
+  * payment_id : BIGSERIAL <<PK>>
+  --
+  user_membership_id : BIGINT <<FK>>
+  amount             : NUMERIC(10,2)
+  payment_method     : VARCHAR(30)  -- ('cash','card','mock')
+  payment_date       : TIMESTAMPTZ
+  transaction_ref    : VARCHAR(150)
+  payment_status     : VARCHAR(20)  -- ('pending','confirmed','failed')
+  created_at         : TIMESTAMPTZ
+}
+
+'===============================================================================
+' ENTIDADES: ACCESO Y LOGS
+'===============================================================================
+entity "QrAccess" as QrAccess {
+  * qr_id : BIGSERIAL <<PK>>
+  --
+  user_id      : BIGINT <<FK>>
+  qr_code      : TEXT -- base64 string
+  generated_at : TIMESTAMPTZ
+  status       : VARCHAR(20) -- ('active','inactive','expired')
+}
+
+entity "AccessLog" as AccessLog {
+  * log_id : BIGSERIAL <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  qr_id   : BIGINT <<FK>>
+  ts      : TIMESTAMPTZ
+  result  : VARCHAR(20) -- ('granted','denied')
+  notes   : TEXT
+}
+
+entity "Branch" as Branch {
+  * branch_id : BIGSERIAL <<PK>>
+  --
+  name      : VARCHAR(150)
+  address   : TEXT
+  city      : VARCHAR(100)
+  capacity  : INTEGER
+}
+
+'===============================================================================
+' RELACIONES ENTRE ENTIDADES
+'===============================================================================
+
+' Usuarios y Roles
+User ||--o{ UserRole : "1 - N"
+Role ||--o{ UserRole : "1 - N"
+
+' Membresías y pagos
+User ||--o{ UserMembership : "1 - N"
+Membership ||--o{ UserMembership : "1 - N"
+UserMembership ||--o{ Payment : "1 - N"
+
+' Accesos
+User ||--o{ QrAccess : "1 - N"
+QrAccess ||--o{ AccessLog : "1 - N"
+User ||--o{ AccessLog : "1 - N"
+Branch ||--o{ AccessLog : "1 - N"
+
+'===============================================================================
+' NOTAS DE IMPLEMENTACIÓN EN POSTGRESQL
+'===============================================================================
+note left of User
+- email UNIQUE
+- Index on (email, status)
+- Hash password with BCrypt
+end note
+
+note right of Membership
+- FK: user_membership.membership_id -> membership.membership_id
+- Recommended index: (status, duration_days)
+end note
+
+note bottom of Payment
+- FK: payment.user_membership_id -> user_membership.user_membership_id
+- Index: (payment_date, payment_status)
+end note
+
+note right of AccessLog
+- FKs: user_id, qr_id, branch_id
+- Index on timestamp for reporting
+end note
+
+@enduml
+
+
+</code></pre>
+    
+    </div>
+
+  </section>
+
+
+  <section id="hu">
+    <h2>Tablero de Historias de Usuario (HU) – GYMETRA</h2>
+
+    <details>
+      <summary>Autenticación & Seguridad</summary>
+      <div>
+        <ul>
+          <li>
+            Como Cliente quiero registrarme para acceder al sistema y comprar una membresía.
+          </li>
+          <li>
+            Como Cliente quiero iniciar sesión para gestionar mi cuenta y mis planes.
+          </li>
+          <li>
+            Como Administrador quiero gestionar roles de usuario para controlar accesos al sistema.
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Gestión de Membresías</summary>
+      <div>
+        <ul>
+          <li>
+            Como Cliente quiero ver los planes de membresía disponibles para elegir el que más me convenga.
+          </li>
+          <li>
+            Como Cliente quiero suscribirme a una membresía para acceder al gimnasio.
+          </li>
+          <li>
+            Como Cliente quiero cancelar o pausar mi membresía cuando no pueda asistir.
+          </li>
+          <li>
+            Como Administrador quiero crear, editar y eliminar planes de membresía para mantener actualizadas las
+            opciones.
+          </li>
+          <li>
+            Como Administrador quiero gestionar las membresías activas de los clientes para dar soporte a cambios y
+            renovaciones. </li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Pagos</summary>
+      <div>
+        <ul>
+          <li>
+            Como Cliente quiero pagar mi membresía en línea con tarjeta o pasarela de pago.
+          </li>
+          <li>
+            Como Cliente quiero recibir confirmación de pago para asegurarme de que mi suscripción está activa.
+          </li>
+          <li>
+            Como Administrador quiero consultar el historial de pagos para revisar ingresos y facturación.
+          </li>
+          <li>
+            Como Administrador quiero gestionar reembolsos o fallos de pago para dar soporte a incidencias.
+          </li>
+
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Acceso al GYM</summary>
+      <div>
+        <ul>
+          <li>
+            Como Cliente quiero acceder al gimnasio escaneando un código QR para validar mi membresía.
+          </li>
+          <li>
+            Como Cliente quiero recibir una notificación si mi acceso es denegado para saber el motivo.
+          </li>
+          <li>
+            Como Administrador quiero revisar los registros de acceso (logs) para controlar quién entra y cuándo.
+          </li>
+          <li>
+            Como Administrador quiero poder desactivar accesos en casos diferentes al pago o suspensión de membresía.
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Reportes & Administración</summary>
+      <div>
+        <ul>
+          <li>
+            Como Administrador quiero generar reportes de membresías activas e inactivas para conocer el estado general.
+          </li>
+          <li>
+            Como Administrador quiero ver métricas de ingresos por pagos para analizar el rendimiento económico.
+          </li>
+          <li>
+            Como Administrador quiero consultar estadísticas de accesos al gimnasio para entender la ocupación.
+          </li>
+          <li>
+            Como Administrador quiero exportar reportes en PDF/Excel para auditorías o reuniones. </li>
+        </ul>
+      </div>
+    </details>
+
+    <details>
+      <summary>Sistema (Técnico)</summary>
+      <div>
+        <ul>
+          <li>
+            Como Desarrollador quiero que el sistema tenga logs centralizados para identificar y resolver problemas
+            rápidamente.
+          </li>
+          <li>
+            Como Sistema quiero aislar el microservicio de pagos para escalar
+            sin afectar otros módulos.
+          </li>
+          <li>
+            Como Sistema quiero registrar accesos en la base de datos por sede
+            para soportar múltiples gimnasios.
+          </li>
+          <li>
+            Como DevOps quiero automatizar despliegues CI/CD para entregar nuevas versiones sin afectar al servicio.
+          </li>
+          <li>
+            Como Administrador del sistema quiero que el sistema gestione backups automáticos de la base de datos para
+            prevenir pérdida de datos.
+          </li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <section id="moscow">
+    <h2>Priorización MoSCoW</h2>
+    <h3>Must</h3>
+    <ul>
+      <li>Como Cliente quiero registrarme para acceder al sistema y comprar una membresía.</li>
+      <li>Como Cliente quiero iniciar sesión para gestionar mi cuenta y mis planes.</li>
+      <li>Como Administrador quiero gestionar roles de usuario para controlar accesos al sistema.</li>
+      <li>Como Cliente quiero ver los planes de membresía disponibles para elegir el que más me convenga.</li>
+      <li>Como Cliente quiero suscribirme a una membresía para acceder al gimnasio.</li>
+      <li>Como Cliente quiero pagar mi membresía en línea con tarjeta o pasarela de pago.</li>
+      <li>Como Cliente quiero recibir confirmación de pago para asegurarme de que mi suscripción está activa.</li>
+      <li>Como Cliente quiero acceder al gimnasio escaneando un código QR para validar mi membresía.</li>
+      <li>Como Administrador quiero consultar registros de acceso para verificar entradas al gimnasio.</li>
+      <li>Como Administrador quiero generar reportes básicos de membresías activas e inactivas.</li>
+
+    </ul>
+    <h3>Should</h3>
+    <ul>
+      <li>Como Cliente quiero cancelar o pausar mi membresía cuando no pueda asistir.</li>
+      <li>Como Administrador quiero crear, editar y eliminar planes de membresía para mantener actualizadas las
+        opciones.</li>
+      <li>Como Administrador quiero consultar el historial de pagos para revisar ingresos y facturación.</li>
+      <li>Como Administrador quiero gestionar reembolsos o fallos de pago para dar soporte a incidencias.</li>
+      <li>Como Cliente quiero recibir una notificación si mi acceso es denegado para saber el motivo.</li>
+      <li>Como Administrador quiero bloquear accesos de usuarios suspendidos o con membresías vencidas.</li>
+      <li>Como Administrador quiero ver métricas de ingresos por pagos para analizar el rendimiento económico.</li>
+      <li>Como Administrador quiero exportar reportes en PDF/Excel para auditorías o reuniones.</li>
+
+    </ul>
+    <h3>Could</h3>
+    <ul>
+      <li>Como Cliente quiero acumular puntos o beneficios adicionales con mis pagos/membresías.</li>
+      <li>Como Cliente quiero recibir notificaciones push/email sobre vencimiento de membresía.</li>
+      <li>Como Administrador quiero configurar recordatorios automáticos de renovación.</li>
+      <li>Como Sistema quiero enviar alertas de seguridad en caso de intentos fallidos de acceso al sistema.</li>
+      <li>Como Administrador quiero visualizar dashboards con métricas en tiempo real sobre accesos y ocupación.</li>
+
+    </ul>
+    <h3>Wont</h3>
+    <ul>
+      <li>Como Cliente quiero transferir mi membresía a otra persona.</li>
+      <li>Como Cliente quiero congelar mi membresía por vacaciones largas y reactivarla sin costo adicional.</li>
+      <li>Como Administrador quiero integrar el sistema con redes sociales para login externo.</li>
+      <li>Como Administrador quiero habilitar pagos con criptomonedas como método alternativo.</li>
+
+    </ul>
+  </section>
+  <section id="phases">
+    <h2>Fases y Estimación</h2>
+    <table class="phase-table">
+      <thead>
+        <tr>
+          <th>Fase</th>
+          <th>Historias de Usuario</th>
+          <th>Estimación (hrs)</th>
+          <th>Avance (%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Phase 1</td>
+          <td>
+            <ul>
+              <li>Como Cliente quiero registrarme para acceder al sistema y comprar una membresía.</li>
+              <li>Como Cliente quiero iniciar sesión para gestionar mi cuenta y mis planes.</li>
+              <li>Como Administrador quiero gestionar roles de usuario para controlar accesos al sistema.</li>
+              <li>Como Administrador quiero bloquear accesos de usuarios suspendidos o con membresías vencidas.</li>
+              <li>Como Cliente quiero recibir notificaciones push/email sobre vencimiento de membresía.</li>
+              <li>Como Administrador quiero configurar recordatorios automáticos de renovación.</li>
+
+            </ul>
+          </td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Phase 2</td>
+          <td>
+            <ul>
+              <li>Como Cliente quiero ver los planes de membresía disponibles para elegir el que más me convenga.</li>
+              <li>Como Cliente quiero suscribirme a una membresía para acceder al gimnasio.</li>
+              <li>Como Cliente quiero cancelar o pausar mi membresía cuando no pueda asistir.</li>
+              <li>Como Cliente quiero acceder al gimnasio escaneando un código QR para validar mi membresía.</li>
+              <li>Como Administrador quiero crear, editar y eliminar planes de membresía para mantener actualizadas las
+                opciones.</li>
+              <li>Como Administrador quiero consultar registros de acceso para verificar entradas al gimnasio.</li>
+              <li>Como Cliente quiero recibir una notificación si mi acceso es denegado para saber el motivo.</li>
+              <li>Como Sistema quiero enviar alertas de seguridad en caso de intentos fallidos de acceso al sistema.
+              </li>
+
+            </ul>
+          </td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Phase 3</td>
+          <td>
+            <ul>
+              <li>Como Cliente quiero pagar mi membresía en línea con tarjeta o pasarela de pago.</li>
+              <li>Como Cliente quiero recibir confirmación de pago para asegurarme de que mi suscripción está activa.
+              </li>
+              <li>Como Administrador quiero consultar el historial de pagos para revisar ingresos y facturación.</li>
+              <li>Como Administrador quiero gestionar reembolsos o fallos de pago para dar soporte a incidencias.</li>
+              <li>Como Administrador quiero generar reportes básicos de membresías activas e inactivas.</li>
+              <li>Como Administrador quiero ver métricas de ingresos por pagos para analizar el rendimiento económico.
+              </li>
+              <li>Como Administrador quiero exportar reportes en PDF/Excel para auditorías o reuniones.</li>
+              <li>Como Administrador quiero visualizar dashboards con métricas en tiempo real sobre accesos y ocupación.
+              </li>
+              <li>Como Cliente quiero acumular puntos o beneficios adicionales con mis pagos/membresías.</li>
+
+            </ul>
+          </td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</body>
+
+</html>
