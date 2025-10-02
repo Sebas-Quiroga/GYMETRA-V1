@@ -41,3 +41,10 @@ coverage/
 .env.development.local
 .env.test.local
 .env.production.local
+
+backend/GYMETR-login
+frontend/gymetra-frontend  
+data/Database-Setup
+docker-compose.yml
+Jenkinsfile
+README.md

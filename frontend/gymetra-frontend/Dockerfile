@@ -12,10 +12,14 @@ COPY ionic.config.json ./
 COPY tsconfig*.json ./
 COPY vite.config.ts ./
 
-# Instalar TODAS las dependencias (prod+dev) para permitir build correcto
-# Usar cache mount para npm para acelerar builds subsecuentes
+# Instalar dependencias separando prod de dev para evitar problemas con Cypress
+# Primero instalar solo dependencias de producción
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --prefer-offline
+    npm ci --omit=dev --prefer-offline
+
+# Instalar solo las dependencias de desarrollo necesarias para el build (sin cypress)
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --save-dev @vitejs/plugin-vue vite vue-tsc typescript terser @vitejs/plugin-legacy --prefer-offline
 
 ###############################
 # Etapa 2: Build
