@@ -42,9 +42,10 @@ coverage/
 .env.test.local
 .env.production.local
 
-backend/GYMETR-login
-frontend/gymetra-frontend  
-data/Database-Setup
+# Comentamos las líneas que estaban bloqueando los directorios necesarios
+# backend/GYMETR-login
+# frontend/gymetra-frontend  
+# data/Database-Setup
 docker-compose.yml
 Jenkinsfile
 README.md

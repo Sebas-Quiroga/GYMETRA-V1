@@ -10,9 +10,20 @@ FROM node:20-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/gymetra-frontend/ .
 
-# Instalar dependencias (sin Cypress para evitar problemas)
-RUN npm ci --omit=dev --prefer-offline
-RUN npm install --save-dev @vitejs/plugin-vue vite vue-tsc typescript terser @vitejs/plugin-legacy --prefer-offline
+# Configurar npm para evitar problemas de red y Cypress
+RUN npm config set fund false && \
+    npm config set audit false && \
+    npm config set prefer-offline true && \
+    npm config set cache-max 3600 && \
+    npm config set registry https://registry.npmjs.org/
+
+# Instalar dependencias básicas primero
+RUN npm install --production --no-audit --no-fund --prefer-offline || \
+    npm install --production --no-audit --no-fund
+
+# Instalar dependencias de desarrollo necesarias para build
+RUN npm install --save-dev @vitejs/plugin-vue vite vue-tsc typescript terser @vitejs/plugin-legacy --no-audit --no-fund --prefer-offline || \
+    npm install --save-dev @vitejs/plugin-vue vite vue-tsc typescript terser @vitejs/plugin-legacy --no-audit --no-fund
 
 # Build del frontend
 ENV NODE_ENV=production
