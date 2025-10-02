@@ -1,0 +1,165 @@
+# Dockerfile unificado para despliegue QA
+# Etapa 1: Build del backend (Spring Boot)
+FROM maven:3.9.6-eclipse-temurin-17 AS backend-build
+WORKDIR /app/backend
+COPY backend/GYMETR-login/ .
+RUN mvn clean package -DskipTests
+
+# Etapa 2: Build del frontend (Vue/Ionic)
+FROM node:20-alpine AS frontend-build
+WORKDIR /app/frontend
+COPY frontend/gymetra-frontend/ .
+
+# Instalar dependencias (sin Cypress para evitar problemas)
+RUN npm ci --omit=dev --prefer-offline
+RUN npm install --save-dev @vitejs/plugin-vue vite vue-tsc typescript terser @vitejs/plugin-legacy --prefer-offline
+
+# Build del frontend
+ENV NODE_ENV=production
+RUN npm run build
+
+# Etapa 3: Contenedor final unificado
+FROM ubuntu:22.04
+
+# Variables de entorno
+ARG GIT_COMMIT
+ARG BUILD_TIME
+ENV POSTGRES_DB=gymdb
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=123456
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
+
+# Etiquetas de la imagen
+LABEL org.opencontainers.image.title="gymetra-deploy-qa" \
+      org.opencontainers.image.source="https://github.com/Sebas-Quiroga/GYMETRA-V1" \
+      org.opencontainers.image.revision="$GIT_COMMIT" \
+      org.opencontainers.image.created="$BUILD_TIME" \
+      org.opencontainers.image.description="GYMETRA QA Environment - All-in-One Container"
+
+# Instalar dependencias necesarias
+RUN apt-get update && apt-get install -y \
+    openjdk-17-jdk \
+    nginx \
+    postgresql \
+    postgresql-contrib \
+    supervisor \
+    curl \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Crear directorios necesarios
+RUN mkdir -p /var/log/supervisor /app/backend /app/frontend /app/data
+
+# Copiar backend JAR
+COPY --from=backend-build /app/backend/target/*.jar /app/backend/app.jar
+
+# Copiar frontend build a directorio de Nginx
+COPY --from=frontend-build /app/frontend/dist/ /var/www/html/
+
+# Copiar archivos de configuración y datos
+COPY data/Database-Setup/ /app/data/
+
+# Configuración de Nginx para el frontend
+RUN rm -f /etc/nginx/sites-enabled/default
+RUN cat > /etc/nginx/sites-available/gymetra.conf << 'EOF'
+server {
+    listen 8100;
+    server_name _;
+    root /var/www/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+    }
+}
+EOF
+
+RUN ln -s /etc/nginx/sites-available/gymetra.conf /etc/nginx/sites-enabled/
+
+# Configuración de PostgreSQL
+RUN service postgresql start && \
+    sudo -u postgres psql -c "CREATE DATABASE $POSTGRES_DB;" && \
+    sudo -u postgres psql -c "ALTER USER postgres PASSWORD '$POSTGRES_PASSWORD';" && \
+    service postgresql stop
+
+# Configurar PostgreSQL para permitir conexiones
+RUN echo "host all all 0.0.0.0/0 md5" >> /etc/postgresql/*/main/pg_hba.conf && \
+    echo "listen_addresses='*'" >> /etc/postgresql/*/main/postgresql.conf && \
+    echo "port = 5000" >> /etc/postgresql/*/main/postgresql.conf
+
+# Configuración de supervisord
+RUN cat > /etc/supervisor/conf.d/supervisord.conf << 'EOF'
+[supervisord]
+nodaemon=true
+user=root
+
+[program:postgres]
+command=/usr/lib/postgresql/14/bin/postgres -D /var/lib/postgresql/14/main -c config_file=/etc/postgresql/14/main/postgresql.conf
+user=postgres
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/supervisor/postgres.err.log
+stdout_logfile=/var/log/supervisor/postgres.out.log
+
+[program:backend]
+command=java %(ENV_JAVA_OPTS)s -jar /app/backend/app.jar --spring.profiles.active=prod --server.port=8080 --spring.datasource.url=jdbc:postgresql://localhost:5000/%(ENV_POSTGRES_DB)s --spring.datasource.username=%(ENV_POSTGRES_USER)s --spring.datasource.password=%(ENV_POSTGRES_PASSWORD)s
+directory=/app/backend
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/supervisor/backend.err.log
+stdout_logfile=/var/log/supervisor/backend.out.log
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+stderr_logfile=/var/log/supervisor/nginx.err.log
+stdout_logfile=/var/log/supervisor/nginx.out.log
+EOF
+
+# Script de inicialización para la base de datos
+RUN cat > /app/init-db.sh << 'EOF'
+#!/bin/bash
+if [ ! -f /var/lib/postgresql/14/main/PG_VERSION ]; then
+    echo "Inicializando PostgreSQL..."
+    sudo -u postgres /usr/lib/postgresql/14/bin/initdb -D /var/lib/postgresql/14/main
+    service postgresql start
+    sleep 5
+    sudo -u postgres psql -c "CREATE DATABASE $POSTGRES_DB;"
+    sudo -u postgres psql -c "ALTER USER postgres PASSWORD '$POSTGRES_PASSWORD';"
+    
+    # Ejecutar scripts de inicialización si existen
+    if [ -f /app/data/database_Initial.sql ]; then
+        sudo -u postgres psql -d $POSTGRES_DB -f /app/data/database_Initial.sql
+    fi
+    
+    service postgresql stop
+fi
+EOF
+
+RUN chmod +x /app/init-db.sh
+
+# Exponer puertos
+EXPOSE 5000 8080 8100
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health && \
+        curl -f http://localhost:8100 && \
+        pg_isready -h localhost -p 5000 -U postgres || exit 1
+
+# Comando de inicio
+CMD ["/bin/bash", "-c", "/app/init-db.sh && /usr/bin/supervisord"]

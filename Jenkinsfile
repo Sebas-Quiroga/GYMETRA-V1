@@ -112,65 +112,21 @@ pipeline {
         }
 
         stage('Build Services') {
-            parallel {
-                stage('Build Backend') {
-                    steps {
-                        script {
-                            echo "Building backend (GYMETR-login)..."
-                            try {
-                                bat '''
-                                    set DOCKER_BUILDKIT=1
-                                    set COMPOSE_DOCKER_CLI_BUILD=1
-                                    docker-compose -f %DOCKER_COMPOSE_FILE% build --progress=plain backend
-                                '''
-                                env.BACKEND_BUILD_SUCCESS = 'true'
-                                echo "Backend build completed successfully"
-                            } catch (Exception e) {
-                                echo "Backend build failed: ${e.getMessage()}"
-                                env.BACKEND_BUILD_SUCCESS = 'false'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-
-                stage('Build Frontend') {
-                    steps {
-                        script {
-                            echo "Building frontend (gymetra-frontend)..."
-                            try {
-                                bat '''
-                                    set DOCKER_BUILDKIT=1
-                                    set COMPOSE_DOCKER_CLI_BUILD=1
-                                    docker-compose -f %DOCKER_COMPOSE_FILE% build --progress=plain frontend
-                                '''
-                                env.FRONTEND_BUILD_SUCCESS = 'true'
-                                echo "Frontend build completed successfully"
-                            } catch (Exception e) {
-                                echo "Frontend build failed: ${e.getMessage()}"
-                                env.FRONTEND_BUILD_SUCCESS = 'false'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-            }
-            post {
-                always {
-                    script {
-                        echo "DEBUG: BACKEND_BUILD_SUCCESS = ${env.BACKEND_BUILD_SUCCESS}"
-                        echo "DEBUG: FRONTEND_BUILD_SUCCESS = ${env.FRONTEND_BUILD_SUCCESS}"
-
-                        if (env.BACKEND_BUILD_SUCCESS == 'true' && env.FRONTEND_BUILD_SUCCESS == 'true') {
-                            env.BUILD_SUCCESS = 'true'
-                            echo "All services built successfully"
-                        } else if (env.BACKEND_BUILD_SUCCESS == 'true' || env.FRONTEND_BUILD_SUCCESS == 'true') {
-                            env.BUILD_SUCCESS = 'partial'
-                            echo "Some services built successfully"
-                        } else {
-                            env.BUILD_SUCCESS = 'false'
-                            echo "Build failed"
-                        }
+            steps {
+                script {
+                    echo "Building gymetra-deploy-qa unified container..."
+                    try {
+                        bat '''
+                            set DOCKER_BUILDKIT=1
+                            set COMPOSE_DOCKER_CLI_BUILD=1
+                            docker-compose -f %DOCKER_COMPOSE_FILE% build --progress=plain gymetra-deploy-qa
+                        '''
+                        env.BUILD_SUCCESS = 'true'
+                        echo "Unified container build completed successfully"
+                    } catch (Exception e) {
+                        echo "Unified container build failed: ${e.getMessage()}"
+                        env.BUILD_SUCCESS = 'false'
+                        currentBuild.result = 'UNSTABLE'
                     }
                 }
             }
@@ -178,32 +134,20 @@ pipeline {
 
         stage('Tag Images') {
             when {
-                anyOf {
-                    environment name: 'BACKEND_BUILD_SUCCESS', value: 'true'
-                    environment name: 'FRONTEND_BUILD_SUCCESS', value: 'true'
-                }
+                environment name: 'BUILD_SUCCESS', value: 'true'
             }
             steps {
                 script {
-                    echo "Tagging built images with commit and build time..."
+                    echo "Tagging built image with commit and build time..."
                     echo "Using commit: ${env.GIT_COMMIT_SHORT}"
                     echo "Using build time: ${env.BUILD_TIME}"
                     
-                    if (env.BACKEND_BUILD_SUCCESS == 'true' && env.GIT_COMMIT_SHORT && env.GIT_COMMIT_SHORT != 'null') {
+                    if (env.BUILD_SUCCESS == 'true' && env.GIT_COMMIT_SHORT && env.GIT_COMMIT_SHORT != 'null') {
                         try {
-                            bat "docker image tag gymetra/backend:latest gymetra/backend:${env.GIT_COMMIT_SHORT}"
-                            echo "Tagged backend image with: ${env.GIT_COMMIT_SHORT}"
+                            bat "docker image tag gymetra/deploy-qa:latest gymetra/deploy-qa:${env.GIT_COMMIT_SHORT}"
+                            echo "Tagged unified container image with: ${env.GIT_COMMIT_SHORT}"
                         } catch (Exception e) {
-                            echo "Failed to tag backend image: ${e.getMessage()}"
-                        }
-                    }
-                    
-                    if (env.FRONTEND_BUILD_SUCCESS == 'true' && env.GIT_COMMIT_SHORT && env.GIT_COMMIT_SHORT != 'null') {
-                        try {
-                            bat "docker image tag gymetra/frontend:latest gymetra/frontend:${env.GIT_COMMIT_SHORT}"
-                            echo "Tagged frontend image with: ${env.GIT_COMMIT_SHORT}"
-                        } catch (Exception e) {
-                            echo "Failed to tag frontend image: ${e.getMessage()}"
+                            echo "Failed to tag unified container image: ${e.getMessage()}"
                         }
                     }
                 }
@@ -213,8 +157,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    echo "Deploying GYMETRA application..."
-                    if (env.BUILD_SUCCESS == 'true' || env.BUILD_SUCCESS == 'partial') {
+                    echo "Deploying GYMETRA QA unified container..."
+                    if (env.BUILD_SUCCESS == 'true') {
                         try {
                             bat """
                                 echo Deploying with GIT_COMMIT: ${env.GIT_COMMIT_SHORT}
@@ -229,7 +173,7 @@ pipeline {
                             env.DEPLOY_SUCCESS = 'false'
                         }
                     } else {
-                        echo "Skipping deployment - no services built successfully"
+                        echo "Skipping deployment - container build failed"
                         env.DEPLOY_SUCCESS = 'false'
                     }
                 }
@@ -240,17 +184,23 @@ pipeline {
             steps {
                 script {
                     if (env.DEPLOY_SUCCESS == 'true') {
-                        echo "Checking services health..."
+                        echo "Checking unified container health..."
                         try {
                             bat '''
                                 echo Waiting for services to be ready...
-                                timeout /t 30 /nobreak
+                                timeout /t 45 /nobreak
+                                
+                                echo Checking PostgreSQL on port 5000...
+                                powershell -Command "try { $connection = New-Object System.Data.SqlClient.SqlConnection; $connection.ConnectionString = 'Server=localhost,5000;Database=gymdb;User Id=postgres;Password=123456;'; $connection.Open(); echo 'PostgreSQL is healthy'; $connection.Close(); } catch { echo 'PostgreSQL not responding yet...' }"
                                 
                                 echo Checking backend on port %BACKEND_PORT%...
                                 powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:%BACKEND_PORT%/actuator/health' -TimeoutSec 10; if ($response.StatusCode -eq 200) { echo 'Backend is healthy' } else { echo 'Backend responded with code: ' + $response.StatusCode } } catch { echo 'Backend not responding - checking basic connectivity...' }"
                                 
                                 echo Checking frontend on port %FRONTEND_PORT%...
                                 powershell -Command "try { $response = Invoke-WebRequest -Uri 'http://localhost:%FRONTEND_PORT%' -TimeoutSec 10; if ($response.StatusCode -eq 200) { echo 'Frontend is healthy' } else { echo 'Frontend responded with code: ' + $response.StatusCode } } catch { echo 'Frontend not responding yet...' }"
+                                
+                                echo Checking container status...
+                                docker ps --filter "name=gymetra-deploy-qa" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
                             '''
                         } catch (Exception e) {
                             echo "Health check encountered issues: ${e.getMessage()}"
@@ -272,10 +222,12 @@ pipeline {
                             echo Project: %PROJECT_NAME%
                             echo Branch: %TARGET_BRANCH%
                             echo Date: %date% %time%
+                            echo Container: gymetra-deploy-qa (Unified QA Environment)
                             
                             echo === DEPLOYED SERVICES ===
-                            echo Backend (GYMETR-login): http://localhost:%BACKEND_PORT%
-                            echo Frontend (gymetra-frontend): http://localhost:%FRONTEND_PORT%
+                            echo PostgreSQL Database: localhost:5000
+                            echo Backend API (GYMETR-login): http://localhost:%BACKEND_PORT%
+                            echo Frontend Web (gymetra-frontend): http://localhost:%FRONTEND_PORT%
                             echo.
                             echo === CONTAINER STATUS ===
                             docker-compose -f %DOCKER_COMPOSE_FILE% ps
@@ -311,9 +263,11 @@ pipeline {
 
         success {
             script {
-                echo "Successful deployment of GYMETRA!"
-                echo "Backend available at: http://localhost:${BACKEND_PORT}"
-                echo "Frontend available at: http://localhost:${FRONTEND_PORT}"
+                echo "Successful deployment of GYMETRA QA!"
+                echo "PostgreSQL Database: localhost:5000"
+                echo "Backend API: http://localhost:${BACKEND_PORT}"
+                echo "Frontend Web: http://localhost:${FRONTEND_PORT}"
+                echo "Unified Container: gymetra-deploy-qa"
                 echo "Deployment completed at: ${new Date()}"
             }
         }
@@ -345,20 +299,20 @@ pipeline {
 
         unstable {
             script {
-                echo "Unstable deployment of GYMETRA"
+                echo "Deployment completed with warnings - GYMETRA QA"
+                echo "Check unified container logs: docker logs gymetra-deploy-qa"
+                echo "Monitor services: PostgreSQL (5000), Backend (8080), Frontend (8100)"
                 echo "Some components may not be fully functional"
-                if (env.BACKEND_BUILD_SUCCESS == 'true' && env.FRONTEND_BUILD_SUCCESS != 'true') {
-                    echo "Backend deployed successfully, but frontend had issues"
-                } else if (env.FRONTEND_BUILD_SUCCESS == 'true' && env.BACKEND_BUILD_SUCCESS != 'true') {
-                    echo "Frontend deployed successfully, but backend had issues"
-                }
+                echo "Please review the deployment status"
             }
         }
 
         cleanup {
             script {
-                echo "Performing cleanup tasks..."
-                // Clean up workspace if needed, but preserve deployment
+                echo "Performing cleanup tasks for GYMETRA QA deployment..."
+                echo "Container gymetra-deploy-qa remains running for QA environment"
+                echo "Workspace cleanup preserving deployment state"
+                // Clean up build artifacts but preserve deployment
             }
         }
     }
