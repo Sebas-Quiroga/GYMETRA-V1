@@ -43,7 +43,7 @@ public class UserService {
                     .passwordHash(passwordEncoder.encode(request.getPassword()))
                     .phone(request.getPhone())
                     .status("active")
-                    .identification(Long.valueOf(request.getIdentification()))
+                    .identification(request.getIdentification())
                     .photoUrl(request.getPhotoUrl())
                     .createdAt(OffsetDateTime.now())
                     .build();
