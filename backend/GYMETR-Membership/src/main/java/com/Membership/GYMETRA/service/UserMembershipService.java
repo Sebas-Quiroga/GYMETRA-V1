@@ -39,53 +39,42 @@ public class UserMembershipService {
             throw new IllegalStateException("El usuario ya tiene una membresía pendiente.");
         }
 
-        // 2️⃣ Buscar la última membresía del usuario
+        // 2️⃣ Buscar la última membresía ACTIVA o vigente (endDate >= hoy)
         List<UserMembership> memberships = repository.findByUserIdOrderByEndDateDesc(userId);
-
+        LocalDate today = LocalDate.now();
         if (!memberships.isEmpty()) {
             UserMembership last = memberships.get(0);
-
-            switch (last.getStatus()) {
-                case EXPIRED:
-                    // Si la última está EXPIRED, actualizamos fecha fin y activamos
-                    last.setEndDate(newMembership.getEndDate());
-                    last.setStatus(UserMembership.Status.ACTIVE);
-                    last.setStartDate(newMembership.getStartDate()); // opcional: actualizar fecha inicio
-                    last.setCreatedAt(LocalDateTime.now());
-                    return repository.save(last);
-
-                case CANCELED:
-                    // Si estaba CANCELED, solo actualizamos fecha fin
-                    last.setEndDate(newMembership.getEndDate());
-                    last.setCreatedAt(LocalDateTime.now());
-                    return repository.save(last);
-
-                default:
-                    break;
+            // Si la última membresía está ACTIVA o su endDate es en el futuro, sumamos los días
+            if ((last.getStatus() == UserMembership.Status.ACTIVE ||
+                 (last.getEndDate() != null && last.getEndDate().isAfter(today)))
+                ) {
+                LocalDate nuevaFechaFin = last.getEndDate().isAfter(today)
+                        ? last.getEndDate().plusDays(newMembership.getMembership().getDurationDays())
+                        : today.plusDays(newMembership.getMembership().getDurationDays());
+                newMembership.setStartDate(today);
+                newMembership.setEndDate(nuevaFechaFin);
             }
         }
 
-        // 3️⃣ Si no hay membresías anteriores EXPIRED o CANCELED, crear nueva con el estado proporcionado
-        // Solo forzar PENDING si el estado proporcionado es null o si hay validaciones específicas
+        // 3️⃣ Si no hay membresías anteriores ACTIVA/vigente, se mantiene la lógica original
         if (newMembership.getStatus() == null) {
             newMembership.setStatus(UserMembership.Status.PENDING);
         }
-        // Respetamos el estado que se pasa (ACTIVE cuando el pago ya está confirmado)
         newMembership.setCreatedAt(LocalDateTime.now());
-        
+
         System.out.println("🔄 CREANDO USER_MEMBERSHIP:");
         System.out.println("   📋 User ID: " + newMembership.getUserId());
         System.out.println("   📅 Start Date: " + newMembership.getStartDate());
         System.out.println("   📅 End Date: " + newMembership.getEndDate());
         System.out.println("   ✅ Status: " + newMembership.getStatus());
         System.out.println("   🏷️ Membership: " + newMembership.getMembership().getPlanName());
-        
+
         UserMembership saved = repository.save(newMembership);
-        
+
         System.out.println("✅ USER_MEMBERSHIP CREADO EXITOSAMENTE:");
         System.out.println("   📝 ID: " + saved.getId());
         System.out.println("   ✅ Status Final: " + saved.getStatus());
-        
+
         return saved;
     }
 
