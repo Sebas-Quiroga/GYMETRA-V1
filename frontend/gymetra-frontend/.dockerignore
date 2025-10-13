@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-
 # Production build (se construye en el contenedor)
 dist/
 build/

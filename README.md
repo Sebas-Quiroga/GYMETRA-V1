@@ -40,18 +40,12 @@ Distributed system for comprehensive gym membership management, developed as an 
 - **Testing**: Vitest/Jest + Playwright
 
 #### Infrastructure
-- **Containers**: Docker
-- **Orchestration**: Kubernetes
-- **CI/CD**: GitHub Actions
-- **Observability**: Prometheus + Grafana + ELK Stack
-- **Cloud**: AWS/GCP
 
 ## 🚀 Installation & Setup
 
 ### Prerequisites
 - Java 17+
 - Node.js 18+
-- Docker & Docker Compose
 - PostgreSQL 14+
 - Git
 
@@ -69,10 +63,6 @@ cp .env.example .env
 # Edit .env with your configurations
 ```
 
-3. **Run with Docker Compose**
-```bash
-docker-compose up -d
-```
 
 4. **Access applications**
 - Web Admin: http://localhost:3000
@@ -97,8 +87,6 @@ gym-membership-system/
 │   ├── web-admin/
 │   └── mobile-app/
 ├── infrastructure/
-│   ├── docker/
-│   └── k8s/
 ├── docs/
 │   ├── api/
 │   ├── architecture/

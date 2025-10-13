@@ -3,7 +3,6 @@
 ###############################
 FROM eclipse-temurin:17-jdk-alpine AS deps
 WORKDIR /workspace
-
 # ARG para inyectar metadata
 ARG BUILD_TIME
 ARG GIT_COMMIT

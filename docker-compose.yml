@@ -1,73 +1,17 @@
+version: '3.8'
 services:
-  database:
-    image: postgres:15-alpine
-    container_name: gymetra_database
-    ports:
-      - "5000:5432"
-    environment:
-      - POSTGRES_DB=gymdb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=123456
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./data/Database-Setup:/docker-entrypoint-initdb.d
-    restart: unless-stopped
-    networks:
-      - gymetra-net
-    labels:
-      com.gymetra.service: "database"
-
-  backend:
-    image: gymetra/backend:latest
-    build:
-      context: ./backend/GYMETR-login
-      dockerfile: Dockerfile
-      args:
-        - DOCKER_BUILDKIT=1
-        - GIT_COMMIT=${GIT_COMMIT:-local}
-        - BUILD_TIME=${BUILD_TIME:-unknown}
-        - SKIP_TESTS=true
-    container_name: gymetra_backend
+  gymetr-login:
+    build: ./backend/GYMETR-login
     ports:
       - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_OPTS=-Xmx512m -Xms256m
-      - DB_HOST=database
-    depends_on:
-      - database
-    restart: unless-stopped
-    networks:
-      - gymetra-net
-    labels:
-      com.gymetra.service: "backend"
-
-  frontend:
-    image: gymetra/frontend:latest
-    build:
-      context: ./frontend/gymetra-frontend
-      dockerfile: Dockerfile
-      args:
-        - DOCKER_BUILDKIT=1
-        - GIT_COMMIT=${GIT_COMMIT:-local}
-        - BUILD_TIME=${BUILD_TIME:-unknown}
-    container_name: gymetra_frontend
+    container_name: gymetr-login
+  gymetr-membership:
+    build: ./backend/GYMETR-Membership
+    ports:
+      - "8081:8081"
+    container_name: gymetr-membership
+  gymetra-frontend:
+    build: ./frontend/gymetra-frontend
     ports:
       - "8100:80"
-    depends_on:
-      - backend
-    restart: unless-stopped
-    networks:
-      - gymetra-net
-    environment:
-      - NODE_ENV=production
-    labels:
-      com.gymetra.service: "frontend"
-
-networks:
-  gymetra-net:
-    driver: bridge
-
-volumes:
-  postgres_data:
-    driver: local
+    container_name: gymetra-frontend

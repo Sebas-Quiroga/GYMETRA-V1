@@ -3,7 +3,6 @@
 ###############################
 FROM node:20-alpine AS deps
 WORKDIR /app
-
 ARG BUILD_TIME
 ARG GIT_COMMIT
 
