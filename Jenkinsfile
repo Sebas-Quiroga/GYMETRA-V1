@@ -20,6 +20,14 @@ pipeline {
                 }
             }
         }
+        stage('Diagnóstico archivos Membership') {
+            steps {
+                dir('backend/GYMETR-Membership') {
+                    bat 'dir /a'
+                    bat 'type mvnw.cmd'
+                }
+            }
+        }
         stage('Build Frontend') {
             steps {
                 dir('frontend/gymetra-frontend') {
