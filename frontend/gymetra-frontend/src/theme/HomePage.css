@@ -1,0 +1,386 @@
+/* HomePage.css - Estilos para la página principal */
+
+/* Página principal */
+.home-page {
+  --background: #07B7E0 !important;
+  --padding-start: 0 !important;
+  --padding-end: 0 !important;
+  --padding-top: 0 !important;
+  --padding-bottom: 0 !important;
+}
+
+.home-page::part(scroll) {
+  background: #07B7E0 !important;
+}
+
+/* Header personalizado */
+.custom-toolbar {
+  --background: #07B7E0;
+  --color: white;
+  --border-width: 0;
+}
+
+.page-title {
+  color: white;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.home-page ion-buttons ion-button {
+  --color: white;
+}
+
+/* Container principal */
+.dashboard-container {
+  padding: 20px;
+  min-height: 100vh;
+  background: #07B7E0;
+}
+
+/* Card de Bienvenida */
+.welcome-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 25px;
+  margin-bottom: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.welcome-text h2 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 5px 0;
+  text-shadow: none;
+}
+
+.welcome-text p {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.profile-avatar {
+  position: relative;
+}
+
+.avatar-circle {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  overflow: hidden; /* Para que la imagen se recorte en círculo */
+  cursor: pointer; /* Indicar que es clickeable */
+  transition: all 0.3s ease;
+}
+
+.avatar-circle:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+/* Estilos para la imagen de avatar */
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Estilos para el icono cuando no hay foto */
+.avatar-icon {
+  font-size: 28px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Row de estadísticas */
+.stats-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 20px 15px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Card de días restantes - Estados dinámicos */
+.record-card .stat-number {
+  color: white;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 5px;
+  text-shadow: none;
+  transition: all 0.3s ease;
+}
+
+/* Estado de carga */
+.record-card.loading-state {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.record-card.loading-state .stat-number {
+  opacity: 0.7;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Estado sin membresía */
+.record-card.no-membership {
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.record-card.no-membership .stat-number {
+  color: #ffc107;
+}
+
+/* Estado crítico (1-3 días) */
+.record-card.critical-state {
+  background: rgba(244, 67, 54, 0.15);
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.record-card.critical-state .stat-number {
+  color: #ff5722;
+  animation: urgentPulse 1s ease-in-out infinite;
+}
+
+/* Estado de advertencia (4-7 días) */
+.record-card.warning-state {
+  background: rgba(255, 152, 0, 0.15);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.record-card.warning-state .stat-number {
+  color: #ff9800;
+}
+
+/* Estado activo (más de 7 días) */
+.record-card.active-state {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.record-card.active-state .stat-number {
+  color: white;
+}
+
+.stat-label {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Íconos de las cards */
+.stat-icon {
+  margin-bottom: 8px;
+}
+
+.stat-icon ion-icon {
+  font-size: 32px;
+  color: white;
+  filter: none;
+}
+
+/* Sección de entrenamiento */
+.training-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.section-header h3 {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: none;
+}
+
+.info-btn {
+  --color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+.info-btn ion-icon {
+  font-size: 20px;
+}
+
+/* Container del gráfico */
+.chart-container {
+  height: 200px;
+  display: flex;
+  align-items: end;
+  padding: 0 10px;
+}
+
+.chart-bars {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  width: 100%;
+  height: 100%;
+  gap: 8px;
+}
+
+.bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: end;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 6px 6px 2px 2px;
+  transition: all 0.3s ease;
+  margin-bottom: 10px;
+  min-height: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bar-active {
+  background: white;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+}
+
+.bar-inactive {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.bar-label {
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Animaciones */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes urgentPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-card,
+.stat-card,
+.training-section {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.stat-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.stat-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.stat-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.training-section {
+  animation-delay: 0.4s;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 15px;
+  }
+
+  .stats-row {
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 15px 10px;
+  }
+
+  .record-card .stat-number {
+    font-size: 1.8rem;
+  }
+
+  .stat-icon ion-icon {
+    font-size: 28px;
+  }
+
+  .welcome-text h2 {
+    font-size: 1.5rem;
+  }
+
+  .chart-bars {
+    gap: 6px;
+  }
+}
