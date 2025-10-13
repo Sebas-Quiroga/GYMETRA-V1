@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        GIT_CREDENTIALS_ID = 'git-credentials-id' // Cambia esto por el ID real de tus credenciales en Jenkins
+    // ...existing code...
     JAVA_HOME = 'C:/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot' // Ruta real del JDK en Jenkins
     PATH = "${JAVA_HOME}/bin;${env.PATH}"
     }
