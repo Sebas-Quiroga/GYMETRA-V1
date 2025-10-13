@@ -2,6 +2,8 @@ pipeline {
     agent any
     environment {
         GIT_CREDENTIALS_ID = 'git-credentials-id' // Cambia esto por el ID real de tus credenciales en Jenkins
+        JAVA_HOME = 'C:/Program Files/Java/jdk-17' // Ajusta la ruta si tu JDK está en otra ubicación
+        PATH = "${JAVA_HOME}/bin;${env.PATH}"
     }
     stages {
         stage('Build Backend - GYMETR-login') {
