@@ -1,186 +1,66 @@
-// src/services/profileService.ts
-import { ref } from 'vue';
-import type { Ref } from 'vue';
-import { MAIN_API_URL, apiRequest, type ApiResponse } from './apiService';
+import { useAuthStore } from '@/stores/auth';
 
-export interface UpdateProfileData {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  photoUrl?: string;
-}
-
-export interface ProfileResponse {
-  user: {
-    id: string | number;
-    email: string;
-    firstName: string;
-    lastName: string;
-    phone: string;
-    photoUrl: string;
-  };
-  message: string;
-}
-
-export interface UseProfileReturn {
-  loading: Ref<boolean>;
-  error: Ref<string>;
-  updateProfile: (data: UpdateProfileData, token: string) => Promise<ApiResponse<ProfileResponse>>;
-  updatePhoto: (photoUrl: string, token: string) => Promise<ApiResponse<ProfileResponse>>;
-  clearError: () => void;
-}
-
-export function useProfile(): UseProfileReturn {
-  const loading = ref<boolean>(false);
-  const error = ref<string>('');
-
-  const clearError = () => {
-    error.value = '';
-  };
-
-  const updateProfile = async (data: UpdateProfileData, token: string): Promise<ApiResponse<ProfileResponse>> => {
-    loading.value = true;
-    error.value = '';
-
-    try {
-      console.log('🔄 Actualizando perfil:', {
-        ...data,
-        photoUrl: data.photoUrl ? '***base64***' : undefined // No mostrar la imagen completa en logs
-      });
-
-      // Preparar datos para envío
-      const updatePayload = {
-        ...data,
-        // Limpiar datos vacíos
-        ...(data.firstName && { firstName: data.firstName.trim() }),
-        ...(data.lastName && { lastName: data.lastName.trim() }),
-        ...(data.phone && { phone: data.phone.trim() }),
-        ...(data.photoUrl !== undefined && { photoUrl: data.photoUrl }),
-      };
-
-      // Hacer la petición con autenticación
-      const apiResp = await apiRequest<ProfileResponse>(
-        `${MAIN_API_URL}/profile`,
-        {
-          method: 'PUT',
-          body: JSON.stringify(updatePayload),
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          }
-        }
-      );
-
-      console.log('✅ Perfil actualizado:', apiResp);
-      return apiResp;
-
-    } catch (err: any) {
-      console.error('💥 Error en actualización de perfil:', err);
-
-      let errorMessage = 'Error inesperado al actualizar perfil';
-
-      // Manejar mensajes específicos del backend
-      if (err.message) {
-        if (err.message.includes('authentication') || err.message.includes('autorización')) {
-          errorMessage = 'Sesión expirada. Inicia sesión nuevamente.';
-        } else if (err.message.includes('network') || err.message.includes('conexión')) {
-          errorMessage = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
-        } else if (err.message.includes('timeout') || err.message.includes('tiempo')) {
-          errorMessage = 'Tiempo de espera agotado. Intenta nuevamente.';
-        } else if (err.message.includes('imagen') || err.message.includes('foto')) {
-          errorMessage = 'Error al procesar la imagen. Intenta con otra foto.';
-        } else {
-          errorMessage = err.message;
-        }
-      }
-
-      error.value = errorMessage;
-      
-      return {
-        success: false,
-        message: errorMessage
-      };
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const updatePhoto = async (photoUrl: string, token: string): Promise<ApiResponse<ProfileResponse>> => {
-    return updateProfile({ photoUrl }, token);
-  };
-
-  return {
-    loading,
-    error,
-    updateProfile,
-    updatePhoto,
-    clearError
-  };
-}
-
-// Función para redimensionar imagen (reutilizada del registro)
-export const resizeImageForProfile = (file: File, maxSize: number = 200): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d')!;
-    const img = new Image();
-    
-    img.onload = () => {
-      let { width, height } = img;
-      const aspectRatio = width / height;
-      
-      if (width > height) {
-        width = Math.min(width, maxSize);
-        height = width / aspectRatio;
-      } else {
-        height = Math.min(height, maxSize);
-        width = height * aspectRatio;
-      }
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Fondo blanco para JPEGs
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0, width, height);
-      
-      // Comprimir imagen gradualmente
-      let quality = 0.8;
-      let base64 = canvas.toDataURL('image/jpeg', quality);
-      
-      // Reducir calidad hasta que la imagen sea menor a 100KB
-      while (base64.length > 100000 && quality > 0.1) {
-        quality -= 0.1;
-        base64 = canvas.toDataURL('image/jpeg', quality);
-      }
-      
-      resolve(base64);
-    };
-    
-    img.onerror = () => reject(new Error('Error al procesar la imagen'));
-    img.src = URL.createObjectURL(file);
-  });
+export type UpdateUserProfileOptions = {
+  userId: string;
+  data: Record<string, any>;
+  successMsg: string;
+  onSuccess?: () => void;
+  loadingRef?: { value: boolean };
+  showNotification: (type: 'success' | 'error' | 'info', title: string, message: string) => void;
+  setUserData: (data: any) => void;
 };
 
-// Función para validar archivo de imagen
-export const validateImageFile = (file: File): { isValid: boolean; error?: string } => {
-  const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-  const maxSize = 5 * 1024 * 1024; // 5MB
-
-  if (!validTypes.includes(file.type)) {
-    return {
-      isValid: false,
-      error: 'Solo se permiten archivos PNG, JPG o JPEG'
-    };
+export const updateUserProfile = async ({
+  userId,
+  data,
+  successMsg,
+  onSuccess,
+  loadingRef,
+  showNotification,
+  setUserData
+}: UpdateUserProfileOptions) => {
+  const auth = useAuthStore();
+  if (loadingRef) loadingRef.value = true;
+  try {
+    const response = await fetch(`http://localhost:8080/api/auth/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    let responseData;
+    let newToken = null;
+    try {
+      responseData = await response.json();
+      if (responseData.token) {
+        newToken = responseData.token;
+        auth.setToken(newToken);
+        showNotification('success', successMsg, 'Datos y sesión actualizados.');
+      } else {
+        showNotification('success', successMsg, 'Datos actualizados.');
+      }
+    } catch (e) {
+      responseData = await response.text();
+      showNotification('success', successMsg, responseData);
+    }
+    if (newToken) {
+      setUserData({
+        userId: auth.user?.userId || '',
+        email: auth.user?.email || '',
+        firstName: auth.user?.firstName || '',
+        lastName: auth.user?.lastName || '',
+        phone: auth.user?.phone || '',
+        status: auth.user?.status || '',
+        photoUrl: auth.user?.photoUrl || '',
+      });
+    } else if (responseData && typeof responseData === 'object') {
+      setUserData((prev: any) => ({ ...prev, ...responseData }));
+    }
+    if (onSuccess) onSuccess();
+  } catch (error) {
+    showNotification('error', 'Error', 'Hubo un error al actualizar el perfil.');
+  } finally {
+    if (loadingRef) loadingRef.value = false;
   }
-
-  if (file.size > maxSize) {
-    return {
-      isValid: false,
-      error: 'La imagen debe ser menor a 5MB'
-    };
-  }
-
-  return { isValid: true };
 };

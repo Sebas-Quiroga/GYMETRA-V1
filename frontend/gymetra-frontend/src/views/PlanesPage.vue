@@ -1,39 +1,69 @@
 <template>
   <ion-page>
-    <div class="planes-header-bar">
-      <button class="planes-back-btn" @click="$router.back()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <!-- Componente de notificación -->
+    <Transition name="fade">
+      <div v-if="notification.show" 
+           class="notification-container"
+           :class="notification.type"
+           role="alert"
+           aria-live="assertive">
+        <div class="notification-content">
+          <ion-icon :icon="notification.icon" class="notification-icon" aria-hidden="true"></ion-icon>
+          <div class="notification-text">
+            <h4>{{ notification.title }}</h4>
+            <p>{{ notification.message }}</p>
+          </div>
+          <ion-icon 
+            :icon="closeCircle" 
+            class="close-icon"
+            @click="dismissNotification"
+            tabindex="0"
+            role="button"
+            aria-label="Cerrar notificación">
+          </ion-icon>
+        </div>
+        <div class="progress-bar">
+          <div class="progress" :style="{ width: notification.progress + '%' }"></div>
+        </div>
+      </div>
+    </Transition>
+
+    <div class="planes-header-bar" role="banner" aria-label="Encabezado de planes">
+      <button class="planes-back-btn" @click="$router.back()" aria-label="Volver" tabindex="0">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
-      <span class="planes-header-title">Planes</span>
+      <span class="planes-header-title" aria-label="Planes">Planes</span>
     </div>
-    <ion-content class="planes-content">
+    <ion-content class="planes-content" role="main" aria-label="Listado de planes">
       <!-- Loading state -->
-      <div v-if="loading" class="loading-container">
-        <div class="spinner"></div>
+      <div v-if="loading" class="loading-container" role="status" aria-live="polite">
+        <div class="spinner" aria-label="Cargando"></div>
         <p>Cargando planes disponibles...</p>
       </div>
 
       <!-- Error state -->
-      <div v-else-if="error" class="error-container">
+      <div v-else-if="error" class="error-container" role="alert" aria-live="assertive">
         <p class="error-message">{{ error }}</p>
-        <button class="retry-btn" @click="loadMemberships">Reintentar</button>
+        <button class="retry-btn" @click="loadMemberships" aria-label="Reintentar cargar planes">Reintentar</button>
       </div>
 
       <!-- Empty state -->
-      <div v-else-if="memberships.length === 0" class="empty-container">
+      <div v-else-if="memberships.length === 0" class="empty-container" role="status" aria-live="polite">
         <p>No hay planes disponibles en este momento</p>
       </div>
 
       <!-- Memberships list -->
-      <div v-else class="planes-list">
+      <div v-else class="planes-list" aria-label="Lista de planes disponibles">
         <div 
           v-for="membership in memberships" 
           :key="membership.membershipId"
           class="plan-card"
+          role="region"
+          :aria-label="'Plan ' + membership.planName"
         >
           <div class="plan-price">$ {{ formatPrice(membership.price) }}</div>
           <div class="plan-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path :d="getIconPath(membership.durationDays)"/>
               <circle v-if="membership.durationDays > 186" cx="12" cy="8" r="7"/>
               <path v-if="membership.durationDays > 186" d="M8 21h8l-4-7z"/>
@@ -46,10 +76,12 @@
             class="plan-btn" 
             @click="selectPlan(membership)"
             :disabled="!isMembershipAvailable(membership) || purchasing"
+            :aria-disabled="!isMembershipAvailable(membership) || purchasing"
             :class="{ 'processing': purchasing && selectedMembershipId === membership.membershipId }"
+            :aria-label="isMembershipAvailable(membership) ? 'Pagar plan ' + membership.planName : 'Plan no disponible'"
           >
             <span v-if="purchasing && selectedMembershipId === membership.membershipId">
-              <div class="btn-spinner"></div>
+              <div class="btn-spinner" aria-label="Cargando"></div>
               Procesando...
             </span>
             <span v-else>
@@ -60,117 +92,25 @@
       </div>
 
       <!-- Loading overlay para compra -->
-      <div v-if="purchasing" class="purchase-overlay">
+      <div v-if="purchasing" class="purchase-overlay" role="alertdialog" aria-modal="true" aria-label="Procesando compra">
         <div class="purchase-modal">
-          <div class="spinner"></div>
+          <div class="spinner" aria-label="Cargando"></div>
           <p>Procesando tu compra...</p>
           <p class="purchase-details">{{ selectedPlanName }}</p>
         </div>
       </div>
 
-      <!-- Modal de Pago con Stripe -->
-      <div v-if="showPaymentModal" class="payment-modal-overlay" @click="closePaymentModal">
-        <div class="payment-modal-content" @click.stop>
-          <div class="payment-modal-header">
-            <h3>Completar Compra</h3>
-            <button class="close-btn" @click="closePaymentModal">&times;</button>
-          </div>
-
-          <!-- Resumen de compra -->
-          <div v-if="selectedMembershipForPayment" class="purchase-summary">
-            <h4>📋 Resumen de Compra</h4>
-            <p><strong>Membresía:</strong> {{ selectedMembershipForPayment.planName }}</p>
-            <p><strong>Duración:</strong> {{ formatDuration(selectedMembershipForPayment.durationDays) }}</p>
-            <p class="total-price">
-              <strong>Total:</strong> ${{ formatPrice(selectedMembershipForPayment.price) }} USD
-            </p>
-            <hr>
-            <small>💡 La membresía se asociará a tu cuenta de usuario</small>
-          </div>
-
-          <!-- Formulario de pago -->
-          <form @submit.prevent="processPayment" class="payment-form">
-            <div class="form-group">
-              <label for="userIdInput">ID de Usuario *</label>
-              <input 
-                type="number" 
-                id="userIdInput" 
-                v-model="paymentData.userId" 
-                required 
-                placeholder="Ej: 1, 2, 3..." 
-                min="1"
-              >
-              <small>Ingresa tu ID de usuario para asociar la membresía</small>
-            </div>
-
-            <div class="form-group">
-              <label for="billingZip">Código Postal *</label>
-              <input 
-                type="text" 
-                id="billingZip" 
-                v-model="paymentData.billingZip" 
-                required 
-                placeholder="12345" 
-                maxlength="10"
-              >
-              <small>Requerido por Stripe para procesar el pago</small>
-            </div>
-
-            <div class="form-group">
-              <label>Información de Pago</label>
-              <div v-if="!stripeAvailable" class="test-mode-notice">
-                🧪 Modo de Prueba - No se requiere tarjeta
-              </div>
-              <div v-else>
-                <div id="stripe-card-element" class="stripe-element"></div>
-                <div v-if="cardError" class="error-msg">{{ cardError }}</div>
-              </div>
-            </div>
-
-            <button 
-              type="submit" 
-              class="pay-btn"
-              :disabled="paymentProcessing"
-              :class="{ 'processing': paymentProcessing }"
-            >
-              <span v-if="paymentProcessing">
-                <div class="btn-spinner"></div>
-                Procesando...
-              </span>
-              <span v-else>
-                💳 Pagar Ahora
-              </span>
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Modal de Éxito -->
-      <div v-if="showSuccessModal" class="success-modal-overlay" @click="closeSuccessModal">
-        <div class="success-modal-content" @click.stop>
-          <h2>¡Pago Exitoso! ✅</h2>
-          <div v-if="paymentResult">
-            <p><strong>Usuario ID:</strong> {{ paymentResult.userId }}</p>
-            <p><strong>Membresía:</strong> {{ paymentResult.membershipName }}</p>
-            <p><strong>Duración:</strong> {{ paymentResult.duration }}</p>
-            <p><strong>Monto:</strong> ${{ paymentResult.amount }} USD</p>
-            <hr>
-            <p class="success-note">La membresía ha sido asociada correctamente a tu cuenta.</p>
-          </div>
-          <button class="success-btn" @click="closeSuccessModal">
-            Continuar
-          </button>
-        </div>
-      </div>
+      <!-- El pago ahora se realiza en una vista separada -->
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, reactive, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { IonPage, IonContent } from '@ionic/vue';
+import { IonPage, IonContent, IonIcon, IonButton } from '@ionic/vue';
 import { useAuth } from '@/composables/useAuth';
+import { checkmarkCircle, alertCircle, warningOutline, informationCircle, closeCircle } from 'ionicons/icons';
 import { 
   getAvailableMemberships, 
   purchaseMembership,
@@ -183,6 +123,73 @@ import {
 } from '@/services/membershipService';
 
 // Configuración de Stripe
+// Estado de notificaciones
+const notification = reactive({
+  show: false,
+  type: 'info' as 'success' | 'error' | 'warning' | 'info',
+  title: '',
+  message: '',
+  icon: informationCircle,
+  progress: 0,
+  duration: 5000,
+});
+
+// Variables para los timers de notificación
+let notificationTimer: NodeJS.Timeout | null = null;
+let notificationProgressTimer: NodeJS.Timeout | null = null;
+
+// Funciones de notificación
+const showNotification = (
+  type: 'success' | 'error' | 'warning' | 'info',
+  title: string,
+  message: string,
+  duration: number = 5000
+) => {
+  // Limpiar timers previos
+  if (notificationTimer) clearTimeout(notificationTimer);
+  if (notificationProgressTimer) clearInterval(notificationProgressTimer);
+
+  // Configurar icono según el tipo
+  const icons = {
+    success: checkmarkCircle,
+    error: alertCircle,
+    warning: warningOutline,
+    info: informationCircle,
+  };
+
+  // Configurar notificación
+  notification.type = type;
+  notification.title = title;
+  notification.message = message;
+  notification.icon = icons[type];
+  notification.duration = duration;
+  notification.progress = 0;
+  notification.show = true;
+
+  // Animar barra de progreso
+  const progressInterval = 50; // 50ms
+  const progressStep = (progressInterval / duration) * 100;
+  
+  notificationProgressTimer = setInterval(() => {
+    notification.progress += progressStep;
+    if (notification.progress >= 100) {
+      dismissNotification();
+    }
+  }, progressInterval);
+
+  // Auto-dismiss después del tiempo especificado
+  notificationTimer = setTimeout(() => {
+    dismissNotification();
+  }, duration);
+};
+
+const dismissNotification = () => {
+  if (notificationTimer) clearTimeout(notificationTimer);
+  if (notificationProgressTimer) clearInterval(notificationProgressTimer);
+  notification.show = false;
+  notification.progress = 0;
+};
+
 const STRIPE_CONFIG = {
   PUBLISHABLE_KEY: 'pk_test_51S9c29RPJMMOJ1bv1BejUA5NyJ7gsg0rvFcEjdAa8JuyMI7Zs3S9aCklSsGvTfGE2rVa6fhbwug33zIqK7b1ni8M00SLlPxKFx', // Tu clave real de Stripe
   API_BASE_URL: 'http://localhost:8081/api'
@@ -199,253 +206,6 @@ const purchasing = ref(false);
 const selectedMembershipId = ref<number | null>(null);
 const selectedPlanName = ref('');
 
-// Nuevos estados para Stripe
-const showPaymentModal = ref(false);
-const showSuccessModal = ref(false);
-const selectedMembershipForPayment = ref<Membership | null>(null);
-const paymentProcessing = ref(false);
-const stripeAvailable = ref(false);
-const cardError = ref('');
-
-// Variables de Stripe
-let stripe: any = null;
-let elements: any = null;
-let cardElement: any = null;
-
-// Datos del formulario de pago
-const paymentData = ref({
-  userId: userInfo.value?.userId || '',
-  billingZip: ''
-});
-
-// Resultado del pago para mostrar en el modal de éxito
-const paymentResult = ref<{
-  userId: number;
-  membershipName: string;
-  duration: string;
-  amount: number;
-} | null>(null);
-
-// ===============================
-// Funciones de inicialización de Stripe
-// ===============================
-const initializeStripe = async () => {
-  try {
-    if (!window.Stripe) {
-      console.warn('⚠️ Stripe no está disponible');
-      return false;
-    }
-
-    if (STRIPE_CONFIG.PUBLISHABLE_KEY.startsWith('pk_test_') || STRIPE_CONFIG.PUBLISHABLE_KEY.startsWith('pk_live_')) {
-      console.log('💳 Inicializando Stripe...');
-      stripe = window.Stripe(STRIPE_CONFIG.PUBLISHABLE_KEY);
-      elements = stripe.elements();
-      
-      console.log('✅ Stripe inicializado correctamente');
-      stripeAvailable.value = true;
-      return true;
-    } else {
-      console.log('🧪 Modo simulación - Stripe no configurado');
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ Error al inicializar Stripe:', error);
-    return false;
-  }
-};
-
-const setupStripeElements = async () => {
-  if (!stripe || !elements) return;
-  
-  try {
-    await nextTick();
-    const cardElementContainer = document.getElementById('stripe-card-element');
-    
-    if (cardElementContainer && !cardElement) {
-      cardElement = elements.create('card', {
-        style: {
-          base: {
-            fontSize: '16px',
-            color: '#424770',
-            '::placeholder': {
-              color: '#aab7c4',
-            },
-          },
-        },
-      });
-      
-      cardElement.mount('#stripe-card-element');
-      
-      cardElement.on('change', (event: any) => {
-        cardError.value = event.error ? event.error.message : '';
-      });
-      
-      console.log('✅ Stripe Elements configurado');
-    }
-  } catch (error) {
-    console.error('❌ Error configurando Stripe Elements:', error);
-  }
-};
-
-// ===============================
-// Funciones de manejo de modales
-// ===============================
-const openPaymentModal = (membership: Membership) => {
-  selectedMembershipForPayment.value = membership;
-  showPaymentModal.value = true;
-  
-  // Configurar userId si está disponible
-  if (userInfo.value?.userId) {
-    paymentData.value.userId = userInfo.value.userId.toString();
-  }
-  
-  // Configurar Stripe Elements después de que el modal esté visible
-  if (stripeAvailable.value) {
-    setTimeout(() => {
-      setupStripeElements();
-    }, 100);
-  }
-};
-
-const closePaymentModal = () => {
-  showPaymentModal.value = false;
-  selectedMembershipForPayment.value = null;
-  cardError.value = '';
-  
-  // Limpiar Stripe Elements
-  if (cardElement) {
-    try {
-      cardElement.unmount();
-      cardElement = null;
-    } catch (error) {
-      console.log('Stripe Elements ya desmontado');
-    }
-  }
-  
-  // Reset form
-  paymentData.value.billingZip = '';
-};
-
-const closeSuccessModal = () => {
-  showSuccessModal.value = false;
-  paymentResult.value = null;
-};
-
-// ===============================
-// Funciones de procesamiento de pago
-// ===============================
-const processPayment = async () => {
-  if (!selectedMembershipForPayment.value) return;
-  
-  // Validaciones
-  if (!paymentData.value.userId || parseInt(paymentData.value.userId) < 1) {
-    alert('Por favor ingresa un ID de usuario válido');
-    return;
-  }
-  
-  if (!paymentData.value.billingZip || paymentData.value.billingZip.length < 3) {
-    alert('Por favor ingresa un código postal válido');
-    return;
-  }
-  
-  paymentProcessing.value = true;
-  
-  try {
-    if (stripeAvailable.value && cardElement) {
-      await processStripePayment();
-    } else {
-      await simulatePayment();
-    }
-  } catch (error: any) {
-    console.error('❌ Error en el pago:', error);
-    alert('Error en el pago: ' + error.message);
-  } finally {
-    paymentProcessing.value = false;
-  }
-};
-
-const processStripePayment = async () => {
-  if (!selectedMembershipForPayment.value || !stripe || !cardElement) return;
-  
-  try {
-    console.log('🔄 Procesando pago con Stripe...');
-    
-    // 1. Crear PaymentIntent
-    const response = await fetch(`${STRIPE_CONFIG.API_BASE_URL}/payments/create-payment-intent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        membershipId: selectedMembershipForPayment.value.membershipId,
-        userId: parseInt(paymentData.value.userId)
-      })
-    });
-
-    if (!response.ok) throw new Error('Error al crear PaymentIntent');
-
-    const { clientSecret } = await response.json();
-
-    // 2. Confirmar pago
-    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: {
-        card: cardElement,
-        billing_details: {
-          address: {
-            postal_code: paymentData.value.billingZip
-          }
-        }
-      }
-    });
-
-    if (error) throw error;
-
-    // 3. Confirmar en backend
-    const confirmResponse = await fetch(`${STRIPE_CONFIG.API_BASE_URL}/payments/confirm-payment`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        paymentIntentId: paymentIntent.id,
-        membershipId: selectedMembershipForPayment.value.membershipId,
-        userId: parseInt(paymentData.value.userId)
-      })
-    });
-
-    if (!confirmResponse.ok) {
-      throw new Error('Error al confirmar en backend');
-    }
-
-    console.log('✅ Pago procesado exitosamente con Stripe');
-    showPaymentSuccess();
-
-  } catch (error: any) {
-    throw new Error('Error en Stripe: ' + error.message);
-  }
-};
-
-const simulatePayment = async () => {
-  if (!selectedMembershipForPayment.value) return;
-  
-  console.log('🧪 Simulando pago...');
-  
-  // Simular delay de procesamiento
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  console.log('✅ Pago simulado exitosamente');
-  showPaymentSuccess();
-};
-
-const showPaymentSuccess = () => {
-  if (!selectedMembershipForPayment.value) return;
-  
-  paymentResult.value = {
-    userId: parseInt(paymentData.value.userId),
-    membershipName: selectedMembershipForPayment.value.planName,
-    duration: formatDuration(selectedMembershipForPayment.value.durationDays),
-    amount: selectedMembershipForPayment.value.price
-  };
-  
-  closePaymentModal();
-  showSuccessModal.value = true;
-};
 
 // ===============================
 // Función existente actualizada
@@ -459,43 +219,51 @@ const loadMemberships = async () => {
   try {
     // Verificar autenticación antes de hacer la petición
     if (!requireAuth()) {
+      showNotification('error', 'Error de autenticación', 'Por favor inicia sesión para ver los planes disponibles.');
       return;
     }
 
     const data = await getAvailableMemberships();
     memberships.value = data;
     console.log('✅ Membresías cargadas exitosamente:', data.length, 'planes disponibles');
+    if (data.length > 0) {
+      showNotification('success', '¡Planes cargados!', `${data.length} planes disponibles`);
+    }
   } catch (err: any) {
-    error.value = err.message;
+    error.value = '';
     console.error('❌ Error loading memberships:', err);
     
     // Si es un error de autenticación, redirigir al login
     if (err.message.includes('autenticado') || err.message.includes('Sesión expirada')) {
+      showNotification('error', 'Sesión expirada', 'Por favor inicia sesión nuevamente.');
       setTimeout(() => {
         router.push('/login');
       }, 2000);
+    } else {
+      showNotification('error', 'Error al cargar planes', err.message);
     }
   } finally {
     loading.value = false;
   }
 };
 
-// Manejar selección y compra de plan - ACTUALIZADA PARA STRIPE
+// Manejar selección y compra de plan - Redirigir a la vista de pago
 const selectPlan = async (membership: Membership) => {
-  // Verificar autenticación antes de proceder
   if (!requireAuth()) {
+    showNotification('error', 'Error de autenticación', 'Por favor inicia sesión para seleccionar un plan.');
     return;
   }
-
   if (!isMembershipAvailable(membership)) {
     console.warn('Plan no disponible:', membership.planName);
+    showNotification('warning', 'Plan no disponible', 'Este plan no se encuentra disponible en este momento.');
     return;
   }
-
-  console.log('🎯 Plan seleccionado para pago:', membership);
-  
-  // Abrir modal de pago con Stripe
-  openPaymentModal(membership);
+  showNotification('info', 'Procesando...', `Preparando el plan ${membership.planName} para el pago.`);
+  // Redirigir a la vista de pago y pasar el plan por query param
+  router.push({
+    path: '/Pasarelapago',
+    query: { plan: encodeURIComponent(JSON.stringify(membership)) }
+  });
 };
 
 // Obtener el path del ícono SVG según la duración
@@ -512,21 +280,21 @@ const confirmPurchase = (membership: Membership): boolean => {
 // Verificar autenticación y cargar membresías al montar el componente
 onMounted(async () => {
   if (initAuth({ requireAuth: true })) {
-    // Inicializar Stripe primero
-    console.log('🔄 Inicializando Stripe...');
-    await initializeStripe();
-    
     // Verificar conectividad antes de cargar datos
     console.log('🔍 Verificando conectividad con el backend...');
     const isBackendConnected = await checkBackendConnectivity();
-    
     if (!isBackendConnected) {
       console.warn('⚠️ Backend no disponible, modo offline o error de CORS');
-      error.value = 'El servidor no está disponible. Algunas funciones pueden no funcionar correctamente.';
+      showNotification('warning', 'Problemas de conexión', 'El servidor no está disponible. Algunas funciones pueden no funcionar correctamente.');
     }
-    
     loadMemberships();
   }
+});
+
+// Limpiar timers al desmontar el componente
+onUnmounted(() => {
+  if (notificationTimer) clearTimeout(notificationTimer);
+  if (notificationProgressTimer) clearInterval(notificationProgressTimer);
 });
 </script>
 
@@ -737,6 +505,131 @@ onMounted(async () => {
 }
 
 /* Purchase overlay */
+/* Estilos de notificación */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.notification-container.error {
+  border-left: 4px solid #dc3545;
+}
+
+.notification-container.success {
+  border-left: 4px solid #28a745;
+}
+
+.notification-container.warning {
+  border-left: 4px solid #ffc107;
+}
+
+.notification-container.info {
+  border-left: 4px solid #17a2b8;
+}
+
+.notification-content {
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.notification-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.error .notification-icon {
+  color: #dc3545;
+}
+
+.success .notification-icon {
+  color: #28a745;
+}
+
+.warning .notification-icon {
+  color: #ffc107;
+}
+
+.info .notification-icon {
+  color: #17a2b8;
+}
+
+.notification-text {
+  flex-grow: 1;
+}
+
+.notification-text h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.notification-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.close-icon {
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.close-icon:hover {
+  color: #666;
+}
+
+.progress-bar {
+  height: 4px;
+  background: #f0f0f0;
+  width: 100%;
+}
+
+.progress {
+  height: 100%;
+  transition: width 0.05s linear;
+}
+
+.error .progress {
+  background: #dc3545;
+}
+
+.success .progress {
+  background: #28a745;
+}
+
+.warning .progress {
+  background: #ffc107;
+}
+
+.info .progress {
+  background: #17a2b8;
+}
+
+/* Animación de fade */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
 .purchase-overlay {
   position: fixed;
   top: 0;

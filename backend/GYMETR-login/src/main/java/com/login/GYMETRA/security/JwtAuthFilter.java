@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,7 +30,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     // Rutas públicas (ajusta si necesitas más)
     private static final List<String> PUBLIC_PATHS = List.of(
-            "/api/auth/**",
+            "/api/auth/login",
+            "/api/auth/register",
+            "/api/auth/users/**",  // Añadido para permitir el endpoint de edición
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html"
@@ -37,7 +40,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         // No filtrar preflight ni rutas públicas
         if (HttpMethod.OPTIONS.matches(request.getMethod())) {
             return true;
@@ -47,9 +50,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain chain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
 
         // Si no hay Bearer, no seteamos autenticación y dejamos seguir

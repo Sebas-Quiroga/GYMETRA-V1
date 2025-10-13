@@ -2,11 +2,11 @@
   <ion-page>
     <!-- Header con navegación -->
     <ion-header>
-      <ion-toolbar color="primary" class="custom-toolbar">
-        <ion-title class="page-title">Principal</ion-title>
+      <ion-toolbar color="primary" class="custom-toolbar" role="banner" aria-label="Encabezado principal">
+        <ion-title class="page-title" aria-label="Página principal">Principal</ion-title>
         <ion-buttons slot="end">
           <!-- Botón de salir -->
-          <ion-button fill="clear" @click="logout">
+          <ion-button fill="clear" @click="logout" aria-label="Cerrar sesión">
             <ion-icon :icon="logOutOutline"></ion-icon>
             Salir
           </ion-button>
@@ -15,16 +15,16 @@
     </ion-header>
 
     <ion-content class="home-page">
-      <div class="dashboard-container">
+  <div class="dashboard-container" role="main" aria-label="Panel principal">
         <!-- Card de Bienvenida -->
-        <div class="welcome-card">
+        <div class="welcome-card" aria-label="Bienvenida">
           <div class="welcome-content">
             <div class="welcome-text">
               <h2>Hola, {{ userFirstName }}</h2>
               <p>{{ greeting }}</p>
             </div>
             <div class="profile-avatar">
-              <div class="avatar-circle" @click="navigateToProfile">
+              <div class="avatar-circle" @click="navigateToProfile" tabindex="0" role="button" aria-label="Ir al perfil">
                 <!-- Mostrar foto si existe, sino mostrar icono -->
                 <img 
                   v-if="userPhotoUrl" 
@@ -32,11 +32,14 @@
                   alt="Foto de perfil"
                   class="avatar-image"
                   @error="handleImageError"
+                  loading="lazy"
+                  aria-label="Foto de perfil"
                 />
                 <ion-icon 
                   v-else 
                   :icon="personOutline"
                   class="avatar-icon"
+                  aria-hidden="true"
                 ></ion-icon>
               </div>
             </div>
@@ -44,9 +47,9 @@
         </div>
 
         <!-- Stats Cards Row -->
-        <div class="stats-row">
+  <div class="stats-row" aria-label="Estadísticas rápidas">
           <!-- Card Días Restantes -->
-          <div class="stat-card record-card" :class="getMembershipCardClass">
+          <div class="stat-card record-card" :class="getMembershipCardClass" aria-label="Días restantes de membresía">
             <div 
               class="stat-number" 
               :data-days-critical="isDaysCritical"
@@ -57,27 +60,27 @@
             <div class="stat-label">{{ daysRemainingLabel }}</div>
           </div>
           <!-- Card Rutina -->
-          <div class="stat-card routine-card" @click="navigateToPlanes">
+          <div class="stat-card routine-card" @click="navigateToPlanes" tabindex="0" role="button" aria-label="Ver planes">
             <div class="stat-icon">
-              <ion-icon :icon="fitnessOutline"></ion-icon>
+              <ion-icon :icon="fitnessOutline" aria-hidden="true"></ion-icon>
             </div>
             <div class="stat-label">planes</div>
           </div>
           <!-- Card QR -->
-          <div class="stat-card copy-card" @click="navigateToQR">
+          <div class="stat-card copy-card" @click="navigateToQR" tabindex="0" role="button" aria-label="Ver código QR">
             <div class="stat-icon">
-              <ion-icon :icon="qrCodeOutline"></ion-icon>
+              <ion-icon :icon="qrCodeOutline" aria-hidden="true"></ion-icon>
             </div>
             <div class="stat-label">código QR</div>
           </div>
         </div>
 
         <!-- Tiempo Entrenado Section -->
-        <div class="training-section">
+        <div class="training-section" aria-label="Tiempo entrenado semanal">
           <div class="section-header">
             <h3>Tiempo Entrenado</h3>
-            <ion-button fill="clear" size="small" class="info-btn">
-              <ion-icon :icon="informationCircleOutline"></ion-icon>
+            <ion-button fill="clear" size="small" class="info-btn" aria-label="Información sobre tiempo entrenado">
+              <ion-icon :icon="informationCircleOutline" aria-hidden="true"></ion-icon>
             </ion-button>
           </div>
           <!-- Chart Container -->
@@ -85,7 +88,7 @@
             <div class="chart-bars">
               <div class="bar-item" v-for="(bar, index) in chartData" :key="index">
                 <div class="bar" :class="bar.isActive ? 'bar-active' : 'bar-inactive'"
-                  :style="{ height: bar.height + '%' }"></div>
+                  :style="{ height: bar.height + '%' }" :aria-label="'Entrenamiento ' + bar.day + ': ' + bar.height + '%'" role="progressbar"></div>
                 <div class="bar-label">{{ bar.day }}</div>
               </div>
             </div>

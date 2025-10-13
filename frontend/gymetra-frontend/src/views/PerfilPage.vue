@@ -1,49 +1,91 @@
 <template>
   <ion-page>
-    <div class="perfil-header-bar">
-      <button class="perfil-back-btn" @click="$router.back()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <div class="perfil-header-bar" role="banner" aria-label="Encabezado de perfil">
+      <button class="perfil-back-btn" @click="$router.back()" aria-label="Volver" tabindex="0">
+        <ion-icon :icon="arrowBackOutline" style="font-size: 1.7rem; color: #fff;" aria-hidden="true"></ion-icon>
       </button>
-      <span class="perfil-header-title">Perfil</span>
-      <button class="perfil-settings-btn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .66.38 1.26 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 8c.33.36.51.86.51 1.36V9a2 2 0 0 1 0 4v-.09c0-.5-.18-1-.51-1.36z"/></svg>
+      <span class="perfil-header-title" aria-label="Perfil">Perfil</span>
+      <button class="perfil-settings-btn" aria-label="Configuración" tabindex="0">
+        <ion-icon :icon="settingsOutline" style="font-size: 1.5rem; color: #fff;" aria-hidden="true"></ion-icon>
       </button>
     </div>
+    
     <ion-content class="perfil-content">
       <!-- Avatar y datos -->
-      <div class="perfil-avatar-section">
-        <div class="perfil-avatar" @click="changePhoto" :class="{ 'loading': profileLoading }">
-          <img :src="photoPreview || userPhotoUrl" alt="avatar" />
-          <div class="avatar-overlay">
-            <ion-icon :icon="cameraOutline" class="camera-overlay-icon"></ion-icon>
+      <div class="perfil-avatar-section" aria-label="Avatar y datos de usuario">
+        <div class="perfil-avatar" :class="{ 'loading': profileLoading }">
+          <img :src="avatarSrc" alt="avatar" @click="changePhoto" style="cursor:pointer" loading="lazy" aria-label="Foto de perfil" />
+          <div class="avatar-overlay" @click="changePhoto" tabindex="0" role="button" aria-label="Cambiar foto de perfil">
+            <ion-icon :icon="cameraOutline" class="camera-overlay-icon" style="font-size:2.2rem;color:#fff;" aria-hidden="true"></ion-icon>
           </div>
-          <span class="add-icon">+</span>
         </div>
-        <div class="perfil-username">{{ userName }}</div>
-      </div>
-      <div class="perfil-info-card">
-        <ion-list>
-          <ion-item>{{ userData.email }}</ion-item>
-          <ion-item>********</ion-item>
-          <ion-item>{{ userData.phone }}</ion-item>
-          <ion-item>{{ userData.status }}</ion-item>
-        </ion-list>
-      </div>
-      <div class="perfil-edit-btn">
-        <ion-button shape="round" color="primary" fill="solid" @click="goToRegister">
-          <ion-icon slot="icon-only" :icon="createOutline"></ion-icon>
-        </ion-button>
+        <div class="perfil-username-row">
+          <div class="perfil-username">{{ userName }}</div>
+          <ion-button class="perfil-edit-btn-inline" shape="round" color="primary" fill="solid" @click="openEditModal" aria-label="Editar nombre de usuario">
+            <ion-icon slot="icon-only" :icon="createOutline"></ion-icon>
+          </ion-button>
+        </div>
+        <div v-if="photoPreview" class="perfil-update-img-btn" style="margin-top: 10px;">
+          <ion-button shape="round" color="primary" fill="solid" @click="updateAvatar" :disabled="editLoading" :aria-disabled="editLoading" aria-label="Actualizar imagen de perfil">
+            <ion-icon slot="icon-only" :icon="createOutline"></ion-icon>
+            <span style="margin-left:8px;">Actualizar imagen</span>
+          </ion-button>
+        </div>
       </div>
 
+      <div class="perfil-info-card" aria-label="Información de usuario">
+        <ion-list>
+          <ion-item><ion-icon slot="start" :icon="mailOutline" style="color:#04b8e5;" aria-hidden="true"/> <span aria-label="Correo electrónico">{{ userData.email }}</span></ion-item>
+          <ion-item><ion-icon slot="start" :icon="lockClosedOutline" style="color:#04b8e5;" aria-hidden="true"/> ******** <ion-button slot="end" fill="clear" size="small" aria-label="Editar contraseña"><ion-icon :icon="createOutline" /></ion-button></ion-item>
+          <ion-item><ion-icon slot="start" :icon="callOutline" style="color:#04b8e5;" aria-hidden="true"/> <span aria-label="Teléfono">{{ userData.phone }}</span></ion-item>
+          <ion-item><ion-icon slot="start" :icon="personCircleOutline" style="color:#04b8e5;" aria-hidden="true"/> <span aria-label="Estado">{{ userData.status }}</span></ion-item>
+        </ion-list>
+      </div>
+
+      <!-- Botón de editar eliminado, ahora está junto al nombre -->
+
+      <!-- Modal de edición de perfil -->
+      <ion-modal :is-open="showEditModal" @did-dismiss="closeEditModal" aria-modal="true" role="dialog">
+        <div class="modal-content" aria-label="Editar Perfil">
+          <button class="modal-close-btn" @click="closeEditModal" aria-label="Cerrar modal" style="position:sticky;top:0;z-index:10;float:right;background:none;border:none;font-size:1.5rem;">×</button>
+          <h2>Editar Perfil</h2>
+          <form @submit.prevent="handleEditProfile" aria-label="Formulario de edición de perfil">
+            <ion-item>
+              <ion-label position="stacked">Nombre</ion-label>
+              <ion-input v-model="editForm.firstName" maxlength="50" autocomplete="given-name" aria-label="Nombre" required />
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Apellido</ion-label>
+              <ion-input v-model="editForm.lastName" maxlength="50" autocomplete="family-name" aria-label="Apellido" required />
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Correo electrónico</ion-label>
+              <ion-input v-model="editForm.email" type="email" maxlength="100" autocomplete="email" aria-label="Correo electrónico" required />
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Teléfono</ion-label>
+              <ion-input v-model="editForm.phone" type="tel" maxlength="15" autocomplete="tel" aria-label="Teléfono" required />
+            </ion-item>
+            <div class="btn-container">
+              <ion-button type="submit" expand="block" color="primary" :disabled="editLoading" :aria-disabled="editLoading" aria-label="Guardar cambios">
+                <ion-spinner v-if="editLoading" name="crescent" aria-label="Cargando"></ion-spinner>
+                <span v-else>Guardar Cambios</span>
+              </ion-button>
+              <ion-button fill="clear" color="medium" @click="closeEditModal" aria-label="Cancelar">Cancelar</ion-button>
+            </div>
+          </form>
+        </div>
+      </ion-modal>
+
       <!-- Toast de notificación -->
-      <div v-if="notification.show" class="notification-toast" :class="notification.type">
+      <div v-if="notification.show" class="notification-toast" :class="notification.type" role="alert" aria-live="assertive">
         <div class="notification-content">
-          <ion-icon :icon="notification.icon" class="notification-icon"></ion-icon>
+          <ion-icon :icon="notification.icon" class="notification-icon" aria-hidden="true"></ion-icon>
           <div class="notification-text">
             <h4>{{ notification.title }}</h4>
             <p>{{ notification.message }}</p>
           </div>
-          <ion-button fill="clear" size="small" @click="dismissNotification">
+          <ion-button fill="clear" size="small" @click="dismissNotification" aria-label="Cerrar notificación">
             <ion-icon :icon="createOutline"></ion-icon>
           </ion-button>
         </div>
@@ -56,406 +98,175 @@
         accept="image/png,image/jpeg,image/jpg" 
         style="display:none" 
         @change="handleFileSelect" 
+        aria-label="Seleccionar imagen de perfil"
       />
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { arrowBackOutline, settingsOutline, createOutline, cameraOutline, imagesOutline, checkmarkCircle, alertCircle, informationCircle, warningOutline, trashOutline, addOutline } from 'ionicons/icons';
+import { arrowBackOutline, settingsOutline, createOutline, cameraOutline, imagesOutline, checkmarkCircle, alertCircle, informationCircle, warningOutline, trashOutline, addOutline, mailOutline, lockClosedOutline, callOutline, personCircleOutline } from 'ionicons/icons';
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { decodeJWT } from '@/services/authService';
+import { updateUserProfile } from '@/services/profileService';
 import { useRouter } from 'vue-router';
-import { useProfile, validateImageFile, resizeImageForProfile } from '@/services/profileService';
-import { loadingController, alertController, actionSheetController } from '@ionic/vue';
 
 const auth = useAuthStore();
 const router = useRouter();
-const { loading: profileLoading, error: profileError, updatePhoto, clearError } = useProfile();
 
+// Definir las propiedades de estado
 const userData = ref({
-  userId: undefined as string | number | undefined,
-  email: '',
-  firstName: '',
-  lastName: '',
-  phone: '',
-  status: '',
-  photoUrl: '',
+  userId: auth.user?.userId || '',
+  email: auth.user?.email || '',
+  firstName: auth.user?.firstName || '',
+  lastName: auth.user?.lastName || '',
+  phone: auth.user?.phone || '',
+  status: auth.user?.status || '',
+  photoUrl: auth.user?.photoUrl || '',
 });
 
-// Estado para la funcionalidad de foto
-const fileInput = ref<HTMLInputElement>();
+// Avatar helpers
 const photoPreview = ref('');
-const notification = ref({
-  show: false,
-  type: 'info' as 'success' | 'error' | 'warning' | 'info',
-  title: '',
-  message: '',
-  icon: informationCircle,
+const avatarSrc = computed(() => {
+  if (photoPreview.value) return photoPreview.value;
+  const val = userData.value.photoUrl;
+  if (!val) return '';
+  if (/^([A-Za-z0-9+/=]+)$/.test(val) && val.length > 100) {
+    return `data:image/png;base64,${val}`;
+  }
+  if (val.startsWith('data:image/')) return val;
+  return val;
 });
-const userPhotoUrl = computed(() => 
-  photoPreview.value || auth.userPhotoUrl
-);
-const userName = computed(() => auth.userName);
+const fileInput = ref<HTMLInputElement | null>(null);
+const changePhoto = () => {
+  fileInput.value?.click();
+};
+const handleFileSelect = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (!input.files || !input.files[0]) return;
 
-const goToRegister = () => {
-  router.push('/register');
+  const file = input.files[0];
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    const result = e.target?.result as string;
+    
+    // Comprimir la imagen y convertirla a base64
+    const base64 = result.includes(',') ? result.split(',')[1] : result;
+
+    // Establecer la imagen base64 en el estado
+    photoPreview.value = result; // Esto es solo para mostrar una vista previa
+    editForm.value.photoUrl = base64; // Esto es lo que enviamos al backend
+  };
+
+  reader.readAsDataURL(file); // Este paso convierte la imagen a base64
 };
 
-// Funciones para notificaciones
-const showNotification = (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => {
-  const icons = {
-    success: checkmarkCircle,
-    error: alertCircle,
-    warning: warningOutline,
-    info: informationCircle,
+const editForm = ref({
+  firstName: userData.value.firstName,
+  lastName: userData.value.lastName,
+  email: userData.value.email,
+  phone: userData.value.phone,
+  photoUrl: userData.value.photoUrl,
+});
+
+const profileLoading = ref(false); // Definido para evitar el warning
+// userPhotoUrl no se usa, eliminado para evitar redundancia
+const userName = computed(() => userData.value.firstName + ' ' + userData.value.lastName);
+
+// Funcionalidad del modal de edición
+const showEditModal = ref(false);
+const editLoading = ref(false);
+
+const openEditModal = () => {
+  showEditModal.value = true;
+};
+
+const closeEditModal = () => {
+  showEditModal.value = false;
+};
+
+
+// Función para editar el perfil
+const handleEditProfile = async () => {
+  editLoading.value = true;
+  let base64 = editForm.value.photoUrl;
+  if (base64 && !base64.startsWith('data:image/png;base64,')) {
+    base64 = 'data:image/png;base64,' + base64;
+  }
+  const data = {
+    firstName: editForm.value.firstName,
+    lastName: editForm.value.lastName,
+    email: editForm.value.email,
+    phone: editForm.value.phone,
+    photoUrl: base64 || userData.value.photoUrl,
   };
-  
-  notification.value = {
-    show: true,
-    type,
-    title,
-    message,
-    icon: icons[type],
+  const hasChanges =
+    data.firstName !== userData.value.firstName ||
+    data.lastName !== userData.value.lastName ||
+    data.email !== userData.value.email ||
+    data.phone !== userData.value.phone ||
+    data.photoUrl !== userData.value.photoUrl;
+  if (!hasChanges) {
+    showNotification('info', 'Sin cambios', 'No se han detectado cambios.');
+    editLoading.value = false;
+    return;
+  }
+  await updateUserProfile({
+    userId: String(userData.value.userId),
+    data,
+    successMsg: 'Perfil actualizado',
+    onSuccess: closeEditModal,
+    loadingRef: editLoading,
+    showNotification,
+    setUserData: (val: any) => { userData.value = typeof val === 'function' ? val(userData.value) : val; }
+  });
+};
+
+// Actualizar imagen de perfil
+const updateAvatar = async () => {
+  if (!editForm.value.photoUrl) return;
+  let base64 = editForm.value.photoUrl;
+  if (!base64.startsWith('data:image/png;base64,')) {
+    base64 = 'data:image/png;base64,' + base64;
+  }
+  const data = {
+    firstName: editForm.value.firstName,
+    lastName: editForm.value.lastName,
+    email: editForm.value.email,
+    phone: editForm.value.phone,
+    photoUrl: base64,
   };
-  
-  // Auto-dismiss después de 5 segundos
-  setTimeout(() => {
-    dismissNotification();
-  }, 5000);
+  await updateUserProfile({
+    userId: String(userData.value.userId),
+    data,
+    successMsg: 'Imagen actualizada',
+    onSuccess: () => { photoPreview.value = ''; },
+    loadingRef: profileLoading,
+    showNotification,
+    setUserData: (val: any) => { userData.value = typeof val === 'function' ? val(userData.value) : val; }
+  });
+};
+
+// Notificaciones
+const notification = ref({
+  show: false,
+  type: 'info',
+  title: '',
+  message: '',
+  icon: 'informationCircle',
+});
+
+type NotificationType = 'success' | 'error' | 'info';
+const showNotification = (type: NotificationType, title: string, message: string) => {
+  notification.value = { show: true, type, title, message, icon: type === 'success' ? 'checkmarkCircle' : type === 'info' ? 'informationCircle' : 'alertCircle' };
+  setTimeout(() => { notification.value.show = false; }, 5000);
 };
 
 const dismissNotification = () => {
   notification.value.show = false;
 };
-
-// Funciones para cambio de foto
-const changePhoto = async () => {
-  if (profileLoading.value) return;
-  
-  const actionSheet = await actionSheetController.create({
-    header: 'Cambiar Foto de Perfil',
-    buttons: [
-      {
-        text: 'Tomar Foto',
-        icon: cameraOutline,
-        handler: () => {
-          takePhoto();
-        }
-      },
-      {
-        text: 'Seleccionar de Galería',
-        icon: imagesOutline,
-        handler: () => {
-          selectFromGallery();
-        }
-      },
-      {
-        text: 'Eliminar Foto',
-        icon: trashOutline,
-        role: 'destructive',
-        handler: () => {
-          removePhoto();
-        }
-      },
-      {
-        text: 'Cancelar',
-        role: 'cancel'
-      }
-    ]
-  });
-  
-  await actionSheet.present();
-};
-
-const selectFromGallery = () => {
-  if (fileInput.value) {
-    fileInput.value.accept = "image/png,image/jpeg,image/jpg";
-    fileInput.value.click();
-  }
-};
-
-const takePhoto = () => {
-  if (fileInput.value) {
-    fileInput.value.accept = "image/png,image/jpeg,image/jpg";
-    fileInput.value.setAttribute('capture', 'camera');
-    fileInput.value.click();
-  }
-};
-
-const removePhoto = async () => {
-  try {
-    const loading = await loadingController.create({
-      message: 'Eliminando foto...',
-    });
-    await loading.present();
-    
-    const response = await updatePhoto('', auth.token);
-    
-    if (response.success) {
-      userData.value.photoUrl = '';
-      photoPreview.value = '';
-      // Actualizar el store
-      auth.updateUserPhoto('');
-      showNotification('success', 'Foto eliminada', 'Tu foto de perfil ha sido eliminada');
-    } else {
-      showNotification('error', 'Error', response.message || 'No se pudo eliminar la foto');
-    }
-    
-    await loading.dismiss();
-  } catch (error) {
-    console.error('Error eliminando foto:', error);
-    showNotification('error', 'Error', 'Error al eliminar la foto');
-  }
-};
-
-const handleFileSelect = async (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  
-  if (file) {
-    const validation = validateImageFile(file);
-    if (!validation.isValid) {
-      showNotification('warning', 'Archivo no válido', validation.error || 'Archivo no válido');
-      return;
-    }
-    
-    const loading = await loadingController.create({
-      message: 'Procesando imagen...',
-    });
-    await loading.present();
-    
-    try {
-      // Crear preview inmediatamente
-      photoPreview.value = URL.createObjectURL(file);
-      
-      // Redimensionar imagen
-      const base64 = await resizeImageForProfile(file, 200);
-      
-      // Subir foto al servidor
-      const response = await updatePhoto(base64, auth.token);
-      
-      if (response.success) {
-        // Actualizar datos del usuario
-        userData.value.photoUrl = base64;
-        // Actualizar el store
-        auth.updateUserPhoto(base64);
-        showNotification('success', 'Foto actualizada', '¡Tu foto de perfil ha sido actualizada!');
-      } else {
-        // Revertir preview si falló
-        photoPreview.value = '';
-        showNotification('error', 'Error', response.message || 'No se pudo actualizar la foto');
-      }
-      
-    } catch (error) {
-      console.error('Error procesando imagen:', error);
-      photoPreview.value = '';
-      showNotification('error', 'Error', 'Error al procesar la imagen');
-    } finally {
-      await loading.dismiss();
-    }
-  }
-  
-  // Limpiar el input
-  target.value = '';
-};
-
-onMounted(() => {
-  // Inicializar token si no está cargado
-  if (!auth.token) {
-    auth.initializeToken();
-  }
-  
-  // Usar datos del store si están disponibles
-  if (auth.user) {
-    userData.value = {
-      userId: auth.user.userId,
-      email: auth.user.email || '',
-      firstName: auth.user.firstName || '',
-      lastName: auth.user.lastName || '',
-      phone: auth.user.phone || '',
-      status: auth.user.status || '',
-      photoUrl: auth.user.photoUrl || '',
-    };
-  } else if (auth.token) {
-    // Decodificar token si el store no tiene los datos
-    const decoded = decodeJWT(auth.token);
-    if (decoded) {
-      const decodedData = {
-        userId: decoded.userId,
-        email: decoded.email || '',
-        firstName: decoded.firstName || '',
-        lastName: decoded.lastName || '',
-        phone: decoded.phone || '',
-        status: decoded.status || '',
-        photoUrl: decoded.photoUrl || '',
-      };
-      userData.value = decodedData;
-      // Actualizar el store con los datos decodificados
-      auth.updateUser(decodedData);
-    }
-  }
-});
 </script>
 
 <style src="../theme/PerfilPage.css"></style>
-<style>
-.perfil-header-bar {
-  background: #07B7E0;
-  min-height: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  padding: 0 22px;
-  box-shadow: none;
-}
-.perfil-back-btn {
-  background: transparent;
-  border: none;
-  outline: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  cursor: pointer;
-  padding: 0;
-}
-.perfil-header-title {
-  color: #fff;
-  font-size: 1.45rem;
-  font-weight: 800;
-  font-family: 'Nunito', sans-serif;
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-.perfil-settings-btn {
-  background: transparent;
-  border: none;
-  outline: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 12px;
-  cursor: pointer;
-  padding: 0;
-}
-
-/* Estilos para el avatar interactivo */
-.perfil-avatar {
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.perfil-avatar:hover {
-  transform: scale(1.05);
-}
-
-.perfil-avatar.loading {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.avatar-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(7, 183, 224, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: 50%;
-}
-
-.perfil-avatar:hover .avatar-overlay {
-  opacity: 1;
-}
-
-.camera-overlay-icon {
-  color: white;
-  font-size: 24px;
-}
-
-/* Estilos para notificaciones */
-.notification-toast {
-  position: fixed;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 90%;
-  width: 400px;
-  z-index: 10000;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  animation: slideDown 0.3s ease-out;
-}
-
-.notification-toast.success {
-  background: #d4edda;
-  border: 1px solid #c3e6cb;
-  color: #155724;
-}
-
-.notification-toast.error {
-  background: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
-}
-
-.notification-toast.warning {
-  background: #fff3cd;
-  border: 1px solid #ffeaa7;
-  color: #856404;
-}
-
-.notification-toast.info {
-  background: #d1ecf1;
-  border: 1px solid #bee5eb;
-  color: #0c5460;
-}
-
-.notification-content {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  gap: 12px;
-}
-
-.notification-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.notification-text {
-  flex: 1;
-}
-
-.notification-text h4 {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.notification-text p {
-  margin: 0;
-  font-size: 13px;
-  opacity: 0.9;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-</style>
