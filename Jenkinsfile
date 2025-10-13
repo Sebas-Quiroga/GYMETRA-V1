@@ -33,6 +33,14 @@ pipeline {
                 }
             }
         }
+        stage('Diagnóstico Frontend') {
+            steps {
+                dir('frontend/gymetra-frontend') {
+                    bat 'dir'
+                    bat 'type index.html'
+                }
+            }
+        }
         stage('Build Frontend') {
             steps {
                 dir('frontend/gymetra-frontend') {
