@@ -1,4 +1,3 @@
-# Jenkins pipeline for GYMETRA-V1
 pipeline {
     agent any
     environment {
