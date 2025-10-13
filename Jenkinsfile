@@ -81,5 +81,19 @@ pipeline {
                 }
             }
         }
+        stage('List Docker Images') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    bat 'docker images'
+                }
+            }
+        }
+        stage('List Running Containers') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    bat 'docker ps'
+                }
+            }
+        }
     }
 }
