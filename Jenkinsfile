@@ -6,6 +6,11 @@ pipeline {
     PATH = "${JAVA_HOME}/bin;${env.PATH}"
     }
     stages {
+        stage('Workspace Global Diagnostic') {
+            steps {
+                bat 'dir /s /b'
+            }
+        }
         stage('Build Backend - GYMETR-login') {
             steps {
                 dir('backend/GYMETR-login') {
