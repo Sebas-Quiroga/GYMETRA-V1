@@ -13,18 +13,18 @@ pipeline {
                 }
             }
         }
-        stage('Build Backend - GYMETR-Membership') {
-            steps {
-                dir('backend/GYMETR-Membership') {
-                    bat 'mvnw.cmd clean package -DskipTests'
-                }
-            }
-        }
-        stage('Diagnóstico archivos Membership') {
+        stage('Membership Diagnostic') {
             steps {
                 dir('backend/GYMETR-Membership') {
                     bat 'dir /a'
                     bat 'type mvnw.cmd'
+                }
+            }
+        }
+        stage('Build Backend - GYMETR-Membership') {
+            steps {
+                dir('backend/GYMETR-Membership') {
+                    bat 'mvnw.cmd clean package -DskipTests'
                 }
             }
         }
