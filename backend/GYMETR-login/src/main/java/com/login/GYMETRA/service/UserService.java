@@ -2,6 +2,7 @@ package com.login.GYMETRA.service;
 
 import com.login.GYMETRA.dto.JwtResponse;
 import com.login.GYMETRA.dto.RegisterRequest;
+import com.login.GYMETRA.dto.EditUserRequest;
 import com.login.GYMETRA.entity.Role;
 import com.login.GYMETRA.entity.User;
 import com.login.GYMETRA.entity.UserRole;
@@ -120,6 +121,37 @@ public class UserService {
 
         String token = jwtService.generateToken(buildJwtClaims(user), user);
         return new JwtResponse(true, token, "Bearer", "Login exitoso");
+    }
+
+    @Transactional
+    public JwtResponse editUser(Long userId, EditUserRequest request) {
+        try {
+            User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+            // Verificar si el email ya está en uso por otro usuario
+            if (request.getEmail() != null && !request.getEmail().equals(user.getEmail()) &&
+                userRepository.existsByEmail(request.getEmail())) {
+                throw new UserAlreadyExistsException("El email ya está registrado");
+            }
+
+            // Actualizar campos si no son null
+            if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+            if (request.getLastName() != null) user.setLastName(request.getLastName());
+            if (request.getEmail() != null) user.setEmail(request.getEmail());
+            if (request.getPhone() != null) user.setPhone(request.getPhone());
+            if (request.getPhotoUrl() != null) user.setPhotoUrl(request.getPhotoUrl());
+            if (request.getPassword() != null) {
+                user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            }
+
+            User updatedUser = userRepository.save(user);
+            String token = jwtService.generateToken(buildJwtClaims(updatedUser), updatedUser);
+
+            return new JwtResponse(true, token, "Bearer", "Usuario actualizado exitosamente");
+        } catch (IllegalArgumentException | UserAlreadyExistsException ex) {
+            return new JwtResponse(false, null, null, ex.getMessage());
+        }
     }
 
     public static class UserAlreadyExistsException extends RuntimeException {
