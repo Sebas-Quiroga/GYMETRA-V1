@@ -1,19 +1,22 @@
-HU-2.3: Spring Boot setup with required dependencies for backend
+FIX: PostgreSQL connection issues in Docker environment
 
-- Installed Spring Boot DevTools for auto-reload during development.
-- Configured PostgreSQL Driver for database connection.
-- Added Spring Web for building RESTful APIs.
-- Integrated Lombok to reduce boilerplate code in entities and services.
-- Implemented Spring Data JPA with Hibernate for persistence layer.
+- Added PostgreSQL service to docker-compose.yml with proper network configuration
+- Created application-prod.properties for production environment with database connection to containerized PostgreSQL
+- Configured PostgreSQL container with:
+  * Port mapping 5000:5432 for compatibility with existing configuration
+  * Database initialization from Database-Setup directory
+  * Persistent volume for data storage
+  * Proper dependency management (backend depends on database)
+- Removed obsolete deploy.sh script
+- Fixed network connectivity between backend and database containers
 
 QA Acceptance Criteria:
-- Backend compiles successfully with all dependencies.
-- pom.xml contains all configured libraries.
-- Successful connection established with PostgreSQL.
-- Spring Web and JPA ready for service development.
-- Lombok works correctly across the project.
+- Backend connects successfully to PostgreSQL container
+- Database initializes with existing SQL scripts
+- Docker Compose stack starts all services correctly
+- No connection refused errors in application logs
 
 DoD:
-- Configuration committed to branch HU-2.3-dev.
-- Backend starts without errors in local environment.
-- Dependencies validated by QA.
+- Changes committed to develop branch
+- Jenkins pipeline can build and deploy the complete stack
+- Database connectivity verified in containerized environment
