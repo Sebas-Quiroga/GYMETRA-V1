@@ -77,12 +77,12 @@ export const apiRequest = async <T = any>(
       };
     }
 
-    // Si la respuesta es exitosa pero no tiene el campo 'success', lo agregamos
-    if (response.ok && !responseData.hasOwnProperty('success')) {
+    // Normalización: asegurar que siempre devolvemos ApiResponse<T>
+    if (!('success' in responseData)) {
       responseData = {
-        success: true,
-        message: responseData.message || 'Operación exitosa',
-        data: responseData
+        success: response.ok,
+        message: (responseData as any)?.message || (response.ok ? 'Operación exitosa' : 'Error'),
+        data: responseData as any
       };
     }
 

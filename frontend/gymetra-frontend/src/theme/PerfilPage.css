@@ -1,3 +1,30 @@
+/* Header más compacto y moderno */
+.perfil-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ion-color-primary, #04b8e5);
+  padding: 0.7rem 1.1rem 0.7rem 0.5rem;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  box-shadow: 0 2px 8px rgba(4,184,229,0.10);
+}
+.perfil-header-title {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.perfil-back-btn, .perfil-settings-btn {
+  background: none;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+}
+
 
 /* Fuente y colores del sistema */
 body, .perfil-content, .perfil-toolbar, .perfil-avatar-section, .perfil-info-card, .perfil-edit-btn, .perfil-username, .perfil-info-card ion-item {
@@ -26,37 +53,69 @@ body, .perfil-content, .perfil-toolbar, .perfil-avatar-section, .perfil-info-car
 
 .perfil-avatar {
   position: relative;
-  width: 180px;
-  height: 180px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 4px 18px rgba(4,184,229,0.18);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: box-shadow 0.2s;
 }
 .perfil-avatar img {
-  width: 155px;
-  height: 155px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
   object-fit: cover;
+  box-shadow: 0 2px 8px rgba(4,184,229,0.10);
 }
-.add-icon {
+.perfil-avatar .avatar-overlay {
   position: absolute;
-  right: 14px;
-  bottom: 14px;
-  background: var(--ion-color-primary);
-  color: #fff;
+  bottom: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #04b8e5 80%, #fff 100%);
   border-radius: 50%;
   width: 44px;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  font-weight: 700;
-  box-shadow: 0 4px 18px rgba(4,184,229,0.28);
+  box-shadow: 0 2px 8px rgba(4,184,229,0.18);
   border: 2px solid #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.perfil-avatar .avatar-overlay:hover {
+  background: linear-gradient(135deg, #04b8e5 60%, #fff 100%);
+}
+
+.perfil-username-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 12px;
+  margin-bottom: 4px;
+}
+.perfil-username {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--ion-color-primary);
+  font-family: var(--input-font-family, 'Nunito', sans-serif);
+  margin: 0;
+}
+.perfil-edit-btn-inline {
+  --background: var(--ion-color-primary);
+  --color: #fff;
+  --border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px rgba(4,184,229,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
 }
 .perfil-username {
   margin-top: 12px;
@@ -88,25 +147,16 @@ body, .perfil-content, .perfil-toolbar, .perfil-avatar-section, .perfil-info-car
   margin-bottom: 6px;
   box-shadow: none;
   border: none;
-}
-
-.perfil-edit-btn {
-  display: flex;
-  justify-content: center;
-  margin-top: 18px;
-}
-.perfil-edit-btn ion-button {
-  --background: var(--ion-color-primary);
-  --color: #fff;
-  --border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  font-size: 1.3rem;
-  box-shadow: 0 2px 8px rgba(4,184,229,0.18);
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
 }
+.perfil-info-card ion-item ion-icon {
+  font-size: 1.3rem;
+  margin-right: 0.5rem;
+}
+
+/* Botón de editar principal eliminado, ahora está junto al nombre */
 
 /* Responsive: tablet y desktop */
 @media (min-width: 600px) {

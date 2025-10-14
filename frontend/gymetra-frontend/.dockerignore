@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Production build (se construye en el contenedor)
+dist/
+build/
+
+# Development
+.vite/
+.turbo
+
+# Testing
+coverage/
+tests/e2e/videos/
+tests/e2e/screenshots/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Otros
+*.tmp
+*.temp
