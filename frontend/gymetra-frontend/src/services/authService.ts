@@ -21,7 +21,7 @@ export function decodeJWT(token: string) {
 // ===============================
 export async function login(email: string, password: string) {
   try {
-    const response = await axios.post(`${MAIN_API_URL}/login`, { email, password });
+    const response = await axios.post(`${ MAIN_API_URL}/login`, { email, password });
 
     if (!response.data.token) {
       throw new Error("No se recibió token del servidor");

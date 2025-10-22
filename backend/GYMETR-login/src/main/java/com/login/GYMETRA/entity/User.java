@@ -44,9 +44,9 @@ public class User {
     private OffsetDateTime lastLogin;
 
     @Column(name = "identification", unique = true, nullable = false)
-    private Long identification;
+    private Long identification;  // ahora numérico
 
-    @Column(name = "photo_url", columnDefinition = "TEXT")
+    @Column(name = "photo_url")
     private String photoUrl;
 
     // Relación con la tabla pivote
