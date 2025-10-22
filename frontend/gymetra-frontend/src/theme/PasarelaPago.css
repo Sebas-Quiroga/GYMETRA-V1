@@ -1,298 +1,136 @@
-/*******************************
- * Pasarela de Pago — UI/UX Clean
- * Clases: payment-*, form-group, stripe-element
- *******************************/
-
-/* —— Design Tokens (scoped por contenedor) —— */
-.payment-content {
-  /* Paleta */
-  --pp-primary: #07B7E0;
-  --pp-primary-600: #0696c7;
-  --pp-bg: #ffffff;
-  --pp-surface: #f8f9fa;
-  --pp-card: #ffffff;
-  --pp-text: #1f2a3a;
-  --pp-muted: #5e6b7a;
-  --pp-border: #e6e8ea;
-  --pp-success-bg: #eafaf1;
-  --pp-success-text: #1f9254;
-  --pp-warn-bg: #fef3c7;
-  --pp-warn-text: #92400e;
-  --pp-error: #e53935;
-
-  /* Tipografía y ritmo */
-  --pp-font: 'Nunito', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  --pp-radius-sm: 10px;
-  --pp-radius-md: 14px;
-  --pp-radius-lg: 20px;
-
-  --pp-space-1: .5rem;
-  --pp-space-2: .75rem;
-  --pp-space-3: 1rem;
-  --pp-space-4: 1.5rem;
-  --pp-space-5: 2rem;
-
-  /* Sombras (bajas y altas) */
-  --pp-shadow-1: 0 8px 22px rgba(16, 24, 40, 0.06);
-  --pp-shadow-2: 0 12px 40px rgba(7, 183, 224, 0.18);
-
-  /* Config base */
-  background: var(--pp-bg) !important;
-  min-height: 100vh;
-  padding: 0;
-  font-family: var(--pp-font);
-  color: var(--pp-text);
+/* === INPUTS ESTILO REGISTER === */
+.pasarela-form .input-item {
+	background: #dedbdb;
+	border-radius: 12px;
+	padding: 0 14px;
+	margin-bottom: 12px;
+	display: flex;
+	align-items: center;
+	min-height: 44px;
+	border: none;
+	box-shadow: none;
+	transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+	position: relative;
+	overflow: hidden;
 }
 
-/* —— Header superior —— */
-.payment-header {
-  background: var(--pp-primary);
-  min-height: 64px;
-  display: flex;
-  align-items: center;
-  gap: var(--pp-space-2);
-  padding: 0 22px;
+.pasarela-form .pasarela-input {
+	background: transparent;
+	border: none;
+	outline: none;
+	width: 100%;
+	font-family: 'Nunito', sans-serif;
+	font-weight: 600;
+	font-size: 0.95rem;
+	color: #666;
+	padding: 12px 0;
+	transition: color 0.3s;
+}
+.pasarela-form .pasarela-input::placeholder {
+	color: #999;
+	font-weight: 500;
+}
+.pasarela-form .input-item:focus-within .pasarela-input {
+	color: #07B7E0;
+}
+.pasarela-form .input-item:hover {
+	background: rgba(255,255,255,0.98);
+	transform: translateY(-2px);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(7, 183, 224, 0.15);
+}
+.pasarela-form .input-item:focus-within {
+	background: #fff;
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(7,183,224,0.15);
+}
+/* Fondo y alineación general */
+.pasarela-bg {
+	min-height: 100vh;
+	width: 100vw;
+	background: #f6fafd;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding-top: 0;
+	padding-bottom: 80px; /* espacio para el footer */
+	box-sizing: border-box;
+}
+/* Contenedor principal de la tarjeta de pago */
+.pasarela-card {
+	background: #fff;
+	border-radius: 18px;
+	box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+	max-width: 400px;
+	width: 100%;
+	margin: 24px 0 0 0;
+	padding: 0 24px 24px 24px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	overflow: hidden;
 }
 
-.back-btn {
-  background: transparent;
-  border: none;
-  margin-right: 6px;
-  cursor: pointer;
-  padding: 0;
-  border-radius: 10px;
-  transition: background .15s ease;
-}
-.back-btn:hover { background: rgba(255,255,255,.12); }
-
-.payment-title {
-  color: #fff;
-  font-size: 1.3rem;
-  font-weight: 800;
-  letter-spacing: 0.2px;
+.pasarela-header {
+	background: var(--ion-color-primary, #07B7E0);
+	color: #fff;
+	font-family: var(--input-font-family, 'Nunito', sans-serif) !important;
+	font-weight: 700;
+	font-size: 1.2rem;
+	text-align: center;
+	border-radius: 18px 18px 0 0;
+	padding: 20px 0 20px 0;
+	width: 100%;
+	margin-bottom: 24px;
+	margin-top: 0;
+	box-shadow: 0 4px 18px rgba(4,184,229,0.18);
+	letter-spacing: 0.01em;
 }
 
-/* —— Card principal —— */
-.payment-form-container {
-  max-width: 600px;
-  margin: clamp(20px, 6vh, 48px) auto;
-  background: var(--pp-surface);
-  border-radius: var(--pp-radius-lg);
-  padding: clamp(20px, 5vw, var(--pp-space-5));
-  box-shadow: var(--pp-shadow-1);
-}
-
-/* —— Resumen de compra —— */
-.purchase-summary {
-  background: var(--pp-card);
-  border-radius: var(--pp-radius-md);
-  padding: var(--pp-space-4);
-  margin-bottom: var(--pp-space-4);
-  border: 1px solid var(--pp-border);
-}
-.purchase-summary h4 {
-  color: var(--pp-text);
-  font-size: 1.15rem;
-  font-weight: 800;
-  margin-bottom: .75rem;
-}
-.purchase-summary p {
-  margin: .35rem 0;
-  color: var(--pp-muted);
-  font-weight: 600;
-}
-.total-price {
-  color: var(--pp-primary);
-  font-weight: 900;
-  font-size: 1.15rem;
-  margin-top: .75rem;
-}
-
-/* —— Form —— */
-.payment-form {
-  display: grid;
-  gap: var(--pp-space-3);
-}
-
-/* Contenedores de campo */
-.form-group {
-  display: grid;
-  gap: .5rem;
-}
-.form-group label {
-  color: var(--pp-text);
-  font-weight: 800;
-  font-size: .95rem;
-}
-
-/* Inputs nativos */
-.form-group input {
-  padding: .9rem .95rem;
-  border: 1.6px solid var(--pp-border);
-  border-radius: var(--pp-radius-sm);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--pp-text);
-  background: #fff;
-  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
-}
-.form-group input::placeholder {
-  color: #98a2b3;
-  font-weight: 500;
-}
-.form-group input:hover {
-  background: #fff;
-  border-color: #dde1e6;
-}
-.form-group input:focus {
-  outline: none;
-  border-color: color-mix(in srgb, var(--pp-primary) 65%, #ffffff 35%);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pp-primary) 18%, transparent);
-}
-
-/* Stripe Element */
-.stripe-element {
-  padding: .9rem .95rem;
-  border: 1.6px solid var(--pp-border);
-  border-radius: var(--pp-radius-sm);
-  background: #fff;
-  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
-}
-.stripe-element:focus-within {
-  border-color: color-mix(in srgb, var(--pp-primary) 65%, #ffffff 35%);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--pp-primary) 18%, transparent);
-}
-
-/* Avisos y estados */
-.test-mode-notice {
-  background: var(--pp-warn-bg);
-  color: var(--pp-warn-text);
-  padding: .9rem 1rem;
-  border-radius: var(--pp-radius-sm);
-  font-weight: 800;
-  text-align: center;
-  border: 1px dashed color-mix(in srgb, var(--pp-warn-text) 40%, transparent);
-}
-.error-msg {
-  color: var(--pp-error);
-  font-size: .92rem;
-  margin-top: .45rem;
-}
-
-/* —— Botón principal —— */
-.pay-btn {
-  background: var(--pp-primary);
+.pasarela-btn {
+  margin-top: 28px;
+  width: 95%;
+  padding: 16px 0;
+  background: #111;
   color: #fff;
   border: none;
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  font-size: 1.02rem;
-  font-weight: 900;
-  letter-spacing: .2px;
+  border-radius: 32px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
   cursor: pointer;
-  transition: transform .12s ease, filter .15s ease, box-shadow .18s ease, background .18s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .55rem;
-  width: 100%;
-  box-shadow: 0 6px 18px rgba(7,183,224,.22);
+  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  letter-spacing: 0.5px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
-.pay-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  background: var(--pp-primary-600);
-  box-shadow: var(--pp-shadow-2);
-}
-.pay-btn:active:not(:disabled) {
-  transform: translateY(0);
-  filter: brightness(.98);
-}
-.pay-btn:disabled {
-  opacity: .6;
+.pasarela-btn:disabled {
+  background: #e0e0e0;
+  color: #aaa;
   cursor: not-allowed;
 }
-.pay-btn.processing { background: var(--pp-primary-600); }
-
-/* Spinner inline del botón */
-.btn-spinner {
-  width: 1em; height: 1em;
-  border: 2px solid rgba(255,255,255,.55);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: btn-spin .8s linear infinite;
-  display: inline-block;
-}
-@keyframes btn-spin { to { transform: rotate(360deg); } }
-
-/* —— Mensajes de resultado —— */
-.success-message {
-  margin-top: var(--pp-space-4);
-  background: var(--pp-success-bg);
-  border-radius: var(--pp-radius-md);
-  padding: var(--pp-space-4);
-  text-align: center;
-  color: var(--pp-success-text);
-  border: 1px solid color-mix(in srgb, var(--pp-success-text) 22%, transparent);
-}
-.error-container {
-  text-align: center;
-  margin: var(--pp-space-4) auto;
-  color: var(--pp-error);
-}
-.error-container button {
-  margin-top: var(--pp-space-2);
-  background: transparent;
-  border: 1.6px solid var(--pp-primary);
-  color: var(--pp-primary);
-  padding: .6rem 1rem;
-  border-radius: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: background .15s ease, color .15s ease, box-shadow .2s ease;
-}
-.error-container button:hover {
-  background: var(--pp-primary);
+.pasarela-btn:hover:not(:disabled) {
+  background: #07B7E0;
   color: #fff;
-  box-shadow: 0 8px 24px rgba(7,183,224,.18);
 }
 
-/* —— Responsivo —— */
 @media (max-width: 600px) {
-  .payment-form-container {
-    max-width: 96vw;
-    border-radius: 16px;
-    padding: var(--pp-space-4);
-  }
-  .payment-title { font-size: 1.15rem; }
-}
-
-/* —— Dark Mode (opcional automático) —— */
-@media (prefers-color-scheme: dark) {
-  .payment-content {
-    --pp-bg: #0b1220;
-    --pp-surface: #0f172a;
-    --pp-card: #0f172a;
-    --pp-text: #e6e8ea;
-    --pp-muted: #b6c0cc;
-    --pp-border: #223049;
-    --pp-shadow-1: 0 8px 22px rgba(0,0,0,.35);
-    --pp-shadow-2: 0 12px 40px rgba(7,183,224,.24);
-  }
-
-  .purchase-summary,
-  .form-group input,
-  .stripe-element {
-    background: #0b1220;
-    border-color: var(--pp-border);
-  }
-
-  .back-btn:hover { background: rgba(255,255,255,.08); }
-}
-
-/* —— Accesibilidad: menos movimiento —— */
-@media (prefers-reduced-motion: reduce) {
-  .payment-content * {
-    transition: none !important;
-    animation: none !important;
-  }
+	.pasarela-bg {
+		padding-top: 0;
+		padding-bottom: 80px;
+	}
+	.pasarela-card {
+		max-width: 98vw;
+		padding: 18px 4vw 18px 4vw;
+		margin: 12px 0 0 0;
+	}
+	.pasarela-header {
+		font-size: 1.08rem;
+		padding: 14px 0;
+		border-radius: 12px 12px 0 0;
+		margin-bottom: 16px;
+		box-shadow: 0 2px 8px rgba(4,184,229,0.10);
+	}
 }

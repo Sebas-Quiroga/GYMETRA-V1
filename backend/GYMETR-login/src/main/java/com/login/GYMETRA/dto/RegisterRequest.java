@@ -1,6 +1,8 @@
 package com.login.GYMETRA.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
@@ -21,9 +23,9 @@ public class RegisterRequest {
 
     private String phone;
 
-    @Digits(integer = 10, fraction = 0, message = "La identificación debe tener máximo 10 dígitos")
-    @NotNull(message = "La identificación es obligatoria")
-    private Long identification;
+    @NotBlank(message = "La identificación es obligatoria")
+    @Pattern(regexp = "\\d{6,12}", message = "La identificación debe tener entre 6 y 12 dígitos")
+    private long identification; // CAMBIADO A String
 
     // Foto del usuario, opcional
     private String photoUrl;
