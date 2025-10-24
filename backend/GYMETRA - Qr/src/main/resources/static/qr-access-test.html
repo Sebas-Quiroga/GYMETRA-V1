@@ -49,10 +49,12 @@
             if (!userId) return;
             lastUserId = userId;
             // Obtener QR
+            console.log('[ENVIADO] GET /api/qr-access/user/' + userId);
             const res = await fetch('/api/qr-access/user/' + userId);
             const text = await res.text();
             let data;
             try { data = JSON.parse(text); } catch (err) { data = text; }
+            console.log('[RECIBIDO] /api/qr-access/user/' + userId + ':', data);
             if (data && typeof data === 'object' && data.qrCode) {
                 document.getElementById('qrSection').style.display = '';
                 document.getElementById('qrData').textContent = JSON.stringify(data, null, 2);
@@ -68,8 +70,10 @@
         }
 
         async function cargarSucursales() {
+            console.log('[ENVIADO] GET /api/branches');
             const res = await fetch('/api/branches');
             const branches = await res.json();
+            console.log('[RECIBIDO] /api/branches:', branches);
             const select = document.getElementById('branchId');
             select.innerHTML = '';
             branches.forEach(b => {
@@ -93,14 +97,17 @@
             const branchId = document.getElementById('branchId').value;
             if (!userId || !branchId) return;
             const endpoint = tipo === 'ingreso' ? '/api/access-log/entrada' : '/api/access-log/salida';
+            const payload = { userId, branchId };
+            console.log('[ENVIADO] POST ' + endpoint, payload);
             const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, branchId })
+                body: JSON.stringify(payload)
             });
             const text = await res.text();
             let data;
             try { data = JSON.parse(text); } catch (err) { data = text; }
+            console.log('[RECIBIDO] ' + endpoint + ':', data);
             document.getElementById('result').textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
         }
     </script>

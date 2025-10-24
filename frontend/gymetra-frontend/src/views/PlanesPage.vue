@@ -225,7 +225,7 @@ const loadMemberships = async () => {
 
     const data = await getAvailableMemberships();
     memberships.value = data;
-    console.log('✅ Membresías cargadas exitosamente:', data.length, 'planes disponibles');
+  // Solo mostrar errores en consola
     if (data.length > 0) {
       showNotification('success', '¡Planes cargados!', `${data.length} planes disponibles`);
     }
@@ -254,7 +254,7 @@ const selectPlan = async (membership: Membership) => {
     return;
   }
   if (!isMembershipAvailable(membership)) {
-    console.warn('Plan no disponible:', membership.planName);
+  // Solo mostrar errores en consola
     showNotification('warning', 'Plan no disponible', 'Este plan no se encuentra disponible en este momento.');
     return;
   }
@@ -281,7 +281,7 @@ const confirmPurchase = (membership: Membership): boolean => {
 onMounted(async () => {
   if (initAuth({ requireAuth: true })) {
     // Verificar conectividad antes de cargar datos
-    console.log('🔍 Verificando conectividad con el backend...');
+  // Solo mostrar errores en consola
     const isBackendConnected = await checkBackendConnectivity();
     if (!isBackendConnected) {
       console.warn('⚠️ Backend no disponible, modo offline o error de CORS');

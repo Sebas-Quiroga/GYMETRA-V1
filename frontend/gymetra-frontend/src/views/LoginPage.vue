@@ -234,14 +234,6 @@
               <ion-button fill="clear" color="medium" @click="closeForgotModal" aria-label="Cancelar">Cancelar</ion-button>
             </div>
           </div>
-
-          <!-- Mensaje final -->
-          <div v-else-if="forgotStep === 4">
-            <div class="message" role="status" aria-live="polite">{{ forgotMessage }}</div>
-            <div class="btn-container">
-              <ion-button @click="closeForgotModal" aria-label="Cerrar modal">Cerrar</ion-button>
-            </div>
-          </div>
         </div>
       </ion-modal>
   </ion-content>
@@ -279,6 +271,16 @@ import { sendRecoveryToken, validateRecoveryToken, resetPassword as resetPasswor
 import '../theme/LoginPage.css';
 
 // Dominios de email comunes
+const emailDomains = [
+  '@gmail.com',
+  '@corhuila.edu.co',
+  '@hotmail.com',
+  '@outlook.com',
+  '@yahoo.com',
+  '@estudiantecorhuila.edu.co',
+  '@docente.corhuila.edu.co'
+];
+
 // Estado de notificaciones
 const notification = reactive({
   show: false,
@@ -345,16 +347,6 @@ const dismissNotification = () => {
   notification.show = false;
   notification.progress = 0;
 };
-
-const emailDomains = [
-  '@gmail.com',
-  '@corhuila.edu.co',
-  '@hotmail.com',
-  '@outlook.com',
-  '@yahoo.com',
-  '@estudiantecorhuila.edu.co',
-  '@docente.corhuila.edu.co'
-];
 
 // Estado local para login
 const email = ref("");
@@ -642,17 +634,24 @@ const validateToken = async () => {
 const resetPassword = async () => {
   forgotMessage.value = "";
   
-  const passwordValidation = validateNewPassword(forgotNewPassword.value);
-  if (passwordValidation) {
-    newPasswordError.value = passwordValidation;
+  const passwordValidationError = validateNewPassword(forgotNewPassword.value);
+  if (passwordValidationError) {
+    newPasswordError.value = passwordValidationError;
     return;
   }
   
   forgotLoading.value = true;
   try {
     const msg = await resetPasswordService(forgotToken.value, forgotNewPassword.value);
-    showNotification('success', '¡Contraseña restablecida!', msg, 5000);
-    forgotStep.value = 4;
+    
+    // ⭐ Primero cerrar el modal
+    closeForgotModal();
+    
+    // ⭐ Luego mostrar la notificación de éxito
+    setTimeout(() => {
+      showNotification('success', '¡Contraseña restablecida!', msg, 5000);
+    }, 300); // Pequeño delay para que el modal se cierre primero
+    
   } catch (err: any) {
     const errorMsg = err.message || "Error restableciendo contraseña";
     showNotification('error', 'Error', errorMsg, 5000);
@@ -701,3 +700,7 @@ onUnmounted(() => {
   if (notificationProgressTimer) clearInterval(notificationProgressTimer);
 });
 </script>
+
+<style>
+@import '../theme/LoginPage.css';
+</style>

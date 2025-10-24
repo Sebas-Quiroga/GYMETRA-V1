@@ -9,7 +9,14 @@ export async function sendRecoveryToken(email: string): Promise<string> {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   });
   const msg = await res.text();
-  if (!res.ok) throw new Error(msg);
+  if (!res.ok) {
+    console.error('❌ Error al enviar correo de recuperación:', {
+      status: res.status,
+      statusText: res.statusText,
+      body: msg
+    });
+    throw new Error(msg);
+  }
   return msg;
 }
 
@@ -19,7 +26,14 @@ export async function validateRecoveryToken(token: string): Promise<string> {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   });
   const msg = await res.text();
-  if (!res.ok) throw new Error(msg);
+  if (!res.ok) {
+    console.error('❌ Error al validar token de recuperación:', {
+      status: res.status,
+      statusText: res.statusText,
+      body: msg
+    });
+    throw new Error(msg);
+  }
   return msg;
 }
 
@@ -29,6 +43,13 @@ export async function resetPassword(token: string, newPassword: string): Promise
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   });
   const msg = await res.text();
-  if (!res.ok) throw new Error(msg);
+  if (!res.ok) {
+    console.error('❌ Error al resetear contraseña:', {
+      status: res.status,
+      statusText: res.statusText,
+      body: msg
+    });
+    throw new Error(msg);
+  }
   return msg;
 }

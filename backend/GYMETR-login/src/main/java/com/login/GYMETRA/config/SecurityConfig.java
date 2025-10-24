@@ -23,55 +23,65 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    // Bean de PasswordEncoder para inyección
+    // 🔐 Bean para encriptar contraseñas
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Configuración de seguridad principal
+    // 🧱 Configuración principal de seguridad
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // deshabilita CSRF
+                // ❌ Deshabilita CSRF (no necesario con JWT)
+                .csrf(csrf -> csrf.disable())
+                // 🌍 Habilita CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Deshabilita sesiones
+                // 🔁 Sin sesiones: cada request se autentica por JWT
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // ⚙️ Configuración de endpoints públicos y protegidos
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Permite solicitudes OPTIONS para CORS
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
-                                "/api/auth/users/**",  // Permitir el endpoint de edición sin autenticación
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password",     // ✅ agregado
+                                "/api/auth/validate-token",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
-                        ).permitAll()
-                        .anyRequest().authenticated()
+                        ).permitAll() // 🔓 públicos
+                        .anyRequest().authenticated() // 🔒 el resto requiere JWT
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Agrega el filtro JWT
+                // 🔎 Filtro JWT personalizado
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
-    // Configuración de CORS
+    // ⚙️ Configuración de CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:8100",
-                "http://localhost:5501",
                 "http://localhost:5500",
+                "http://localhost:5501",
                 "http://127.0.0.1:5500",
                 "http://127.0.0.1:5501",
                 "http://localhost:3000",
                 "http://localhost:4200",
-                "http://localhost:5173", // Vite dev server
-                "http://localhost:8080"  // Permite Swagger desde localhost:8080
+                "http://localhost:5173", // Vite
+                "http://localhost:8080"  // Swagger
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 }

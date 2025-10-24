@@ -128,8 +128,34 @@ const navigateToPlanes = () => {
   router.push('/Planes')
 }
 
-const navigateToQR = () => {
-  router.push('/qr')
+// Estado reactivo para el QR temporal (puedes moverlo a un store si prefieres)
+const qrCodeData = ref<string | null>(null)
+
+const navigateToQR = async () => {
+  // Obtener el userId del usuario autenticado
+  const userId = userData.value.userId;
+  if (!userId) {
+    console.error('No hay userId disponible para consultar el QR');
+    return;
+  }
+  try {
+    const response = await fetch(`http://localhost:8090/api/qr-access/user/${userId}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const data = await response.json();
+    if (data && data.qrCode) {
+      qrCodeData.value = data.qrCode;
+      // Guardar en window para acceso global
+      (window as any).qrCodeData = data.qrCode;
+      // Guardar en localStorage para fallback
+      localStorage.setItem('qrCodeData', data.qrCode);
+      // Navegar a la vista QR
+      router.push({ path: '/qr', query: { fromHome: '1' } });
+    } else {
+  // Solo mostrar errores en consola
+    }
+  } catch (error) {
+    console.error('Error consultando el QR:', error);
+  }
 }
 
 const navigateToProfile = () => {
@@ -197,7 +223,7 @@ const decodeBase64Image = (base64String: string): string => {
 
 // Función para manejar errores de carga de imagen
 const handleImageError = () => {
-  console.warn('Error cargando la imagen de perfil, mostrando icono por defecto');
+  // Solo mostrar errores en consola
   // Ya no necesitamos hacer nada aquí, el store maneja los estados
 };
 
@@ -242,13 +268,13 @@ const loadUserData = async () => {
       // Decodificar y establecer la URL de la foto
       if (userData.value.photoUrl) {
         // El store ya maneja la foto, no necesitamos decodificarla aquí
-        console.log('✅ Foto de perfil disponible');
+  // Solo mostrar errores en consola
       }
       
       if (decoded.exp) {
         const now = Math.floor(Date.now() / 1000);
         if (decoded.exp < now) {
-          console.warn('Token expirado');
+          // Solo mostrar errores en consola
         }
       }
 
@@ -273,13 +299,13 @@ const updateChartForCurrentDay = () => {
 // ===============================
 const loadUserMemberships = async () => {
   if (!userData.value.userId) {
-    console.log('No hay userId disponible para cargar membresías');
+  // Solo mostrar errores en consola
     return;
   }
 
   try {
     loadingMemberships.value = true;
-    console.log('🔍 Cargando membresías del usuario ID:', userData.value.userId);
+  // Solo mostrar errores en consola
     
     // Usar la API directamente como en el componente de estado
     const response = await fetch(`http://localhost:8081/api/user-memberships/user/${userData.value.userId}`);
@@ -289,7 +315,7 @@ const loadUserMemberships = async () => {
     }
     
     const memberships = await response.json();
-    console.log('✅ Membresías recibidas:', memberships);
+  // Solo mostrar errores en consola
     
     // Filtrar solo membresías activas
     const activeMemberships = memberships
@@ -299,7 +325,7 @@ const loadUserMemberships = async () => {
       );
     
     userMemberships.value = activeMemberships;
-    console.log('✅ Membresías activas cargadas:', activeMemberships);
+  // Solo mostrar errores en consola
     
   } catch (error: any) {
     console.error('❌ Error cargando membresías:', error);
@@ -382,6 +408,21 @@ const getMembershipCardClass = computed(() => {
   if (days <= 3) return 'critical-state';
   if (days <= 7) return 'warning-state';
   return 'active-state';
+});
+
+// Nueva lógica para el componente QR
+const qrCode = ref<string | null>(null);
+const qrStatus = ref('');
+const qrEndDate = ref<string | null>(null);
+
+onMounted(() => {
+  if (window && (window as any).qrCodeData) {
+    qrCode.value = (window as any).qrCodeData;
+  } else {
+    qrCode.value = localStorage.getItem('qrCodeData');
+  }
+  qrStatus.value = qrCode.value ? 'Membresía activa' : 'Sin QR';
+  qrEndDate.value = null;
 });
 
 onMounted(async () => {
