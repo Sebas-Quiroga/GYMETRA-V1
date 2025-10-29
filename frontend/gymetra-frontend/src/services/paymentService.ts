@@ -1,6 +1,6 @@
 // src/services/paymentService.ts
 import { loadStripe, Stripe } from '@stripe/stripe-js';
-
+import { HOST_URL } from"../services/hots";
 let stripePromise: Promise<Stripe | null> | null = null;
 
 export function getStripe() {
@@ -14,7 +14,7 @@ export function getStripe() {
 
 type CreatePIResponse = { clientSecret: string };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || `${HOST_URL}:8081/api`;
 
 export async function createPaymentIntent(membershipId: number): Promise<CreatePIResponse> {
   const res = await fetch(`${API_BASE}/payments/create-payment-intent`, {
