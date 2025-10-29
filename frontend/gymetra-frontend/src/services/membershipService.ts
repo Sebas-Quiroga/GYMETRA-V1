@@ -1,9 +1,10 @@
 // src/services/membershipService.ts
 import { apiGet, apiPost, apiAuthRequest, ApiResponse } from './apiService';
 import { getToken } from './authService';
+import { HOST_URL } from"../services/hots";
 
 // URL base para membresías
-const MEMBERSHIP_API_URL = "http://localhost:8081/api";
+const MEMBERSHIP_API_URL = `${HOST_URL}:8081/api`;
 
 // Endpoints específicos para membresías
 export const MEMBERSHIP_ENDPOINTS = {

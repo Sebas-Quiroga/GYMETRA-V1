@@ -61,6 +61,7 @@
 import { ref, onMounted } from 'vue'
 import QrcodeVue from 'qrcode.vue'
 import { useAuthStore } from '@/stores/auth'
+import { HOST_URL } from"../services/hots";
 
 // 📦 Store de autenticación
 const auth = useAuthStore()
@@ -96,7 +97,7 @@ onMounted(async () => {
       return
     }
 
-    const response = await fetch(`http://localhost:8090/api/qr-access/user/${userId}`)
+    const response = await fetch(`${HOST_URL}:8090/api/qr-access/user/${userId}`)
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 
     const data = await response.json()

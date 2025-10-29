@@ -23,7 +23,7 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    // 🔐 Bean para encriptar contraseñas
+    // 🔐 Encriptación de contraseñas
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -33,55 +33,48 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // ❌ Deshabilita CSRF (no necesario con JWT)
                 .csrf(csrf -> csrf.disable())
-                // 🌍 Habilita CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // 🔁 Sin sesiones: cada request se autentica por JWT
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // ⚙️ Configuración de endpoints públicos y protegidos
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
-                                "/api/auth/reset-password",     // ✅ agregado
+                                "/api/auth/reset-password",
                                 "/api/auth/validate-token",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
-                        ).permitAll() // 🔓 públicos
-                        .anyRequest().authenticated() // 🔒 el resto requiere JWT
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
-                // 🔎 Filtro JWT personalizado
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ⚙️ Configuración de CORS
+    // 🌍 CORS Dinámico: acepta cualquier IP privada o dominio local
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:8100",
-                "http://localhost:5500",
-                "http://localhost:5501",
-                "http://127.0.0.1:5500",
-                "http://127.0.0.1:5501",
-                "http://localhost:3000",
-                "http://localhost:4200",
-                "http://localhost:5173", // Vite
-                "http://localhost:8080"  // Swagger
-        ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+    // ✅ Permite orígenes específicos y patrones generales
+    configuration.addAllowedOriginPattern("http://*");
+    configuration.addAllowedOriginPattern("https://*");
 
-        return source;
-    }
+    // ✅ Agrega tu IP pública/local con puerto
+    configuration.addAllowedOrigin("http://192.168.0.11:8100");
+
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of("*"));
+    configuration.setAllowCredentials(true);
+
+    // Registrar la configuración para todas las rutas
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+
+    return source;
+}
 }

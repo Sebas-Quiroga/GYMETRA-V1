@@ -1,0 +1,261 @@
+/* Importar fuente Nunito */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap');
+
+/* Login Admin Page Styles */
+.admin-login-page {
+  min-height: 100vh;
+  width: 100vw;
+  background: #00BCD4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: 'Nunito', sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+/* Tarjeta de Login Centrada */
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  background: white;
+  border-radius: 25px;
+  padding: 50px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Logo/Ícono */
+.logo-section {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.logo-icon {
+  font-size: 80px;
+  color: #00BCD4;
+  margin-bottom: 16px;
+}
+
+.logo-section h1 {
+  font-size: 28px;
+  color: #333;
+  margin: 0;
+  font-weight: 700;
+  font-family: 'Nunito', sans-serif;
+}
+
+/* Campos del Formulario */
+.form-group {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.form-group:nth-child(2) {
+  margin-top: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  font-family: 'Nunito', sans-serif;
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  font-size: 20px;
+  color: #666;
+  z-index: 1;
+}
+
+.form-input {
+  width: 100%;
+  padding: 16px 16px 16px 48px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  background: white;
+  color: #333;
+  font-family: 'Nunito', sans-serif;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #00BCD4;
+  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+  color: #333;
+}
+
+.form-input.error {
+  border-color: #dc3545;
+  color: #333;
+}
+
+.validation-error {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 4px;
+  font-family: 'Nunito', sans-serif;
+}
+
+/* Enlace "¿Olvidaste tu contraseña?" */
+.forgot-link {
+  width: 100%;
+  text-align: left;
+  margin-top: 10px;
+  margin-bottom: 25px;
+}
+
+.forgot-password-link {
+  color: #00BCD4;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Nunito', sans-serif;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+}
+
+/* Botón Ingresar */
+.login-btn-container {
+  width: 100%;
+  margin-top: 25px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.login-btn {
+  width: 200px;
+  padding: 16px 32px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Nunito', sans-serif;
+}
+
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.login-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+}
+
+.spinner-icon {
+  font-size: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Footer del login */
+.login-footer {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.login-footer p {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  font-family: 'Nunito', sans-serif;
+}
+
+.contact-link {
+  color: #00BCD4;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: 'Nunito', sans-serif;
+}
+
+.contact-link:hover {
+  text-decoration: underline;
+}
+
+/* Enlace de regreso */
+.back-link {
+  width: 100%;
+  text-align: center;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: color 0.3s;
+  font-family: 'Nunito', sans-serif;
+}
+
+.back-btn:hover {
+  color: #00BCD4;
+}
+
+.back-btn ion-icon {
+  font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-login-page {
+    padding: 10px;
+  }
+
+  .login-card {
+    padding: 30px 20px;
+    max-width: 100%;
+  }
+
+  .logo-icon {
+    font-size: 70px;
+  }
+
+  .login-btn {
+    width: 180px;
+    padding: 14px 28px;
+  }
+}

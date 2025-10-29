@@ -1,0 +1,235 @@
+/* Admin Dashboard Styles */
+.admin-dashboard {
+  display: flex;
+  height: 100vh;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background-color: #00BCD4;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  font-size: 40px;
+  color: white;
+}
+
+.user-name {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 20px 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item.active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-item ion-icon {
+  font-size: 20px;
+}
+
+.nav-item span {
+  font-size: 16px;
+}
+
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.logout-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.logout-btn ion-icon {
+  font-size: 20px;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  background-color: #F5F5F5;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+/* Stats Cards */
+.stats-cards {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  flex: 1;
+  background-color: #00BCD4;
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 45%;
+}
+
+.stat-number {
+  font-size: 72px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.stat-label {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+/* Users Table Container */
+.users-table-container {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.users-table-container h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+/* Users Table */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.users-table thead {
+  background-color: #00BCD4;
+  color: white;
+}
+
+.users-table th {
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: bold;
+  font-size: 14px;
+  border: none;
+}
+
+.users-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid #e1e5e9;
+  background-color: white;
+  font-size: 14px;
+  height: 60px;
+}
+
+.users-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.users-table tbody tr:hover {
+  background-color: #f0f0f0;
+}
+
+/* Status classes */
+.status-active {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.status-expired {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.status-suspended {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-dashboard {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+  }
+
+  .stats-cards {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .stat-card {
+    width: 100%;
+  }
+
+  .users-table {
+    font-size: 12px;
+  }
+
+  .users-table th,
+  .users-table td {
+    padding: 10px;
+  }
+
+  .users-table-container {
+    padding: 20px;
+    overflow-x: auto;
+  }
+}

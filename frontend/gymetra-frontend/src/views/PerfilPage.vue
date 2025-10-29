@@ -111,6 +111,7 @@ import { useAuthStore } from '@/stores/auth';
 import { decodeJWT } from '@/services/authService';
 import { updateUserProfile } from '@/services/profileService';
 import { useRouter } from 'vue-router';
+import { HOST_URL } from"../services/hots";
 
 const auth = useAuthStore();
 const router = useRouter();

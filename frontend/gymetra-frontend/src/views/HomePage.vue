@@ -111,6 +111,7 @@ import {
 import { qrCodeOutline } from 'ionicons/icons';
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import { HOST_URL } from"../services/hots";
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -139,7 +140,7 @@ const navigateToQR = async () => {
     return;
   }
   try {
-    const response = await fetch(`http://localhost:8090/api/qr-access/user/${userId}`);
+    const response = await fetch(`${HOST_URL}:8090/api/qr-access/user/${userId}`);
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     const data = await response.json();
     if (data && data.qrCode) {
@@ -308,7 +309,7 @@ const loadUserMemberships = async () => {
   // Solo mostrar errores en consola
     
     // Usar la API directamente como en el componente de estado
-    const response = await fetch(`http://localhost:8081/api/user-memberships/user/${userData.value.userId}`);
+    const response = await fetch(`${HOST_URL}:8081/api/user-memberships/user/${userData.value.userId}`);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);

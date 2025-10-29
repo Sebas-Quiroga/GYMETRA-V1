@@ -1,6 +1,6 @@
 import axios from "axios";
 import {  MAIN_API_URL } from "../services/apiService";
-
+import { HOST_URL } from"../services/hots";
 const baseUrl =  MAIN_API_URL ;
 
 export async function sendRecoveryToken(email: string): Promise<string> {

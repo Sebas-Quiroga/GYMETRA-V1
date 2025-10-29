@@ -121,6 +121,7 @@ import {
   isMembershipAvailable,
   type Membership 
 } from '@/services/membershipService';
+import { HOST_URL } from"../services/hots";
 
 // Configuración de Stripe
 // Estado de notificaciones
@@ -192,7 +193,7 @@ const dismissNotification = () => {
 
 const STRIPE_CONFIG = {
   PUBLISHABLE_KEY: 'pk_test_51S9c29RPJMMOJ1bv1BejUA5NyJ7gsg0rvFcEjdAa8JuyMI7Zs3S9aCklSsGvTfGE2rVa6fhbwug33zIqK7b1ni8M00SLlPxKFx', // Tu clave real de Stripe
-  API_BASE_URL: 'http://localhost:8081/api'
+  API_BASE_URL: `${HOST_URL}:8081/api`
 };
 
 const router = useRouter();
