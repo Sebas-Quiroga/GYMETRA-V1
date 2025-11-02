@@ -137,8 +137,8 @@ const handleLogin = async () => {
     await new Promise(resolve => setTimeout(resolve, 1500))
 
     // TODO: Aquí irá la lógica de autenticación real
-    // Por ahora, redirigir al dashboard
-    router.push('/dashboard')
+    // Por ahora, redirigir al panel de admin
+    router.push('/adminpanel')
 
   } catch (error) {
     console.error('Error en login:', error)
