@@ -10,6 +10,7 @@ import com.login.GYMETRA.repository.RoleRepository;
 import com.login.GYMETRA.repository.UserRepository;
 import com.login.GYMETRA.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,9 @@ public class UserService {
 
     private static final String DEFAULT_USER_ROLE = "Client";
 
+    // ==============================================================
+    // REGISTRO DE USUARIO
+    // ==============================================================
     @Transactional
     public JwtResponse register(RegisterRequest request) {
         try {
@@ -58,7 +62,6 @@ public class UserService {
             clientRole.getUserRoles().add(userRole);
 
             User savedUser = userRepository.save(user);
-
             String token = jwtService.generateToken(buildJwtClaims(savedUser), savedUser);
 
             return new JwtResponse(true, token, "Bearer", "Registro exitoso");
@@ -68,6 +71,87 @@ public class UserService {
         }
     }
 
+    // ==============================================================
+    // LOGIN DE USUARIO
+    // ==============================================================
+    public JwtResponse login(String email, String password) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isEmpty()) {
+            return new JwtResponse(false, null, null, "Usuario no encontrado");
+        }
+
+        User user = optionalUser.get();
+
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            return new JwtResponse(false, null, null, "Contraseña incorrecta");
+        }
+
+        String token = jwtService.generateToken(buildJwtClaims(user), user);
+        return new JwtResponse(true, token, "Bearer", "Login exitoso");
+    }
+
+    // ==============================================================
+    // EDICIÓN DE USUARIO
+    // ==============================================================
+    @Transactional
+    public JwtResponse editUser(Long userId, EditUserRequest request) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+            // Verificar si el email ya está en uso por otro usuario
+            if (request.getEmail() != null && !request.getEmail().equals(user.getEmail()) &&
+                    userRepository.existsByEmail(request.getEmail())) {
+                throw new UserAlreadyExistsException("El email ya está registrado");
+            }
+
+            // Actualizar campos no nulos
+            if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+            if (request.getLastName() != null) user.setLastName(request.getLastName());
+            if (request.getEmail() != null) user.setEmail(request.getEmail());
+            if (request.getPhone() != null) user.setPhone(request.getPhone());
+            if (request.getPhotoUrl() != null) user.setPhotoUrl(request.getPhotoUrl());
+            if (request.getPassword() != null) {
+                user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            }
+
+            User updatedUser = userRepository.save(user);
+            String token = jwtService.generateToken(buildJwtClaims(updatedUser), updatedUser);
+
+            return new JwtResponse(true, token, "Bearer", "Usuario actualizado exitosamente");
+
+        } catch (IllegalArgumentException | UserAlreadyExistsException ex) {
+            return new JwtResponse(false, null, null, ex.getMessage());
+        }
+    }
+
+    // ==============================================================
+    // OBTENER TODOS LOS USUARIOS
+    // ==============================================================
+    public List<User> getAllUsers() {
+        return userRepository.findAll(Sort.by(Sort.Direction.ASC, "userId"));
+    }
+
+    // ==============================================================
+    // ELIMINAR USUARIO
+    // ==============================================================
+    @Transactional
+    public boolean deleteUser(Long userId) {
+        try {
+            if (userRepository.existsById(userId)) {
+                userRepository.deleteById(userId);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ==============================================================
+    // VALIDACIONES Y UTILIDADES
+    // ==============================================================
     private void validateRegistrationRequest(RegisterRequest request) {
         validateIdentification(request.getIdentification());
 
@@ -106,54 +190,9 @@ public class UserService {
         return claims;
     }
 
-    public JwtResponse login(String email, String password) {
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-
-        if (optionalUser.isEmpty()) {
-            return new JwtResponse(false, null, null, "Usuario no encontrado");
-        }
-
-        User user = optionalUser.get();
-
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            return new JwtResponse(false, null, null, "Contraseña incorrecta");
-        }
-
-        String token = jwtService.generateToken(buildJwtClaims(user), user);
-        return new JwtResponse(true, token, "Bearer", "Login exitoso");
-    }
-
-    @Transactional
-    public JwtResponse editUser(Long userId, EditUserRequest request) {
-        try {
-            User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-
-            // Verificar si el email ya está en uso por otro usuario
-            if (request.getEmail() != null && !request.getEmail().equals(user.getEmail()) &&
-                userRepository.existsByEmail(request.getEmail())) {
-                throw new UserAlreadyExistsException("El email ya está registrado");
-            }
-
-            // Actualizar campos si no son null
-            if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
-            if (request.getLastName() != null) user.setLastName(request.getLastName());
-            if (request.getEmail() != null) user.setEmail(request.getEmail());
-            if (request.getPhone() != null) user.setPhone(request.getPhone());
-            if (request.getPhotoUrl() != null) user.setPhotoUrl(request.getPhotoUrl());
-            if (request.getPassword() != null) {
-                user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-            }
-
-            User updatedUser = userRepository.save(user);
-            String token = jwtService.generateToken(buildJwtClaims(updatedUser), updatedUser);
-
-            return new JwtResponse(true, token, "Bearer", "Usuario actualizado exitosamente");
-        } catch (IllegalArgumentException | UserAlreadyExistsException ex) {
-            return new JwtResponse(false, null, null, ex.getMessage());
-        }
-    }
-
+    // ==============================================================
+    // EXCEPCIÓN PERSONALIZADA
+    // ==============================================================
     public static class UserAlreadyExistsException extends RuntimeException {
         public UserAlreadyExistsException(String message) {
             super(message);
