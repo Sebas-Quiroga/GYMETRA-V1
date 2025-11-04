@@ -1,3 +1,4 @@
+import QrcodeVue from 'qrcode.vue';
 import { createApp } from 'vue'
 import { createPinia } from 'pinia';
 import App from './App.vue'
@@ -55,6 +56,7 @@ const app = createApp(App)
   .use(router)
   .use(createPinia());
 
+
 // Registrar componentes de Ionic globalmente
 app.component('ion-page', IonPage);
 app.component('ion-content', IonContent);
@@ -66,6 +68,9 @@ app.component('ion-button', IonButton);
 app.component('ion-label', IonLabel);
 app.component('ion-input', IonInput);
 app.component('ion-spinner', IonSpinner);
+
+// Registrar QRCode globalmente
+app.component('qrcode-vue', QrcodeVue);
 
 useAuthStore().initializeToken(); // <-- Sincroniza el token al iniciar
 

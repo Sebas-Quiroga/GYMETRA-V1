@@ -18,7 +18,7 @@
               class="form-input"
               placeholder="admin@gymetra.com"
               required
-              :class="{ 'error': errors.email }"
+              :class="{ error: errors.email }"
             />
           </div>
           <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
@@ -35,14 +35,16 @@
               class="form-input"
               placeholder="••••••••"
               required
-              :class="{ 'error': errors.password }"
+              :class="{ error: errors.password }"
             />
           </div>
           <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
         </div>
 
         <div class="forgot-link">
-          <a href="#" class="forgot-password-link" @click.prevent="handleForgotPassword">¿Olvidaste tu contraseña?</a>
+          <a href="#" class="forgot-password-link" @click.prevent="handleForgotPassword">
+            ¿Olvidaste tu contraseña?
+          </a>
         </div>
 
         <div class="login-btn-container">
@@ -71,102 +73,91 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive } from "vue";
+import { useRouter } from "vue-router";
 import {
   fitnessOutline,
   mailOutline,
   lockClosedOutline,
   refreshOutline,
   arrowBackOutline,
-  shieldCheckmarkOutline,
-  barChartOutline,
-  settingsOutline
-} from 'ionicons/icons'
+} from "ionicons/icons";
 
-const router = useRouter()
+// 🔗 Importa el servicio de autenticación (solo para admin)
+import { login } from "@/services/authService";
 
-// Form state
+const router = useRouter();
+
+// Estado del formulario
 const form = reactive({
-  email: '',
-  password: ''
-})
+  email: "",
+  password: "",
+});
 
-// Error state
+// Estado de errores
 const errors = reactive({
-  email: '',
-  password: ''
-})
+  email: "",
+  password: "",
+});
 
-// Loading state
-const loading = ref(false)
+// Estado de carga
+const loading = ref(false);
 
-// Handle login
+// ===========================================
+// 🔐 Manejar inicio de sesión de administrador
+// ===========================================
 const handleLogin = async () => {
-  // Reset errors
-  errors.email = ''
-  errors.password = ''
+  errors.email = "";
+  errors.password = "";
 
-  // Basic validation
   if (!form.email) {
-    errors.email = 'El correo electrónico es requerido'
-    return
+    errors.email = "El correo electrónico es requerido";
+    return;
   }
-
   if (!form.password) {
-    errors.password = 'La contraseña es requerida'
-    return
+    errors.password = "La contraseña es requerida";
+    return;
   }
 
-  // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(form.email)) {
-    errors.email = 'Ingresa un correo electrónico válido'
-    return
+    errors.email = "Ingresa un correo electrónico válido";
+    return;
   }
 
   try {
-    loading.value = true
+    loading.value = true;
 
-    // TODO: Implementar autenticación de admin
-    console.log('Iniciando sesión como admin:', {
-      email: form.email
-    })
+    await login(form.email, form.password);
 
-    // Simular delay de API
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    console.log("✅ Bienvenido administrador");
+    router.push("/adminpanel"); // tu ruta al panel de administración
 
-    // TODO: Aquí irá la lógica de autenticación real
-    // Por ahora, redirigir al dashboard
-    router.push('/dashboard')
-
-  } catch (error) {
-    console.error('Error en login:', error)
-    errors.password = 'Credenciales incorrectas'
+  } catch (error: any) {
+    console.error("❌ Error en login:", error);
+    errors.password = error.message || "Credenciales incorrectas";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
-// Handle forgot password
+// ===========================================
+// 🔁 Funciones auxiliares
+// ===========================================
 const handleForgotPassword = () => {
-  // TODO: Implementar recuperación de contraseña para admin
-  console.log('Recuperar contraseña de admin')
-}
+  console.log("Recuperar contraseña de admin (pendiente implementar)");
+};
 
-// Handle contact support
 const handleContactSupport = () => {
-  // TODO: Implementar contacto con soporte
-  console.log('Contactar soporte')
-}
+  console.log("Contactar soporte (pendiente implementar)");
+};
 
-// Go to user login
 const goToUserLogin = () => {
-  // TODO: Redirigir al frontend de usuario (puerto 3000)
-  console.log('Redirigir al login de usuario')
-}
+  // 🔄 Cambia esta URL por la de tu frontend de cliente (por ejemplo puerto 3000)
+  window.location.href = "http://localhost:3000/login";
+};
 </script>
 
 <style>
-@import '../theme/LoginAdminPage.css';
+@import "../theme/LoginAdminPage.css";
 </style>

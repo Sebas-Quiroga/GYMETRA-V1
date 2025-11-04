@@ -1,36 +1,14 @@
 <template>
   <div class="admin-dashboard">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="sidebar-header">
-        <div class="user-info">
-          <ion-icon :icon="personCircleOutline" class="user-avatar"></ion-icon>
-          <span class="user-name">Juan</span>
-        </div>
-      </div>
-
-      <nav class="sidebar-nav">
-        <div class="nav-item" @click="navigateToUsers" :class="{ active: activeSection === 'users' }">
-          <ion-icon :icon="peopleOutline"></ion-icon>
-          <span>Usuarios</span>
-        </div>
-        <div class="nav-item" @click="navigateToReports" :class="{ active: activeSection === 'reports' }">
-          <ion-icon :icon="documentOutline"></ion-icon>
-          <span>Reporte</span>
-        </div>
-        <div class="nav-item" @click="navigateToCharts" :class="{ active: activeSection === 'charts' }">
-          <ion-icon :icon="barChartOutline"></ion-icon>
-          <span>Métricas</span>
-        </div>
-      </nav>
-
-      <div class="sidebar-footer">
-        <button class="logout-btn" @click="logout">
-          <ion-icon :icon="logOutOutline"></ion-icon>
-          <span>Log out</span>
-        </button>
-      </div>
-    </div>
+    <!-- Sidebar Component -->
+    <AdminSidebar
+      :active-section="activeSection"
+      @navigate-to-users="navigateToUsers"
+      @navigate-to-reports="navigateToReports"
+      @navigate-to-charts="navigateToCharts"
+      @navigate-to-payments="navigateToPayments"
+      @logout="logout"
+    />
 
     <!-- Main Content -->
     <div class="main-content">
@@ -88,6 +66,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { logout as authLogout } from '@/services/authService'
+import AdminSidebar from '@/components/AdminSidebar.vue'
 import {
   logOutOutline,
   peopleOutline,
@@ -157,8 +137,8 @@ const recentActivities = ref([
 ])
 
 const logout = () => {
-  // TODO: Implement logout logic
-  router.push('/login')
+  // Use centralized authService logout to clear token and redirect
+  authLogout()
 }
 
 const navigateToUsers = () => {
@@ -173,6 +153,11 @@ const navigateToReports = () => {
 const navigateToCharts = () => {
   activeSection.value = 'charts'
   console.log('Navegando a gráficas')
+}
+
+const navigateToPayments = () => {
+  activeSection.value = 'payments'
+  router.push('/adminpagos')
 }
 </script>
 

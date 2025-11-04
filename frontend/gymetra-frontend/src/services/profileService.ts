@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/stores/auth';
+import { HOST_URL } from"../services/hots";
 
 export type UpdateUserProfileOptions = {
   userId: string;
@@ -22,7 +23,7 @@ export const updateUserProfile = async ({
   const auth = useAuthStore();
   if (loadingRef) loadingRef.value = true;
   try {
-    const response = await fetch(`http://localhost:8080/api/auth/users/${userId}`, {
+    const response = await fetch(`${HOST_URL}:8080/api/auth/users/${userId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'

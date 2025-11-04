@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpMethod;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,7 +16,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.lang.NonNull;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,61 +28,72 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
-    // Rutas públicas (ajusta si necesitas más)
+    // 🟢 Endpoints públicos (sin JWT)
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/auth/login",
             "/api/auth/register",
-            "/api/auth/users/**",  // Añadido para permitir el endpoint de edición
+            "/api/auth/forgot-password",
+            "/api/auth/reset-password",
+            "/api/auth/validate-token",
+            "/api/auth/users/**",
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html"
     );
+
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
-        // No filtrar preflight ni rutas públicas
+        String path = request.getServletPath();
+
+        // ✅ Ignora solicitudes OPTIONS y rutas públicas (con o sin barra final)
         if (HttpMethod.OPTIONS.matches(request.getMethod())) {
             return true;
         }
-        String path = request.getServletPath();
-        return PUBLIC_PATHS.stream().anyMatch(p -> PATH_MATCHER.match(p, path));
+
+        return PUBLIC_PATHS.stream().anyMatch(p ->
+                PATH_MATCHER.match(p, path) ||
+                PATH_MATCHER.match(p + "/", path)
+        );
     }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain chain) throws ServletException, IOException {
+                                    @NonNull FilterChain chain)
+            throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
 
-        // Si no hay Bearer, no seteamos autenticación y dejamos seguir
+        // Si no hay token Bearer, continúa sin autenticar
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
-        String username = null;
+        String username;
 
         try {
             username = jwtService.extractUsername(token);
         } catch (Exception e) {
-            // Token ilegible/dañado → no autenticamos y seguimos
+            // Token inválido → seguimos sin autenticar
             SecurityContextHolder.clearContext();
             chain.doFilter(request, response);
             return;
         }
 
-        // Si aún no hay autenticación en el contexto, intentamos validarla
+        // Validar usuario solo si no está autenticado todavía
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             User user = userRepository.findByEmail(username).orElse(null);
 
             try {
                 if (user != null && jwtService.isTokenValid(token, user.getEmail())) {
-                    // OJO: si tus roles no tienen prefijo, puedes agregarlo aquí si usas hasRole()
+
                     List<SimpleGrantedAuthority> authorities = user.getUserRoles().stream()
-                            .map(ur -> ur.getRole().getRoleName())        // p.ej. "ADMIN"
-                            //.map(name -> "ROLE_" + name)                 // descomenta si usas hasRole("ADMIN")
+                            .map(ur -> ur.getRole().getRoleName())
+                            //.map(name -> "ROLE_" + name) // descomentar si usas hasRole("ADMIN")
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
 
@@ -94,7 +105,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     SecurityContextHolder.clearContext();
                 }
             } catch (Exception e) {
-                // Expirado / firma inválida / etc. → no autenticamos y seguimos
                 SecurityContextHolder.clearContext();
             }
         }
