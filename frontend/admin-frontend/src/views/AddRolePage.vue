@@ -12,7 +12,7 @@
     />
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
       <!-- Add Role Form -->
       <div class="add-role-container">
         <div class="form-header">
@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminSidebar from '@/components/AdminSidebar.vue'
 import { userService, RoleRequest } from '@/services/userService'
@@ -86,6 +86,19 @@ import {
   checkmarkCircleOutline,
   arrowBackOutline
 } from 'ionicons/icons'
+
+// Mobile responsive state
+const isMobile = ref(false)
+
+// Check if mobile on mount
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
 
 const router = useRouter()
 const activeSection = ref('roles')

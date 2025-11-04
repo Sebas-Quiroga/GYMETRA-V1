@@ -12,7 +12,7 @@
     />
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
       <!-- Edit User Form -->
       <div class="add-user-container">
         <div class="form-header">
@@ -234,6 +234,19 @@ import {
   createOutline,
   shieldCheckmarkOutline
 } from 'ionicons/icons'
+
+// Mobile responsive state
+const isMobile = ref(false)
+
+// Check if mobile on mount
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
 
 const router = useRouter()
 const route = useRoute()

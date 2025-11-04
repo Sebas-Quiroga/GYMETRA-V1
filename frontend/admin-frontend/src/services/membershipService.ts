@@ -61,5 +61,25 @@ export const membershipService = {
       console.error('Error fetching payments:', error);
       throw error;
     }
+  },
+
+  async createMembership(membership: Omit<Membership, 'membershipId'>): Promise<Membership> {
+    try {
+      const response = await axios.post(`${MEMBERSHIP_API_URL}/memberships`, membership);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating membership:', error);
+      throw error;
+    }
+  },
+
+  async updateMembership(id: number, updates: Partial<Membership>): Promise<Membership> {
+    try {
+      const response = await axios.put(`${MEMBERSHIP_API_URL}/memberships/${id}`, updates);
+      return response.data;
+    } catch (error) {
+      console.error('Error updating membership:', error);
+      throw error;
+    }
   }
 };

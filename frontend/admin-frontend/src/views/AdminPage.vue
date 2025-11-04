@@ -12,7 +12,7 @@
     />
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
       <!-- Stats Cards -->
       <div class="stats-cards">
         <div class="stat-card">
@@ -187,6 +187,19 @@ import {
   checkmarkCircleOutline,
   banOutline
 } from 'ionicons/icons'
+
+// Mobile responsive state
+const isMobile = ref(false)
+
+// Check if mobile on mount
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
 
 // Interface para definir la estructura de datos de usuario
 interface User {

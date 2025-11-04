@@ -11,7 +11,7 @@
     />
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
       <!-- Charts Grid -->
       <div class="charts-grid">
         <!-- Counter Card - Top Left -->
@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { logout as authLogout } from '@/services/authService'
 import AdminSidebar from '@/components/AdminSidebar.vue'
@@ -80,6 +80,19 @@ import {
   personAddOutline,
   checkmarkCircleOutline
 } from 'ionicons/icons'
+
+// Mobile responsive state
+const isMobile = ref(false)
+
+// Check if mobile on mount
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
 
 const router = useRouter()
 const activeSection = ref('charts')
