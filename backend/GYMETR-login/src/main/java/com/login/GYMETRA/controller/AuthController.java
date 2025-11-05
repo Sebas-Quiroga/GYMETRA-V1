@@ -121,4 +121,25 @@ public class AuthController {
         }
     }
 
+    // 🚫 SUSPENDER/ACTIVAR CUENTA DE USUARIO
+    @Operation(summary = "Suspender o activar cuenta de usuario", description = "Cambia el estado de la cuenta de un usuario (active/suspended)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Estado de la cuenta actualizado exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    @PatchMapping("/users/{userId}/status")
+    public ResponseEntity<String> updateUserStatus(
+            @Parameter(description = "ID del usuario", required = true)
+            @PathVariable Long userId,
+            @Parameter(description = "Nuevo estado de la cuenta (active o suspended)", required = true)
+            @RequestParam String status) {
+        boolean updated = userService.updateUserStatus(userId, status);
+        if (updated) {
+            return ResponseEntity.ok("Estado de la cuenta actualizado exitosamente");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

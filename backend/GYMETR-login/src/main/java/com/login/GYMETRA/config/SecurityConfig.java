@@ -47,6 +47,8 @@ public class SecurityConfig {
                                 "/api/auth/validate-token",
                                 "/api/auth/users",
                                 "/api/auth/users/{userId}",              // ✅ ahora accesible sin JWT
+                                "/api/auth/users/{userId}/status",       // ✅ actualizar estado de usuario
+                                "/api/roles/**",                         // ✅ rutas de roles públicas
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
@@ -72,7 +74,7 @@ public class SecurityConfig {
         configuration.addAllowedOrigin("http://175.100.1.214"); // tu IP específica
         configuration.addAllowedOrigin("http://192.168.0.11");  // IP local (si usas red LAN)
 
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
 

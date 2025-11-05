@@ -8,6 +8,7 @@ import com.login.GYMETRA.entity.User;
 import com.login.GYMETRA.entity.UserRole;
 import com.login.GYMETRA.repository.RoleRepository;
 import com.login.GYMETRA.repository.UserRepository;
+import com.login.GYMETRA.repository.UserRoleRepository;
 import com.login.GYMETRA.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -25,6 +26,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
@@ -116,6 +118,27 @@ public class UserService {
                 user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
             }
 
+            // Actualizar rol si se proporciona
+            if (request.getRoleId() != null) {
+                Role newRole = roleRepository.findById(request.getRoleId())
+                        .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado"));
+
+                // Buscar el UserRole existente
+                List<UserRole> userRoles = userRoleRepository.findByUser_UserId(userId);
+                if (!userRoles.isEmpty()) {
+                    UserRole existingUserRole = userRoles.get(0); // Asumiendo un solo rol por usuario
+                    existingUserRole.setRole(newRole);
+                    userRoleRepository.save(existingUserRole);
+                } else {
+                    // Si no existe, crear uno nuevo
+                    UserRole newUserRole = UserRole.builder()
+                            .user(user)
+                            .role(newRole)
+                            .build();
+                    userRoleRepository.save(newUserRole);
+                }
+            }
+
             User updatedUser = userRepository.save(user);
             String token = jwtService.generateToken(buildJwtClaims(updatedUser), updatedUser);
 
@@ -144,6 +167,27 @@ public class UserService {
                 return true;
             }
             return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ==============================================================
+    // SUSPENDER/ACTIVAR CUENTA DE USUARIO
+    // ==============================================================
+    @Transactional
+    public boolean updateUserStatus(Long userId, String status) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+            if (!"active".equals(status) && !"suspended".equals(status)) {
+                throw new IllegalArgumentException("Estado inválido. Debe ser 'active' o 'suspended'");
+            }
+
+            user.setStatus(status);
+            userRepository.save(user);
+            return true;
         } catch (Exception e) {
             return false;
         }
