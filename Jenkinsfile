@@ -1,99 +1,75 @@
 pipeline {
     agent any
+
     environment {
-    // ...existing code...
-    JAVA_HOME = 'C:/Program Files/Eclipse Adoptium/jdk-17.0.16.8-hotspot' // Ruta real del JDK en Jenkins
-    PATH = "${JAVA_HOME}/bin;${env.PATH}"
+        DOCKER_IMAGE_PREFIX = 'develop-'
+        DOCKER_REGISTRY = 'your-registry.com' // Replace with your Docker registry
     }
+
     stages {
-        stage('Workspace Global Diagnostic') {
+        stage('Checkout') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat 'dir /s /b'
+                checkout scm
+            }
+        }
+
+        stage('Build GYMETR-login Backend') {
+            steps {
+                dir('backend/GYMETR-login') {
+                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}gymetr-login:latest .'
                 }
             }
         }
-        stage('Build Backend - GYMETR-login') {
+
+        stage('Build GYMETR-Membership Backend') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    dir('backend/GYMETR-login') {
-                        bat 'mvnw.cmd clean package -DskipTests'
-                    }
+                dir('backend/GYMETR-Membership') {
+                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}gymetr-membership:latest .'
                 }
             }
         }
-        stage('Membership Diagnostic') {
+
+        stage('Build GYMETRA - Qr Backend') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    dir('backend/GYMETR-Membership') {
-                        bat 'dir /a'
-                        bat 'type mvnw.cmd'
-                    }
+                dir('backend/GYMETRA - Qr') {
+                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}gymetra-qr:latest .'
                 }
             }
         }
-        stage('Build Backend - GYMETR-Membership') {
+
+        stage('Build admin-frontend') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    dir('backend/GYMETR-Membership') {
-                        bat 'mvnw.cmd clean package -DskipTests'
-                    }
+                dir('frontend/admin-frontend') {
+                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}admin-frontend:latest .'
                 }
             }
         }
-        stage('Diagnóstico Frontend') {
+
+        stage('Build gymetra-frontend') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    dir('frontend/gymetra-frontend') {
-                        bat 'dir'
-                        bat 'type index.html'
-                    }
+                dir('frontend/gymetra-frontend') {
+                    sh 'docker build -t ${DOCKER_IMAGE_PREFIX}gymetra-frontend:latest .'
                 }
             }
         }
-        stage('Build Frontend') {
+
+        stage('Deploy with Docker Compose') {
             steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    dir('frontend/gymetra-frontend') {
-                        bat 'npm install'
-                        bat 'npm run build'
-                    }
-                }
+                sh 'docker-compose down'
+                sh 'docker-compose up -d --build'
             }
         }
-        stage('Commit & Push to Git') {
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat 'git config user.email "jenkins@localhost"'
-                    bat 'git config user.name "jenkins"'
-                    bat 'git add .'
-                    bat 'git commit -m "[jenkins] build & docker deploy" || echo "No changes to commit"'
-                    // El push puede fallar en detached HEAD, así que lo comentamos para evitar fallo del pipeline
-                    // bat 'git push https://github.com/Sebas-Quiroga/GYMETRA-V1.git HEAD:develop-jenkis || echo "Push failed (detached HEAD)"'
-                }
-            }
+    }
+
+    post {
+        always {
+            sh 'docker system prune -f'
         }
-        stage('Build Docker Images & Deploy') {
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat 'docker-compose build'
-                    bat 'docker-compose up -d'
-                }
-            }
+        success {
+            echo 'Deployment successful!'
         }
-        stage('List Docker Images') {
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat 'docker images'
-                }
-            }
-        }
-        stage('List Running Containers') {
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    bat 'docker ps'
-                }
-            }
+        failure {
+            echo 'Deployment failed!'
         }
     }
 }

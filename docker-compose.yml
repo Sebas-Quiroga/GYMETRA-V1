@@ -4,14 +4,24 @@ services:
     build: ./backend/GYMETR-login
     ports:
       - "8080:8080"
-    container_name: gymetr-login
+    container_name: develop-gymetr-login
   gymetr-membership:
     build: ./backend/GYMETR-Membership
     ports:
       - "8081:8081"
-    container_name: gymetr-membership
+    container_name: develop-gymetr-membership
+  gymetra-qr:
+    build: ./backend/GYMETRA - Qr
+    ports:
+      - "8090:8090"
+    container_name: develop-gymetra-qr
+  admin-frontend:
+    build: ./frontend/admin-frontend
+    ports:
+      - "8101:80"
+    container_name: develop-admin-frontend
   gymetra-frontend:
     build: ./frontend/gymetra-frontend
     ports:
       - "8100:80"
-    container_name: gymetra-frontend
+    container_name: develop-gymetra-frontend
