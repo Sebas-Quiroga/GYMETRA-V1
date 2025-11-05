@@ -2,6 +2,8 @@ package com.Membership.GYMETRA.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,11 +13,13 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/inspector")
+@Tag(name = "Inspector de Tablas", description = "Controlador para inspeccionar la estructura de las tablas de la base de datos")
 public class TableInspectorController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Operation(summary = "Obtener estructura de tabla payment", description = "Devuelve la estructura completa de la tabla payment en formato HTML")
     @GetMapping("/payment-table-structure")
     public String getPaymentTableStructure() {
         String sql = """
