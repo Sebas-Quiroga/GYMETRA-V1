@@ -103,6 +103,11 @@
   padding: 40px;
   overflow-y: auto;
   position: relative;
+  transition: margin-left 0.3s ease;
+}
+
+.main-content-mobile {
+  margin-left: 0;
 }
 
 .main-content::before {
@@ -359,6 +364,13 @@
   background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
   color: white;
   box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-btn ion-icon {
+  font-size: 16px;
 }
 
 .edit-btn:hover {
@@ -643,13 +655,32 @@
     padding: 10px;
   }
 
-  .users-table-container {
-    padding: 20px;
+  /* Enhanced table scrolling for mobile */
+  .users-table-container,
+  .payments-table-container,
+  .roles-table-container {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .users-table {
+  .users-table,
+  .payments-table,
+  .memberships-table,
+  .roles-table {
     min-width: 600px;
+    font-size: 12px;
+  }
+
+  .users-table th,
+  .users-table td,
+  .payments-table th,
+  .payments-table td,
+  .memberships-table th,
+  .memberships-table td,
+  .roles-table th,
+  .roles-table td {
+    padding: 8px 6px;
+    white-space: nowrap;
   }
 
   .modal-content {

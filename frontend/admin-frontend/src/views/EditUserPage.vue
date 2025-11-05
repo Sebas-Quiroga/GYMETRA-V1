@@ -7,11 +7,12 @@
       @navigate-to-reports="navigateToReports"
       @navigate-to-charts="navigateToCharts"
       @navigate-to-payments="navigateToPayments"
+      @navigate-to-roles="navigateToRoles"
       @logout="logout"
     />
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
       <!-- Edit User Form -->
       <div class="add-user-container">
         <div class="form-header">
@@ -138,6 +139,33 @@
               <span v-if="errors.identification" class="error-message">{{ errors.identification }}</span>
             </div>
 
+            <!-- Rol -->
+            <div class="form-group">
+              <label for="role" class="form-label">Rol *</label>
+              <div class="input-group">
+                <ion-icon :icon="shieldCheckmarkOutline" class="input-icon"></ion-icon>
+                <select
+                  id="role"
+                  v-model="form.role"
+                  class="form-input"
+                  required
+                  :class="{ 'error': errors.role }"
+                  @change="validateRole"
+                  @blur="validateRole"
+                >
+                  <option value="" disabled>Seleccione un rol</option>
+                  <option
+                    v-for="role in roles"
+                    :key="role.roleId"
+                    :value="role.roleName"
+                  >
+                    {{ role.roleName }}
+                  </option>
+                </select>
+              </div>
+              <span v-if="errors.role" class="error-message">{{ errors.role }}</span>
+            </div>
+
             <!-- Contraseña (opcional para editar) -->
             <div class="form-group">
               <label for="password" class="form-label">Nueva Contraseña <span class="optional">(opcional)</span></label>
@@ -192,7 +220,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AdminSidebar from '@/components/AdminSidebar.vue'
-import { userService } from '@/services/userService'
+import { userService, Role } from '@/services/userService'
 import {
   personOutline,
   mailOutline,
@@ -203,8 +231,22 @@ import {
   checkmarkOutline,
   checkmarkCircleOutline,
   arrowBackOutline,
-  createOutline
+  createOutline,
+  shieldCheckmarkOutline
 } from 'ionicons/icons'
+
+// Mobile responsive state
+const isMobile = ref(false)
+
+// Check if mobile on mount
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+})
 
 const router = useRouter()
 const route = useRoute()
@@ -212,6 +254,7 @@ const activeSection = ref('users')
 const loading = ref(true)
 const submitting = ref(false)
 const successMessage = ref('')
+const roles = ref<Role[]>([])
 
 // Get user ID from route params
 const userId = route.params.userId as string
@@ -241,6 +284,19 @@ const form = reactive({
   email: '',
   phone: '',
   identification: '',
+  role: '',
+  password: ''
+})
+
+// Original user data for comparison
+const originalUser = reactive({
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  identification: '',
+  role: '',
+  roleId: 0,
   password: ''
 })
 
@@ -251,12 +307,15 @@ const errors = reactive({
   email: '',
   phone: '',
   identification: '',
+  role: '',
   password: ''
 })
 
 // Load user data on mount
 onMounted(async () => {
+  await loadRoles()
   await loadUserData()
+  setUserRole()
 })
 
 // Load user data from API
@@ -274,7 +333,20 @@ const loadUserData = async () => {
       form.email = user.email
       form.phone = user.phone || ''
       form.identification = user.identification.toString()
+      form.role = user.role || 'user'
       form.password = '' // Don't load password
+
+      // Store original values for comparison
+      originalUser.firstName = user.firstName
+      originalUser.lastName = user.lastName
+      originalUser.email = user.email
+      originalUser.phone = user.phone || ''
+      originalUser.identification = user.identification.toString()
+      originalUser.role = user.role || 'user'
+      // Find and store original roleId
+      const originalRole = roles.value.find(r => r.roleName === (user.role || 'user'))
+      originalUser.roleId = originalRole ? originalRole.roleId : 0
+      originalUser.password = ''
     } else {
       throw new Error('Usuario no encontrado')
     }
@@ -284,6 +356,29 @@ const loadUserData = async () => {
     router.push('/adminpanel')
   } finally {
     loading.value = false
+  }
+}
+
+// Load roles from API
+const loadRoles = async () => {
+  try {
+    roles.value = await userService.getRoles()
+  } catch (error) {
+    console.error('Error loading roles:', error)
+  }
+}
+
+// Set user role after roles are loaded
+const setUserRole = () => {
+  if (roles.value.length > 0 && originalUser.role) {
+    // Find the role that matches the user's current role
+    const userRole = roles.value.find(r => r.roleName === originalUser.role)
+    if (userRole) {
+      form.role = userRole.roleName
+    } else {
+      // If no match found, set to first available role or default
+      form.role = roles.value[0]?.roleName || ''
+    }
   }
 }
 
@@ -453,6 +548,25 @@ const validatePassword = () => {
   return true
 }
 
+const validateRole = () => {
+  const role = form.role
+
+  if (!role) {
+    errors.role = 'El rol es requerido'
+    return false
+  }
+
+  // Check if the selected role exists in the loaded roles
+  const roleExists = roles.value.some(r => r.roleName === role)
+  if (!roleExists) {
+    errors.role = 'Selecciona un rol válido'
+    return false
+  }
+
+  errors.role = ''
+  return true
+}
+
 const validateIdentification = () => {
   const identification = form.identification
 
@@ -485,18 +599,35 @@ const handleSubmit = async () => {
   if (!validateEmail()) return
   if (!validateIdentification()) return
   if (!validatePhone()) return
+  if (!validateRole()) return
   if (!validatePassword()) return
 
   try {
     submitting.value = true
 
-    // Prepare data for API
-    const updateData: any = {
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
-      email: form.email.trim().toLowerCase(),
-      phone: form.phone.trim() || null,
-      identification: parseInt(form.identification)
+    // Prepare data for API - only include changed fields
+    const updateData: any = {}
+
+    if (form.firstName.trim() !== originalUser.firstName) {
+      updateData.firstName = form.firstName.trim()
+    }
+    if (form.lastName.trim() !== originalUser.lastName) {
+      updateData.lastName = form.lastName.trim()
+    }
+    if (form.email.trim().toLowerCase() !== originalUser.email.toLowerCase()) {
+      updateData.email = form.email.trim().toLowerCase()
+    }
+    if (form.phone.trim() !== originalUser.phone) {
+      updateData.phone = form.phone.trim() || null
+    }
+    if (form.identification !== originalUser.identification) {
+      updateData.identification = parseInt(form.identification)
+    }
+
+    // Find roleId from selected role name
+    const selectedRole = roles.value.find(r => r.roleName === form.role)
+    if (selectedRole && selectedRole.roleId !== originalUser.roleId) {
+      updateData.roleId = selectedRole.roleId
     }
 
     // Only include password if it's provided
@@ -571,6 +702,11 @@ const navigateToCharts = () => {
 const navigateToPayments = () => {
   activeSection.value = 'payments'
   router.push('/adminpagos')
+}
+
+const navigateToRoles = () => {
+  activeSection.value = 'roles'
+  router.push('/admin/roles')
 }
 </script>
 
