@@ -1,16 +1,31 @@
 <template>
   <ion-page>
     <ion-content class="ion-padding login-page" color="primary">
-      <div class="login-container">
+      <!-- Toast de notificación personalizado -->
+      <div v-if="notification.show" class="notification-toast" :class="notification.type">
+        <div class="notification-content">
+          <ion-icon :icon="notification.icon" class="notification-icon"></ion-icon>
+          <div class="notification-text">
+            <h4>{{ notification.title }}</h4>
+            <p>{{ notification.message }}</p>
+          </div>
+          <ion-button fill="clear" size="small" @click="dismissNotification">
+            <ion-icon :icon="closeOutline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="notification-progress" :style="{ width: notification.progress + '%' }"></div>
+      </div>
+
+      <div class="login-container" role="main" aria-label="Inicio de sesión">
         <!-- Logo -->
         <div class="logo-container">
-          <img src="/logo.png" alt="Gymetra Logo" class="logo" />
+          <img src="/logo.png" alt="Gymetra Logo" class="logo" loading="lazy" />
         </div>
 
         <!-- Agrupa los campos en input-card -->
-        <div class="input-card">
+        <div class="input-card" aria-label="Formulario de inicio de sesión">
           <!-- Campo Usuario -->
-          <ion-item :class="{ 'ion-invalid': emailError }">
+          <ion-item :class="{ 'ion-invalid': emailError }" aria-invalid="true" aria-errormessage="email-error">
             <ion-icon slot="start" :icon="personOutline"></ion-icon>
             <ion-input
               v-model="email"
@@ -23,6 +38,9 @@
               @ionFocus="showEmailSuggestions = true"
               @ionBlur="hideEmailSuggestions"
               :class="{ 'ion-valid': isEmailValid, 'ion-invalid': emailError }"
+              aria-label="Correo electrónico"
+              autocomplete="username"
+              required
             ></ion-input>
           </ion-item>
           <!-- Sugerencias de email -->
@@ -37,12 +55,12 @@
             </div>
           </div>
           <!-- Error de email -->
-          <div v-if="emailError" class="validation-error">
+          <div v-if="emailError" class="validation-error" id="email-error" role="alert" aria-live="assertive">
             {{ emailError }}
           </div>
 
           <!-- Campo Contraseña -->
-          <ion-item :class="{ 'ion-invalid': passwordError }">
+          <ion-item :class="{ 'ion-invalid': passwordError }" aria-invalid="true" aria-errormessage="password-error">
             <ion-icon slot="start" :icon="keyOutline"></ion-icon>
             <ion-input
               v-model="password"
@@ -54,50 +72,53 @@
               @ionInput="onPasswordInput"
               :maxlength="15"
               :class="{ 'ion-valid': isPasswordValid, 'ion-invalid': passwordError }"
+              aria-label="Contraseña"
+              autocomplete="current-password"
+              required
             ></ion-input>
             <ion-icon
               slot="end"
               :icon="showPassword ? eyeOffOutline : eyeOutline"
               @click="togglePassword"
               style="cursor: pointer"
+              tabindex="0"
+              role="button"
+              aria-label="Mostrar/ocultar contraseña"
             ></ion-icon>
           </ion-item>
           <!-- Error de contraseña -->
-          <div v-if="passwordError" class="validation-error">
+          <div v-if="passwordError" class="validation-error" id="password-error" role="alert" aria-live="assertive">
             {{ passwordError }}
           </div>
         </div>
 
         <!-- Links -->
-        <div class="links">
-          <a href="#" @click.prevent="openForgotModal">Olvidaste tu contraseña?</a>
+        <div class="links" aria-label="Enlaces de ayuda y registro">
+          <a href="#" @click.prevent="openForgotModal" tabindex="0" aria-label="Recuperar contraseña">Olvidaste tu contraseña?</a>
           <p>
-            Nuevo miembro? <router-link to="/register">Regístrate</router-link>
+            Nuevo miembro? <router-link to="/register" aria-label="Ir a registro">Regístrate</router-link>
           </p>
         </div>
 
         <!-- Botón -->
         <div class="btn-container">
-          <ion-button expand="block" class="login-btn" @click="handleLogin" :disabled="loading">
-            <ion-spinner v-if="loading" name="crescent"></ion-spinner>
+          <ion-button expand="block" class="login-btn" @click="handleLogin" :disabled="loading" :aria-disabled="loading" aria-label="Ingresar">
+            <ion-spinner v-if="loading" name="crescent" aria-label="Cargando"></ion-spinner>
             <span v-else>Ingresar</span>
           </ion-button>
         </div>
 
-        <!-- Error -->
-        <div v-if="errorMessage" class="error-msg">
-          {{ errorMessage }}
-        </div>
       </div>
 
       <!-- Modal Recuperar Contraseña -->
-      <ion-modal :is-open="showForgotModal" @did-dismiss="closeForgotModal">
-        <div class="modal-content">
+      <ion-modal :is-open="showForgotModal" @did-dismiss="closeForgotModal" aria-modal="true" role="dialog">
+        <div class="modal-content" aria-label="Recuperar Contraseña">
+          <button class="modal-close-btn" @click="closeForgotModal" aria-label="Cerrar modal" style="position:sticky;top:0;z-index:10;float:right;background:none;border:none;font-size:1.5rem;">×</button>
           <h2>Recuperar Contraseña</h2>
 
           <!-- Paso 1: ingresar correo -->
           <div v-if="forgotStep === 1">
-            <ion-item :class="{ 'ion-invalid': forgotEmailError }">
+            <ion-item :class="{ 'ion-invalid': forgotEmailError }" aria-invalid="true" aria-errormessage="forgot-email-error">
               <ion-input
                 v-model="forgotEmail"
                 type="email"
@@ -107,6 +128,8 @@
                 @ionFocus="showForgotEmailSuggestions = true"
                 @ionBlur="hideForgotEmailSuggestions"
                 :class="{ 'ion-valid': isForgotEmailValid, 'ion-invalid': forgotEmailError }"
+                aria-label="Correo electrónico para recuperación"
+                autocomplete="username"
               ></ion-input>
             </ion-item>
             <!-- Sugerencias de email para modal -->
@@ -116,47 +139,50 @@
                 :key="suggestion"
                 class="email-suggestion"
                 @click="selectForgotEmailSuggestion(suggestion)"
+                tabindex="0"
+                role="button"
+                aria-label="Sugerencia de correo"
               >
                 {{ suggestion }}
               </div>
             </div>
             <!-- Error de email -->
-            <div v-if="forgotEmailError" class="validation-error">
+            <div v-if="forgotEmailError" class="validation-error" id="forgot-email-error" role="alert" aria-live="assertive">
               {{ forgotEmailError }}
             </div>
             <div class="btn-container">
-              <ion-button @click="sendToken" :disabled="forgotLoading">
-                <ion-spinner v-if="forgotLoading" name="crescent"></ion-spinner>
+              <ion-button @click="sendToken" :disabled="forgotLoading" :aria-disabled="forgotLoading" aria-label="Enviar código de recuperación">
+                <ion-spinner v-if="forgotLoading" name="crescent" aria-label="Cargando"></ion-spinner>
                 <span v-else>Enviar Código</span>
               </ion-button>
-              <ion-button fill="clear" color="medium" @click="closeForgotModal">Cancelar</ion-button>
+              <ion-button fill="clear" color="medium" @click="closeForgotModal" aria-label="Cancelar recuperación">Cancelar</ion-button>
             </div>
-            <div class="message" v-if="forgotMessage">{{ forgotMessage }}</div>
           </div>
 
-          <!-- Paso 2: ingresar token recibido -->
+          <!-- Paso 2: ingresar token -->
           <div v-else-if="forgotStep === 2">
-            <ion-item>
+            <ion-item aria-label="Código de recuperación">
               <ion-input
                 v-model="forgotToken"
                 type="text"
                 placeholder="Código recibido"
                 required
+                aria-label="Código recibido"
+                autocomplete="one-time-code"
               ></ion-input>
             </ion-item>
             <div class="btn-container">
-              <ion-button @click="validateToken" :disabled="forgotLoading">
-                <ion-spinner v-if="forgotLoading" name="crescent"></ion-spinner>
+              <ion-button @click="validateToken" :disabled="forgotLoading" :aria-disabled="forgotLoading" aria-label="Validar código">
+                <ion-spinner v-if="forgotLoading" name="crescent" aria-label="Cargando"></ion-spinner>
                 <span v-else>Validar Código</span>
               </ion-button>
-              <ion-button fill="clear" color="medium" @click="closeForgotModal">Cancelar</ion-button>
+              <ion-button fill="clear" color="medium" @click="closeForgotModal" aria-label="Cancelar">Cancelar</ion-button>
             </div>
-            <div class="message" v-if="forgotMessage">{{ forgotMessage }}</div>
           </div>
 
           <!-- Paso 3: nueva contraseña -->
           <div v-else-if="forgotStep === 3">
-            <ion-item :class="{ 'ion-invalid': newPasswordError }">
+            <ion-item :class="{ 'ion-invalid': newPasswordError }" aria-invalid="true" aria-errormessage="new-password-error">
               <ion-input
                 v-model="forgotNewPassword"
                 type="password"
@@ -165,10 +191,12 @@
                 @ionInput="onNewPasswordInput"
                 :maxlength="15"
                 :class="{ 'ion-valid': isNewPasswordValid, 'ion-invalid': newPasswordError }"
+                aria-label="Nueva contraseña"
+                autocomplete="new-password"
               ></ion-input>
             </ion-item>
             <!-- Indicadores de validación de nueva contraseña -->
-            <div v-if="forgotNewPassword" class="password-requirements">
+            <div v-if="forgotNewPassword" class="password-requirements" aria-label="Requisitos de contraseña">
               <div class="requirement" :class="{ 'valid': passwordValidation.length }">
                 <ion-icon :icon="passwordValidation.length ? checkmarkCircle : closeCircle"></ion-icon>
                 6-15 caracteres
@@ -195,34 +223,25 @@
               </div>
             </div>
             <!-- Error de nueva contraseña -->
-            <div v-if="newPasswordError" class="validation-error">
+            <div v-if="newPasswordError" class="validation-error" id="new-password-error" role="alert" aria-live="assertive">
               {{ newPasswordError }}
             </div>
             <div class="btn-container">
-              <ion-button @click="resetPassword" :disabled="forgotLoading">
-                <ion-spinner v-if="forgotLoading" name="crescent"></ion-spinner>
+              <ion-button @click="resetPassword" :disabled="forgotLoading" :aria-disabled="forgotLoading" aria-label="Restablecer contraseña">
+                <ion-spinner v-if="forgotLoading" name="crescent" aria-label="Cargando"></ion-spinner>
                 <span v-else>Restablecer Contraseña</span>
               </ion-button>
-              <ion-button fill="clear" color="medium" @click="closeForgotModal">Cancelar</ion-button>
-            </div>
-            <div class="message" v-if="forgotMessage">{{ forgotMessage }}</div>
-          </div>
-
-          <!-- Mensaje final -->
-          <div v-else-if="forgotStep === 4">
-            <div class="message">{{ forgotMessage }}</div>
-            <div class="btn-container">
-              <ion-button @click="closeForgotModal">Cerrar</ion-button>
+              <ion-button fill="clear" color="medium" @click="closeForgotModal" aria-label="Cancelar">Cancelar</ion-button>
             </div>
           </div>
         </div>
       </ion-modal>
-    </ion-content>
+  </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, reactive, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import {
   IonPage,
@@ -241,6 +260,10 @@ import {
   eyeOffOutline,
   checkmarkCircle,
   closeCircle,
+  alertCircle,
+  warningOutline,
+  informationCircle,
+  closeOutline,
 } from "ionicons/icons";
 import { login } from "../services/authService";
 import { useAuthStore } from "@/stores/auth";
@@ -257,6 +280,73 @@ const emailDomains = [
   '@estudiantecorhuila.edu.co',
   '@docente.corhuila.edu.co'
 ];
+
+// Estado de notificaciones
+const notification = reactive({
+  show: false,
+  type: 'info' as 'success' | 'error' | 'warning' | 'info',
+  title: '',
+  message: '',
+  icon: informationCircle,
+  progress: 0,
+  duration: 5000,
+});
+
+// Variables para los timers de notificación
+let notificationTimer: NodeJS.Timeout | null = null;
+let notificationProgressTimer: NodeJS.Timeout | null = null;
+
+// Funciones de notificación
+const showNotification = (
+  type: 'success' | 'error' | 'warning' | 'info',
+  title: string,
+  message: string,
+  duration: number = 5000
+) => {
+  // Limpiar timers previos
+  if (notificationTimer) clearTimeout(notificationTimer);
+  if (notificationProgressTimer) clearInterval(notificationProgressTimer);
+
+  // Configurar icono según el tipo
+  const icons = {
+    success: checkmarkCircle,
+    error: alertCircle,
+    warning: warningOutline,
+    info: informationCircle,
+  };
+
+  // Configurar notificación
+  notification.type = type;
+  notification.title = title;
+  notification.message = message;
+  notification.icon = icons[type];
+  notification.duration = duration;
+  notification.progress = 0;
+  notification.show = true;
+
+  // Animar barra de progreso
+  const progressInterval = 50; // 50ms
+  const progressStep = (progressInterval / duration) * 100;
+  
+  notificationProgressTimer = setInterval(() => {
+    notification.progress += progressStep;
+    if (notification.progress >= 100) {
+      dismissNotification();
+    }
+  }, progressInterval);
+
+  // Auto-dismiss después del tiempo especificado
+  notificationTimer = setTimeout(() => {
+    dismissNotification();
+  }, duration);
+};
+
+const dismissNotification = () => {
+  if (notificationTimer) clearTimeout(notificationTimer);
+  if (notificationProgressTimer) clearInterval(notificationProgressTimer);
+  notification.show = false;
+  notification.progress = 0;
+};
 
 // Estado local para login
 const email = ref("");
@@ -511,9 +601,10 @@ const sendToken = async () => {
   try {
     const msg = await sendRecoveryToken(forgotEmail.value);
     forgotStep.value = 2;
-    forgotMessage.value = msg;
+    showNotification('success', 'Código enviado', msg, 5000);
   } catch (err: any) {
-    forgotMessage.value = err.message || "Error enviando correo";
+    const errorMsg = err.message || "Error enviando correo";
+    showNotification('error', 'Error', errorMsg, 5000);
   } finally {
     forgotLoading.value = false;
   }
@@ -530,9 +621,10 @@ const validateToken = async () => {
   try {
     await validateRecoveryToken(forgotToken.value);
     forgotStep.value = 3;
-    forgotMessage.value = "Código válido";
+    showNotification('success', 'Código válido', 'El código ha sido validado correctamente', 5000);
   } catch (err: any) {
-    forgotMessage.value = err.message || "Error validando código";
+    const errorMsg = err.message || "Error validando código";
+    showNotification('error', 'Error de validación', errorMsg, 5000);
   } finally {
     forgotLoading.value = false;
   }
@@ -542,19 +634,27 @@ const validateToken = async () => {
 const resetPassword = async () => {
   forgotMessage.value = "";
   
-  const passwordValidation = validateNewPassword(forgotNewPassword.value);
-  if (passwordValidation) {
-    newPasswordError.value = passwordValidation;
+  const passwordValidationError = validateNewPassword(forgotNewPassword.value);
+  if (passwordValidationError) {
+    newPasswordError.value = passwordValidationError;
     return;
   }
   
   forgotLoading.value = true;
   try {
     const msg = await resetPasswordService(forgotToken.value, forgotNewPassword.value);
-    forgotMessage.value = msg;
-    forgotStep.value = 4;
+    
+    // ⭐ Primero cerrar el modal
+    closeForgotModal();
+    
+    // ⭐ Luego mostrar la notificación de éxito
+    setTimeout(() => {
+      showNotification('success', '¡Contraseña restablecida!', msg, 5000);
+    }, 300); // Pequeño delay para que el modal se cierre primero
+    
   } catch (err: any) {
-    forgotMessage.value = err.message || "Error restableciendo contraseña";
+    const errorMsg = err.message || "Error restableciendo contraseña";
+    showNotification('error', 'Error', errorMsg, 5000);
   } finally {
     forgotLoading.value = false;
   }
@@ -587,9 +687,20 @@ const handleLogin = async () => {
       router.push("/home");
     }
   } catch (err: any) {
-    errorMessage.value = err.message || "Error al iniciar sesión";
+    const errorMsg = err.message || "Error al iniciar sesión";
+    showNotification('error', 'Error de acceso', errorMsg, 5000);
   } finally {
     loading.value = false;
   }
 };
+
+// Limpieza al desmontar el componente
+onUnmounted(() => {
+  if (notificationTimer) clearTimeout(notificationTimer);
+  if (notificationProgressTimer) clearInterval(notificationProgressTimer);
+});
 </script>
+
+<style>
+@import '../theme/LoginPage.css';
+</style>

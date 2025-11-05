@@ -1,7 +1,7 @@
-// src/services/apiService.ts
+import { HOST_URL } from"../services/hots";
 
 // Configuración base de la API
-export const MAIN_API_URL = "http://localhost:8080/api/auth";
+export const MAIN_API_URL = `${HOST_URL}:8080/api/auth`;
 
 // Configuración para diferentes endpoints
 export const API_ENDPOINTS = {

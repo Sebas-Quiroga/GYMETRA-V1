@@ -1,261 +1,321 @@
-
-
 <template>
   <ion-page>
-    <div class="pasarela-header-bar">
-      <button class="pasarela-back-btn" @click="$router.back()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <span class="pasarela-header-title">Añadir nueva tarjeta</span>
-    </div>
-    <ion-content class="pasarela-content">
-      <div class="pasarela-bg">
-        <div class="pasarela-card">
-          <!-- El header visual ya está en ion-header -->
-          <form class="pasarela-form" @submit.prevent="handleSubmit">
-            <div class="input-list">
-              <div class="input-item">
-                <input
-                  type="text"
-                  placeholder="Numero de la tarjeta"
-                  class="pasarela-input"
-                  v-model="form.cardNumber"
-                  maxlength="16"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  @input="onCardNumberInput"
-                  @blur="touched.cardNumber = true"
-                />
-                <div v-if="touched.cardNumber && errors.cardNumber" class="field-error">{{ errors.cardNumber }}</div>
-              </div>
-              <div class="input-item">
-                <input
-                  type="text"
-                  placeholder="Nombre del titular de la tarjeta"
-                  class="pasarela-input"
-                  v-model="form.cardName"
-                  maxlength="40"
-                  @input="onCardNameInput"
-                  @blur="touched.cardName = true"
-                />
-                <div v-if="touched.cardName && errors.cardName" class="field-error">{{ errors.cardName }}</div>
-              </div>
-              <div class="input-item">
-                <input
-                  type="text"
-                  placeholder="MM/AA"
-                  class="pasarela-input"
-                  v-model="form.expiry"
-                  maxlength="5"
-                  @input="onExpiryInput"
-                  @blur="touched.expiry = true"
-                />
-                <div v-if="touched.expiry && errors.expiry" class="field-error">{{ errors.expiry }}</div>
-              </div>
-              <div class="input-item">
-                <input
-                  type="text"
-                  placeholder="CCV"
-                  class="pasarela-input"
-                  v-model="form.ccv"
-                  maxlength="4"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  @input="onCCVInput"
-                  @blur="touched.ccv = true"
-                />
-                <div v-if="touched.ccv && errors.ccv" class="field-error">{{ errors.ccv }}</div>
-              </div>
-            </div>
-            <div class="card-icons">
-              <img v-if="cardType === 'visa'" src="https://img.icons8.com/color/48/000000/visa.png" alt="Visa" />
-              <img v-if="cardType === 'mastercard'" src="https://img.icons8.com/color/48/000000/mastercard-logo.png" alt="Mastercard" />
-              <img v-if="cardType === 'amex'" src="https://img.icons8.com/color/48/000000/amex.png" alt="Amex" />
-              <template v-if="!cardType">
-                <img src="https://img.icons8.com/color/48/000000/visa.png" alt="Visa" style="opacity:0.4;" />
-                <img src="https://img.icons8.com/color/48/000000/mastercard-logo.png" alt="Mastercard" style="opacity:0.4;" />
-                <img src="https://img.icons8.com/color/48/000000/amex.png" alt="Amex" style="opacity:0.4;" />
-              </template>
-            </div>
-            <div class="checkbox-row" style="align-items: flex-start; flex-direction: row; gap: 8px;">
-              <input type="checkbox" id="save-card" class="pasarela-checkbox" :disabled="!isFormValid" />
-              <label for="save-card" class="pasarela-checkbox-label" style="font-weight: 700; color: #888; margin-top: 2px;">
-                Acepto el tratamiento de mis datos personales para procesar el pago conforme a la política de privacidad.
-              </label>
-            </div>
-            <div style="margin-top: 8px; margin-bottom: 8px;">
-              <span style="font-size: 13px; color: #222; max-width: 320px; font-weight: 500; display: block;">
-                Consulta los detalles en nuestra <a href="#" style="color: #07B7E0; text-decoration: underline;">Política de Privacidad</a>.
-              </span>
-            </div>
-            <button type="submit" class="pasarela-btn" :disabled="!isFormValid">Comprar</button>
-          </form>
+    <ion-content class="payment-content">
+      <!-- Toast de notificación personalizado -->
+      <div v-if="notification.show" class="notification-toast" :class="notification.type">
+        <div class="notification-content">
+          <ion-icon :icon="notification.icon" class="notification-icon"></ion-icon>
+          <div class="notification-text">
+            <h4>{{ notification.title }}</h4>
+            <p>{{ notification.message }}</p>
+          </div>
+          <ion-button fill="clear" size="small" @click="dismissNotification">
+            <ion-icon :icon="closeOutline"></ion-icon>
+          </ion-button>
         </div>
-        <div class="pasarela-footer"></div>
+        <div class="notification-progress" :style="{ width: notification.progress + '%' }"></div>
+      </div>
+
+      <div class="payment-header">
+        <button class="back-btn" @click="$router.back()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#07B7E0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="payment-title">Pago de Membresía</span>
+      </div>
+
+      <div class="payment-form-container" v-if="membership">
+        <div class="purchase-summary">
+          <h4>Resumen de Compra</h4>
+          <p><strong>Membresía:</strong> {{ membership.planName }}</p>
+          <p><strong>Duración:</strong> {{ formatDuration(membership.durationDays) }}</p>
+          <p class="total-price"><strong>Total:</strong> ${{ formatPrice(membership.price) }} USD</p>
+        </div>
+
+        <!-- NOTA: Ya no se muestra el campo de ID ni el de Código Postal -->
+        <form @submit.prevent="processPayment" class="payment-form">
+          <div class="form-group">
+            <label>Información de Pago</label>
+            <div v-if="!stripeAvailable" class="test-mode-notice">
+              🧪 Modo de Prueba - No se requiere tarjeta
+            </div>
+            <div v-else>
+              <div id="stripe-card-element" class="stripe-element"></div>
+              <small class="help-text">El código postal se ingresa directamente en la pasarela de pago.</small>
+            </div>
+          </div>
+
+          <button type="submit" class="pay-btn" :disabled="paymentProcessing" :class="{ 'processing': paymentProcessing }">
+            <span v-if="paymentProcessing"><div class="btn-spinner"></div>Procesando...</span>
+            <span v-else>💳 Pagar Ahora</span>
+          </button>
+        </form>
+
+
       </div>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue';
-import { arrowBackOutline } from 'ionicons/icons';
+import { ref, onMounted, nextTick, reactive, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { IonPage, IonContent, IonIcon, IonButton } from '@ionic/vue';
+import { formatPrice, formatDuration } from '@/services/membershipService';
+import { useAuth } from '@/composables/useAuth';
+import { checkmarkCircle, alertCircle, warningOutline, informationCircle, closeOutline } from 'ionicons/icons';
+import "@/theme/PasarelaPago.css";
+import { HOST_URL } from"../services/hots";
 
-const form = reactive({
-  cardNumber: '',
-  cardName: '',
-  expiry: '',
-  ccv: ''
-});
-const errors = reactive({
-  cardNumber: '',
-  cardName: '',
-  expiry: '',
-  ccv: ''
-});
-const touched = reactive({
-  cardNumber: false,
-  cardName: false,
-  expiry: false,
-  ccv: false
-});
+const STRIPE_CONFIG = {
+  PUBLISHABLE_KEY: 'pk_test_51S9c29RPJMMOJ1bv1BejUA5NyJ7gsg0rvFcEjdAa8JuyMI7Zs3S9aCklSsGvTfGE2rVa6fhbwug33zIqK7b1ni8M00SLlPxKFx',
+  API_BASE_URL: `${HOST_URL}:8081/api`
+};
 
-const cardType = computed(() => {
-  const n = form.cardNumber;
-  if (/^4/.test(n)) return 'visa';
-  if (/^(5[1-5]|2[2-7])/.test(n)) return 'mastercard';
-  if (/^3[47]/.test(n)) return 'amex';
-  return '';
+const route = useRoute();
+const router = useRouter();
+const { userInfo } = useAuth();
+
+const membership = ref<any>(null);
+
+// Ya no se piden por UI; userId va oculto (sesión), ZIP se toma de Stripe Element
+const paymentData = ref({
+  userId: userInfo.value?.userId || null
 });
 
-const isFormValid = computed(() => {
-  return (
-    !errors.cardNumber &&
-    !errors.cardName &&
-    !errors.expiry &&
-    !errors.ccv &&
-    form.cardNumber &&
-    form.cardName &&
-    form.expiry &&
-    form.ccv
-  );
+const paymentProcessing = ref(false);
+const stripeAvailable = ref(false);
+const cardError = ref('');
+
+// Estado de notificaciones
+const notification = reactive({
+  show: false,
+  type: 'info' as 'success' | 'error' | 'warning' | 'info',
+  title: '',
+  message: '',
+  icon: informationCircle,
+  progress: 0,
+  duration: 5000,
 });
 
-function onCardNumberInput(e: Event) {
-  const val = (e.target as HTMLInputElement).value.replace(/\D/g, '');
-  form.cardNumber = val;
-  validateCardNumber();
-}
-function onCardNameInput(e: Event) {
-  const val = (e.target as HTMLInputElement).value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, '');
-  form.cardName = val;
-  validateCardName();
-}
-function onExpiryInput(e: Event) {
-  let val = (e.target as HTMLInputElement).value.replace(/[^0-9/]/g, '');
-  if (val.length === 2 && !val.includes('/')) val = val + '/';
-  form.expiry = val.slice(0, 5);
-  validateExpiry();
-}
-function onCCVInput(e: Event) {
-  const val = (e.target as HTMLInputElement).value.replace(/\D/g, '');
-  form.ccv = val;
-  validateCCV();
-}
+// Variables para los timers de notificación
+let notificationTimer: NodeJS.Timeout | null = null;
+let notificationProgressTimer: NodeJS.Timeout | null = null;
 
-function validateCardNumber() {
-  if (!form.cardNumber) {
-    errors.cardNumber = 'Ingrese el número de la tarjeta';
-  } else if (!/^\d{16}$/.test(form.cardNumber)) {
-    errors.cardNumber = 'Debe tener 16 dígitos';
+let stripe: any = null;
+let elements: any = null;
+let cardElement: any = null;
+
+// Funciones de notificación
+const showNotification = (
+  type: 'success' | 'error' | 'warning' | 'info',
+  title: string,
+  message: string,
+  duration: number = 5000
+) => {
+  // Limpiar timers previos
+  if (notificationTimer) clearTimeout(notificationTimer);
+  if (notificationProgressTimer) clearInterval(notificationProgressTimer);
+
+  // Configurar icono según el tipo
+  const icons = {
+    success: checkmarkCircle,
+    error: alertCircle,
+    warning: warningOutline,
+    info: informationCircle,
+  };
+
+  // Configurar notificación
+  notification.type = type;
+  notification.title = title;
+  notification.message = message;
+  notification.icon = icons[type];
+  notification.duration = duration;
+  notification.progress = 0;
+  notification.show = true;
+
+  // Animar barra de progreso
+  const progressInterval = 50; // 50ms
+  const progressStep = (progressInterval / duration) * 100;
+  
+  notificationProgressTimer = setInterval(() => {
+    notification.progress += progressStep;
+    if (notification.progress >= 100) {
+      dismissNotification();
+    }
+  }, progressInterval);
+
+  // Auto-dismiss después del tiempo especificado
+  notificationTimer = setTimeout(() => {
+    dismissNotification();
+  }, duration);
+};
+
+const dismissNotification = () => {
+  if (notificationTimer) clearTimeout(notificationTimer);
+  if (notificationProgressTimer) clearInterval(notificationProgressTimer);
+  notification.show = false;
+  notification.progress = 0;
+};
+
+onMounted(async () => {
+  // Recibe el plan por query params (como JSON string)
+  const planParam = route.query.plan as string;
+  if (planParam) {
+    try {
+      membership.value = JSON.parse(decodeURIComponent(planParam));
+    } catch {
+      membership.value = null;
+      showNotification('warning', 'Plan no encontrado', 'No se encontró información del plan seleccionado', 5000);
+      router.push('/planes');
+      return;
+    }
+  }
+
+  // Validar sesión para tener userId
+  if (!userInfo.value?.userId) {
+    // si no hay sesión, envía a login
+    router.push('/login');
+    return;
   } else {
-    errors.cardNumber = '';
+    paymentData.value.userId = userInfo.value.userId;
   }
-}
-function validateCardName() {
-  if (!form.cardName) {
-    errors.cardName = 'Ingrese el nombre del titular';
-  } else if (!/^([a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]+\s?)+$/.test(form.cardName)) {
-    errors.cardName = 'Solo letras y espacios';
-  } else {
-    errors.cardName = '';
-  }
-}
-function validateExpiry() {
-  if (!form.expiry) {
-    errors.expiry = 'Ingrese la fecha MM/AA';
-  } else if (!/^(0[1-9]|1[0-2])\/(\d{2})$/.test(form.expiry)) {
-    errors.expiry = 'Formato inválido (MM/AA)';
-  } else {
-    errors.expiry = '';
-  }
-}
-function validateCCV() {
-  if (!form.ccv) {
-    errors.ccv = 'Ingrese el CCV';
-  } else if (!/^\d{3,4}$/.test(form.ccv)) {
-    errors.ccv = 'Debe tener 3 o 4 dígitos';
-  } else {
-    errors.ccv = '';
-  }
-}
 
-function handleSubmit() {
-  touched.cardNumber = true;
-  touched.cardName = true;
-  touched.expiry = true;
-  touched.ccv = true;
-  validateCardNumber();
-  validateCardName();
-  validateExpiry();
-  validateCCV();
-  if (!errors.cardNumber && !errors.cardName && !errors.expiry && !errors.ccv) {
-    // Aquí iría la lógica de envío
-    alert('Datos validados y enviados');
+  await initializeStripe();
+  if (stripeAvailable.value) {
+    setTimeout(() => {
+      setupStripeElements();
+    }, 100);
   }
-}
+});
+
+const initializeStripe = async () => {
+  try {
+    if (!window.Stripe) return false;
+    if (STRIPE_CONFIG.PUBLISHABLE_KEY.startsWith('pk_test_') || STRIPE_CONFIG.PUBLISHABLE_KEY.startsWith('pk_live_')) {
+      stripe = window.Stripe(STRIPE_CONFIG.PUBLISHABLE_KEY);
+      elements = stripe.elements();
+      stripeAvailable.value = true;
+      return true;
+    } else {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+};
+
+const setupStripeElements = async () => {
+  if (!stripe || !elements) return;
+  await nextTick();
+  const cardElementContainer = document.getElementById('stripe-card-element');
+  if (cardElementContainer && !cardElement) {
+    cardElement = elements.create('card', {
+      // Aseguramos que el ZIP se pida dentro del widget de Stripe
+      hidePostalCode: false,
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#424770',
+          '::placeholder': { color: '#aab7c4' },
+        },
+      },
+    });
+    cardElement.mount('#stripe-card-element');
+    cardElement.on('change', (event: any) => {
+      if (event.error) {
+        showNotification('warning', 'Error en la tarjeta', event.error.message, 5000);
+      }
+    });
+  }
+};
+
+const processPayment = async () => {
+  if (!membership.value) return;
+
+  // Validar que tengamos userId desde la sesión
+  if (!paymentData.value.userId || parseInt(String(paymentData.value.userId)) < 1) {
+    showNotification('warning', 'Sesión requerida', 'Debes iniciar sesión para continuar con el pago', 5000);
+    router.push('/login');
+    return;
+  }
+
+  paymentProcessing.value = true;
+  try {
+    if (stripeAvailable.value && cardElement) {
+      await processStripePayment();
+    } else {
+      await simulatePayment();
+    }
+  } catch (error: any) {
+    showNotification('error', 'Error en el pago', error?.message || 'Error desconocido', 5000);
+  } finally {
+    paymentProcessing.value = false;
+  }
+};
+
+const processStripePayment = async () => {
+  if (!membership.value || !stripe || !cardElement) return;
+
+  // 1. Crear PaymentIntent en backend
+  const response = await fetch(`${STRIPE_CONFIG.API_BASE_URL}/payments/create-payment-intent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      membershipId: membership.value.membershipId,
+      userId: parseInt(String(paymentData.value.userId))
+    })
+  });
+  if (!response.ok) throw new Error('Error al crear PaymentIntent');
+  const { clientSecret } = await response.json();
+
+  // 2. Confirmar pago con Stripe
+  // IMPORTANTE: no pasamos postal_code; Stripe utiliza el que el usuario ingresó en el Card Element
+  const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+    payment_method: {
+      card: cardElement
+      // billing_details opcional; si no ponemos address.postal_code, Stripe toma el del widget
+    }
+  });
+  if (error) {
+    showNotification('error', 'Error en el pago', error.message, 5000);
+    throw error;
+  }
+
+  // 3. Confirmar en backend (asociar membresía al usuario)
+  const confirmResponse = await fetch(`${STRIPE_CONFIG.API_BASE_URL}/payments/confirm-payment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      paymentIntentId: paymentIntent.id,
+      membershipId: membership.value.membershipId,
+      userId: parseInt(String(paymentData.value.userId))
+    })
+  });
+  if (!confirmResponse.ok) {
+    showNotification('error', 'Error en la confirmación', 'No se pudo confirmar el pago en el servidor', 5000);
+    throw new Error('Error al confirmar en backend');
+  }
+
+  showNotification('success', '¡Pago exitoso!', 'La membresía ha sido activada correctamente', 5000);
+  setTimeout(() => {
+    router.push('/');
+  }, 2000);
+};
+
+const simulatePayment = async () => {
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  showNotification('success', '¡Pago exitoso!', 'La membresía ha sido activada correctamente', 5000);
+  setTimeout(() => {
+    router.push('/');
+  }, 2000);
+};
+
+const goToHome = () => {
+  router.push('/');
+};
+
+onUnmounted(() => {
+  if (notificationTimer) clearTimeout(notificationTimer);
+  if (notificationProgressTimer) clearInterval(notificationProgressTimer);
+});
 </script>
-<style>
-.pasarela-header-bar {
-  background: #07B7E0;
-  min-height: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  padding: 0 22px;
-  box-shadow: none;
-}
-.pasarela-back-btn {
-  background: transparent;
-  border: none;
-  outline: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 12px;
-  cursor: pointer;
-  padding: 0;
-}
-.pasarela-header-title {
-  color: #fff;
-  font-size: 1.45rem;
-  font-weight: 800;
-  font-family: 'Nunito', sans-serif;
-  display: flex;
-  align-items: center;
-}
-.field-error {
-  color: #f04141;
-  font-size: 12px;
-  margin-top: 2px;
-  margin-left: 4px;
-  font-weight: 500;
-  animation: errorSlideIn 0.3s ease-out;
-}
-@keyframes errorSlideIn {
-  0% { opacity: 0; transform: translateY(-8px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-</style>
-
-<style src="../theme/PasarelaPago.css"></style>

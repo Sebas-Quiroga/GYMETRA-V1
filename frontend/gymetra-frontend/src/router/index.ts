@@ -21,7 +21,6 @@ const routes: Array<RouteRecordRaw> = [
     path: '/Pasarelapago',
     name: 'PasarelaPago',
     component: () => import('../views/PasarelaPago.vue')
-    // meta: { requiresAuth: true } // Actívalo si la pasarela requiere login
   },
   {
     path: '/login',

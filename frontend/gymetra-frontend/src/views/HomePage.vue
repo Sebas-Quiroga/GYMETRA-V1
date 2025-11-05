@@ -2,11 +2,11 @@
   <ion-page>
     <!-- Header con navegación -->
     <ion-header>
-      <ion-toolbar color="primary" class="custom-toolbar">
-        <ion-title class="page-title">Principal</ion-title>
+      <ion-toolbar color="primary" class="custom-toolbar" role="banner" aria-label="Encabezado principal">
+        <ion-title class="page-title" aria-label="Página principal">Principal</ion-title>
         <ion-buttons slot="end">
           <!-- Botón de salir -->
-          <ion-button fill="clear" @click="logout">
+          <ion-button fill="clear" @click="logout" aria-label="Cerrar sesión">
             <ion-icon :icon="logOutOutline"></ion-icon>
             Salir
           </ion-button>
@@ -15,16 +15,16 @@
     </ion-header>
 
     <ion-content class="home-page">
-      <div class="dashboard-container">
+  <div class="dashboard-container" role="main" aria-label="Panel principal">
         <!-- Card de Bienvenida -->
-        <div class="welcome-card">
+        <div class="welcome-card" aria-label="Bienvenida">
           <div class="welcome-content">
             <div class="welcome-text">
               <h2>Hola, {{ userFirstName }}</h2>
               <p>{{ greeting }}</p>
             </div>
             <div class="profile-avatar">
-              <div class="avatar-circle">
+              <div class="avatar-circle" @click="navigateToProfile" tabindex="0" role="button" aria-label="Ir al perfil">
                 <!-- Mostrar foto si existe, sino mostrar icono -->
                 <img 
                   v-if="userPhotoUrl" 
@@ -32,11 +32,14 @@
                   alt="Foto de perfil"
                   class="avatar-image"
                   @error="handleImageError"
+                  loading="lazy"
+                  aria-label="Foto de perfil"
                 />
                 <ion-icon 
                   v-else 
                   :icon="personOutline"
                   class="avatar-icon"
+                  aria-hidden="true"
                 ></ion-icon>
               </div>
             </div>
@@ -44,34 +47,40 @@
         </div>
 
         <!-- Stats Cards Row -->
-        <div class="stats-row">
-          <!-- Card Recordes -->
-          <div class="stat-card record-card">
-            <div class="stat-number">20</div>
-            <div class="stat-label">Recordes</div>
+  <div class="stats-row" aria-label="Estadísticas rápidas">
+          <!-- Card Días Restantes -->
+          <div class="stat-card record-card" :class="getMembershipCardClass" aria-label="Días restantes de membresía">
+            <div 
+              class="stat-number" 
+              :data-days-critical="isDaysCritical"
+              :data-days-warning="isDaysWarning"
+            >
+              {{ daysRemaining }}
+            </div>
+            <div class="stat-label">{{ daysRemainingLabel }}</div>
           </div>
           <!-- Card Rutina -->
-          <div class="stat-card routine-card">
+          <div class="stat-card routine-card" @click="navigateToPlanes" tabindex="0" role="button" aria-label="Ver planes">
             <div class="stat-icon">
-              <ion-icon :icon="fitnessOutline"></ion-icon>
+              <ion-icon :icon="fitnessOutline" aria-hidden="true"></ion-icon>
             </div>
-            <div class="stat-label">Rutina</div>
+            <div class="stat-label">planes</div>
           </div>
-          <!-- Card Copiar -->
-          <div class="stat-card copy-card">
+          <!-- Card QR -->
+          <div class="stat-card copy-card" @click="navigateToQR" tabindex="0" role="button" aria-label="Ver código QR">
             <div class="stat-icon">
-              <ion-icon :icon="qrCodeOutline"></ion-icon>
+              <ion-icon :icon="qrCodeOutline" aria-hidden="true"></ion-icon>
             </div>
-            <div class="stat-label">codigo QR</div>
+            <div class="stat-label">código QR</div>
           </div>
         </div>
 
         <!-- Tiempo Entrenado Section -->
-        <div class="training-section">
+        <div class="training-section" aria-label="Tiempo entrenado semanal">
           <div class="section-header">
             <h3>Tiempo Entrenado</h3>
-            <ion-button fill="clear" size="small" class="info-btn">
-              <ion-icon :icon="informationCircleOutline"></ion-icon>
+            <ion-button fill="clear" size="small" class="info-btn" aria-label="Información sobre tiempo entrenado">
+              <ion-icon :icon="informationCircleOutline" aria-hidden="true"></ion-icon>
             </ion-button>
           </div>
           <!-- Chart Container -->
@@ -79,7 +88,7 @@
             <div class="chart-bars">
               <div class="bar-item" v-for="(bar, index) in chartData" :key="index">
                 <div class="bar" :class="bar.isActive ? 'bar-active' : 'bar-inactive'"
-                  :style="{ height: bar.height + '%' }"></div>
+                  :style="{ height: bar.height + '%' }" :aria-label="'Entrenamiento ' + bar.day + ': ' + bar.height + '%'" role="progressbar"></div>
                 <div class="bar-label">{{ bar.day }}</div>
               </div>
             </div>
@@ -102,13 +111,56 @@ import {
 import { qrCodeOutline } from 'ionicons/icons';
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
+import { HOST_URL } from"../services/hots";
 
 const auth = useAuthStore()
 const router = useRouter()
 
+// Estados para membresías
+const userMemberships = ref<any[]>([])
+const loadingMemberships = ref(false)
+
 const logout = () => {
-  auth.clearToken()
-  router.push('/login')
+  auth.clearToken();
+  router.push("/login");
+};
+
+const navigateToPlanes = () => {
+  router.push('/Planes')
+}
+
+// Estado reactivo para el QR temporal (puedes moverlo a un store si prefieres)
+const qrCodeData = ref<string | null>(null)
+
+const navigateToQR = async () => {
+  // Obtener el userId del usuario autenticado
+  const userId = userData.value.userId;
+  if (!userId) {
+    console.error('No hay userId disponible para consultar el QR');
+    return;
+  }
+  try {
+    const response = await fetch(`${HOST_URL}:8090/api/qr-access/user/${userId}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const data = await response.json();
+    if (data && data.qrCode) {
+      qrCodeData.value = data.qrCode;
+      // Guardar en window para acceso global
+      (window as any).qrCodeData = data.qrCode;
+      // Guardar en localStorage para fallback
+      localStorage.setItem('qrCodeData', data.qrCode);
+      // Navegar a la vista QR
+      router.push({ path: '/qr', query: { fromHome: '1' } });
+    } else {
+  // Solo mostrar errores en consola
+    }
+  } catch (error) {
+    console.error('Error consultando el QR:', error);
+  }
+}
+
+const navigateToProfile = () => {
+  router.push('/perfil')
 }
 
 const userData = ref({
@@ -123,8 +175,8 @@ const userData = ref({
   iat: null,
 });
 
-// Estado para la URL de la foto decodificada
-const userPhotoUrl = ref<string>('');
+// Estado para la URL de la foto usando el store
+const userPhotoUrl = computed(() => auth.userPhotoUrl);
 
 const chartData = ref([
   { day: 'L', height: 60, isActive: false },
@@ -172,8 +224,8 @@ const decodeBase64Image = (base64String: string): string => {
 
 // Función para manejar errores de carga de imagen
 const handleImageError = () => {
-  console.warn('Error cargando la imagen de perfil, mostrando icono por defecto');
-  userPhotoUrl.value = '';
+  // Solo mostrar errores en consola
+  // Ya no necesitamos hacer nada aquí, el store maneja los estados
 };
 
 const userFirstName = computed(() => {
@@ -198,7 +250,7 @@ const currentDay = computed(() => {
   return days[today];
 });
 
-const loadUserData = () => {
+const loadUserData = async () => {
   if (auth.token) {
     const decoded = decodeJWT(auth.token);
     if (decoded) {
@@ -216,14 +268,20 @@ const loadUserData = () => {
       
       // Decodificar y establecer la URL de la foto
       if (userData.value.photoUrl) {
-        userPhotoUrl.value = decodeBase64Image(userData.value.photoUrl);
+        // El store ya maneja la foto, no necesitamos decodificarla aquí
+  // Solo mostrar errores en consola
       }
       
       if (decoded.exp) {
         const now = Math.floor(Date.now() / 1000);
         if (decoded.exp < now) {
-          console.warn('Token expirado');
+          // Solo mostrar errores en consola
         }
+      }
+
+      // Cargar membresías una vez que tenemos el userId
+      if (userData.value.userId) {
+        await loadUserMemberships();
       }
     }
   }
@@ -237,316 +295,144 @@ const updateChartForCurrentDay = () => {
   }));
 };
 
+// ===============================
+// Funciones para membresías
+// ===============================
+const loadUserMemberships = async () => {
+  if (!userData.value.userId) {
+  // Solo mostrar errores en consola
+    return;
+  }
+
+  try {
+    loadingMemberships.value = true;
+  // Solo mostrar errores en consola
+    
+    // Usar la API directamente como en el componente de estado
+    const response = await fetch(`${HOST_URL}:8081/api/user-memberships/user/${userData.value.userId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const memberships = await response.json();
+  // Solo mostrar errores en consola
+    
+    // Filtrar solo membresías activas
+    const activeMemberships = memberships
+      .filter((m: any) => m.status === 'ACTIVE')
+      .sort((a: any, b: any) => 
+        new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
+      );
+    
+    userMemberships.value = activeMemberships;
+  // Solo mostrar errores en consola
+    
+  } catch (error: any) {
+    console.error('❌ Error cargando membresías:', error);
+    // En caso de error, mantener el arreglo vacío
+    userMemberships.value = [];
+  } finally {
+    loadingMemberships.value = false;
+  }
+};
+
+// Computed para días restantes - usando la misma lógica del componente de estado
+const daysRemaining = computed(() => {
+  if (loadingMemberships.value) {
+    return '--';
+  }
+
+  if (userMemberships.value.length === 0) {
+    return '0';
+  }
+
+  // Tomar la primera membresía activa (ya están ordenadas por fecha)
+  const activeMembership = userMemberships.value[0];
+  
+  if (!activeMembership?.endDate) return '0';
+  
+  try {
+    const endDate = new Date(activeMembership.endDate);
+    const today = new Date();
+    
+    // Set times to start of day for accurate comparison
+    endDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    
+    const diffTime = endDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return Math.max(0, diffDays).toString();
+  } catch (error) {
+    console.error('Error calculating days:', error);
+    return '0';
+  }
+});
+
+// Computed para el label de días restantes
+const daysRemainingLabel = computed(() => {
+  if (loadingMemberships.value) {
+    return 'Cargando...';
+  }
+
+  const days = parseInt(daysRemaining.value);
+  
+  if (isNaN(days) || days === 0) {
+    return 'Sin membresía activa';
+  } else if (days === 1) {
+    return 'Día restante';
+  } else if (days <= 7) {
+    return 'Días restantes ⚠️';
+  } else {
+    return 'Días restantes';
+  }
+});
+
+// Computed para estados de advertencia
+const isDaysCritical = computed(() => {
+  const days = parseInt(daysRemaining.value);
+  return !isNaN(days) && days > 0 && days <= 3;
+});
+
+const isDaysWarning = computed(() => {
+  const days = parseInt(daysRemaining.value);
+  return !isNaN(days) && days > 3 && days <= 7;
+});
+
+// Computed para clase de la card
+const getMembershipCardClass = computed(() => {
+  const days = parseInt(daysRemaining.value);
+  
+  if (loadingMemberships.value) return 'loading-state';
+  if (isNaN(days) || days === 0) return 'no-membership';
+  if (days <= 3) return 'critical-state';
+  if (days <= 7) return 'warning-state';
+  return 'active-state';
+});
+
+// Nueva lógica para el componente QR
+const qrCode = ref<string | null>(null);
+const qrStatus = ref('');
+const qrEndDate = ref<string | null>(null);
+
 onMounted(() => {
+  if (window && (window as any).qrCodeData) {
+    qrCode.value = (window as any).qrCodeData;
+  } else {
+    qrCode.value = localStorage.getItem('qrCodeData');
+  }
+  qrStatus.value = qrCode.value ? 'Membresía activa' : 'Sin QR';
+  qrEndDate.value = null;
+});
+
+onMounted(async () => {
   auth.initializeToken();
-  loadUserData();
+  await loadUserData();
   updateChartForCurrentDay();
 });
 </script>
 
-<style scoped>
-/* Página principal */
-.home-page {
-  --background: #07B7E0 !important;
-  --padding-start: 0 !important;
-  --padding-end: 0 !important;
-  --padding-top: 0 !important;
-  --padding-bottom: 0 !important;
-}
-
-.home-page::part(scroll) {
-  background: #07B7E0 !important;
-}
-
-/* Header personalizado */
-.custom-toolbar {
-  --background: #07B7E0;
-  --color: white;
-  --border-width: 0;
-}
-
-.page-title {
-  color: white;
-  font-weight: 600;
-  font-size: 1.2rem;
-}
-
-ion-buttons ion-button {
-  --color: white;
-}
-
-/* Container principal */
-.dashboard-container {
-  padding: 20px;
-  min-height: 100vh;
-  background: #07B7E0;
-}
-
-/* Card de Bienvenida */
-.welcome-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 25px;
-  margin-bottom: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.welcome-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.welcome-text h2 {
-  color: white;
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin: 0 0 5px 0;
-  text-shadow: none;
-}
-
-.welcome-text p {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1rem;
-  font-weight: 500;
-  margin: 0;
-}
-
-.profile-avatar {
-  position: relative;
-}
-
-.avatar-circle {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  overflow: hidden; /* Para que la imagen se recorte en círculo */
-}
-
-/* Estilos para la imagen de avatar */
-.avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-/* Estilos para el icono cuando no hay foto */
-.avatar-icon {
-  font-size: 28px;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* Row de estadísticas */
-.stats-row {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.stat-card {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
-  padding: 20px 15px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Card de recordes */
-.record-card .stat-number {
-  color: white;
-  font-size: 2.2rem;
-  font-weight: 800;
-  margin-bottom: 5px;
-  text-shadow: none;
-}
-
-.stat-label {
-  color: white;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-/* Íconos de las cards */
-.stat-icon {
-  margin-bottom: 8px;
-}
-
-.stat-icon ion-icon {
-  font-size: 32px;
-  color: white;
-  filter: none;
-}
-
-/* Sección de entrenamiento */
-.training-section {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.section-header h3 {
-  color: white;
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin: 0;
-  text-shadow: none;
-}
-
-.info-btn {
-  --color: rgba(255, 255, 255, 0.8);
-  margin: 0;
-  --padding-start: 8px;
-  --padding-end: 8px;
-}
-
-.info-btn ion-icon {
-  font-size: 20px;
-}
-
-/* Container del gráfico */
-.chart-container {
-  height: 200px;
-  display: flex;
-  align-items: end;
-  padding: 0 10px;
-}
-
-.chart-bars {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  width: 100%;
-  height: 100%;
-  gap: 8px;
-}
-
-.bar-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-  justify-content: end;
-}
-
-.bar {
-  width: 100%;
-  border-radius: 6px 6px 2px 2px;
-  transition: all 0.3s ease;
-  margin-bottom: 10px;
-  min-height: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.bar-active {
-  background: white;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
-}
-
-.bar-inactive {
-  background: rgba(255, 255, 255, 0.7);
-}
-
-.bar-label {
-  color: white;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  .dashboard-container {
-    padding: 15px;
-  }
-
-  .stats-row {
-    gap: 10px;
-  }
-
-  .stat-card {
-    padding: 15px 10px;
-  }
-
-  .record-card .stat-number {
-    font-size: 1.8rem;
-  }
-
-  .stat-icon ion-icon {
-    font-size: 28px;
-  }
-
-  .welcome-text h2 {
-    font-size: 1.5rem;
-  }
-
-  .chart-bars {
-    gap: 6px;
-  }
-}
-
-/* Animaciones */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.welcome-card,
-.stat-card,
-.training-section {
-  animation: fadeInUp 0.6s ease-out forwards;
-}
-
-.stat-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.stat-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.stat-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-.training-section {
-  animation-delay: 0.4s;
-}
+<style>
+@import '../theme/HomePage.css';
 </style>
