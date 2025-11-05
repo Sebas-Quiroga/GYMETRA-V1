@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { API_ENDPOINTS, apiPost, type ApiResponse } from './apiService';
-
+import { HOST_URL } from"../services/hots";
 export interface RegisterData {
   identification: string;
   firstName: string;

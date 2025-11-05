@@ -942,10 +942,8 @@ const handleRegister = async () => {
       return;
     }
 
-    console.log('📝 Iniciando registro con datos:', {
-      ...registerData,
-      password: '***'
-    });
+  // Solo mostrar errores en consola
+  // Datos de registro ocultos por seguridad
 
     // Mostrar notificación de carga
     showNotification('info', 'Creando cuenta', 'Procesando tu registro...', 10000);
@@ -953,7 +951,7 @@ const handleRegister = async () => {
     // Llamar al servicio de registro
     const response = await register(registerData);
 
-    console.log('🔍 Respuesta del registro:', response);
+  // Solo mostrar errores en consola
 
     // Manejar diferentes tipos de respuesta del backend
     if (response && response.success !== false) {
