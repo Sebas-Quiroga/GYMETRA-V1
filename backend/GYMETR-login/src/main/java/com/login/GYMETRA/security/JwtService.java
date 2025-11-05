@@ -35,6 +35,11 @@ public class JwtService {
         claims.put("firstName", user.getFirstName());
         claims.put("lastName", user.getLastName());
         claims.put("status", user.getStatus());
+        claims.put("phone", user.getPhone());
+        claims.put("identification", user.getIdentification()); // OJO: PII
+        claims.put("photoUrl", user.getPhotoUrl());
+        claims.put("createdAt", user.getCreatedAt() != null ? user.getCreatedAt().toString() : null);
+        claims.put("lastLogin", user.getLastLogin() != null ? user.getLastLogin().toString() : null);
         claims.put("roleIds", user.getUserRoles().stream()
                 .map(ur -> ur.getRole().getRoleId())
                 .collect(Collectors.toList()));
