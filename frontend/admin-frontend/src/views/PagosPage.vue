@@ -58,7 +58,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="membership in userMemberships" :key="membership.id">
+              <tr v-for="membership in paginatedActiveMemberships" :key="membership.id">
                 <td>{{ membership.id }}</td>
                 <td>{{ membership.userName }}</td>
                 <td>{{ membership.membership?.planName || 'Sin plan' }}</td>
@@ -71,6 +71,17 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Pagination for Active Memberships -->
+          <Pagination
+            :total-items="userMemberships.length"
+            :current-page="activeMembershipsCurrentPage"
+            :page-size="activeMembershipsPageSize"
+            item-name="membresías activas"
+            component-id="active-memberships"
+            @update:current-page="activeMembershipsCurrentPage = $event"
+            @update:page-size="activeMembershipsPageSize = $event"
+          />
         </div>
 
         <!-- Membresías Disponibles Section -->
@@ -93,7 +104,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="membership in memberships" :key="membership.membershipId">
+              <tr v-for="membership in paginatedAvailableMemberships" :key="membership.membershipId">
                 <td>{{ membership.membershipId }}</td>
                 <td>{{ membership.planName }}</td>
                 <td>${{ formatPrice(membership.price) }}</td>
@@ -144,6 +155,17 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Pagination for Available Memberships -->
+          <Pagination
+            :total-items="memberships.length"
+            :current-page="availableMembershipsCurrentPage"
+            :page-size="availableMembershipsPageSize"
+            item-name="membresías disponibles"
+            component-id="available-memberships"
+            @update:current-page="availableMembershipsCurrentPage = $event"
+            @update:page-size="availableMembershipsPageSize = $event"
+          />
         </div>
 
         <!-- Payments Section -->
@@ -162,7 +184,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="payment in payments" :key="payment.id">
+              <tr v-for="payment in paginatedPayments" :key="payment.id">
                 <td>{{ payment.idPago }}</td>
                 <td>{{ payment.identificacion }}</td>
                 <td>{{ formatDate(payment.fechaPago) }}</td>
@@ -176,6 +198,17 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Pagination for Payments Table -->
+          <Pagination
+            :total-items="payments.length"
+            :current-page="paymentsCurrentPage"
+            :page-size="paymentsPageSize"
+            item-name="pagos"
+            component-id="payments"
+            @update:current-page="paymentsCurrentPage = $event"
+            @update:page-size="paymentsPageSize = $event"
+          />
         </div>
       </div>
     </div>
@@ -216,6 +249,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { logout as authLogout } from '@/services/authService'
 import AdminSidebar from '@/components/AdminSidebar.vue'
+import Pagination from '@/components/Pagination.vue'
 import { membershipService, type Payment as ApiPayment, type UserMembership as ApiUserMembership, type Membership } from '@/services/membershipService'
 import { userService } from '@/services/userService'
 import {
@@ -286,6 +320,37 @@ const payments = ref<Payment[]>([])
 const userMemberships = ref<(ApiUserMembership & { userName?: string; membership?: Membership })[]>([])
 const memberships = ref<Membership[]>([])
 const users = ref<any[]>([])
+
+// Estado de paginación para membresías activas
+const activeMembershipsCurrentPage = ref(1)
+const activeMembershipsPageSize = ref(10)
+
+// Estado de paginación para membresías disponibles
+const availableMembershipsCurrentPage = ref(1)
+const availableMembershipsPageSize = ref(10)
+
+// Estado de paginación para pagos
+const paymentsCurrentPage = ref(1)
+const paymentsPageSize = ref(10)
+
+// Computed para datos paginados
+const paginatedActiveMemberships = computed(() => {
+  const start = (activeMembershipsCurrentPage.value - 1) * activeMembershipsPageSize.value
+  const end = start + activeMembershipsPageSize.value
+  return userMemberships.value.slice(start, end)
+})
+
+const paginatedAvailableMemberships = computed(() => {
+  const start = (availableMembershipsCurrentPage.value - 1) * availableMembershipsPageSize.value
+  const end = start + availableMembershipsPageSize.value
+  return memberships.value.slice(start, end)
+})
+
+const paginatedPayments = computed(() => {
+  const start = (paymentsCurrentPage.value - 1) * paymentsPageSize.value
+  const end = start + paymentsPageSize.value
+  return payments.value.slice(start, end)
+})
 
 // Modal state
 const showModal = ref(false)
