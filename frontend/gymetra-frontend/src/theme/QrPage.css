@@ -1,0 +1,143 @@
+.qr-card {
+  /* ...existing code... */
+}
+
+@media (max-width: 480px) {
+  .qr-card {
+    max-width: 98vw;
+    padding: 18px 4vw 18px 4vw;
+    border-radius: 16px;
+  }
+  .qr-title {
+    font-size: 1.15rem;
+    margin-bottom: 12px;
+  }
+  .qr-image img {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+@media (min-width: 700px) {
+  .qr-card {
+    max-width: 400px;
+    padding: 36px 32px 32px 32px;
+    border-radius: 32px;
+  }
+  .qr-title {
+    font-size: 2rem;
+  }
+  .qr-image img {
+    width: 220px;
+    height: 220px;
+  }
+}
+:root, body, .qr-container, .qr-page, .qr-content, ion-page {
+  background: #fff !important;
+}
+/* Header superior tipo 'Crear Cuenta' */
+.qr-header-bar {
+  background: #07B7E0;
+  min-height: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.qr-back-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+.qr-header-title {
+  color: #fff;
+  font-size: 1.45rem;
+  font-weight: 800;
+  font-family: 'Nunito', sans-serif;
+  display: flex;
+  align-items: center;
+}
+/* Estilos para la vista QR */
+.qr-container {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-card {
+  background: #07B7E0;
+  border-radius: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  width: 90vw;
+  max-width: 320px;
+  padding: 28px 18px 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24px;
+}
+.qr-title {
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  text-align: center;
+  font-family: 'Nunito', sans-serif;
+}
+.qr-image {
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qr-image img {
+  width: 180px;
+  height: 180px;
+  display: block;
+}
+.qr-status {
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 600;
+  margin-top: 6px;
+  text-align: center;
+}
+.qr-date {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+:deep(ion-content) {
+  --background: #fff !important;
+  background: #fff !important;
+  --ion-background-color: #fff !important;
+  --ion-background-color-rgb: 255,255,255 !important;
+}
+
+.qr-placeholder {
+  width: 220px;
+  height: 220px;
+  background: #e0f7fa;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  font-size: 1.2rem;
+  color: #07B7E0;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
