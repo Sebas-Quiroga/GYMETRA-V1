@@ -1,7 +1,9 @@
 package com.Membership.GYMETRA.service;
 
 import com.Membership.GYMETRA.entity.Membership;
+import com.Membership.GYMETRA.entity.UserMembership;
 import com.Membership.GYMETRA.repository.MembershipRepository;
+import com.Membership.GYMETRA.repository.UserMembershipRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,9 +13,11 @@ import java.util.Optional;
 public class MembershipService {
 
     private final MembershipRepository membershipRepository;
+    private final UserMembershipRepository userMembershipRepository;
 
-    public MembershipService(MembershipRepository membershipRepository) {
+    public MembershipService(MembershipRepository membershipRepository, UserMembershipRepository userMembershipRepository) {
         this.membershipRepository = membershipRepository;
+        this.userMembershipRepository = userMembershipRepository;
     }
 
     // Listar todas las membresías
@@ -34,5 +38,10 @@ public class MembershipService {
     // Eliminar una membresía
     public void deleteMembership(Integer id) {
         membershipRepository.deleteById(id);
+    }
+
+    // Obtener todas las membresías de usuario
+    public List<UserMembership> getAllUserMemberships() {
+        return userMembershipRepository.findAll();
     }
 }

@@ -1,9 +1,10 @@
 // src/services/membershipService.ts
 import { apiGet, apiPost, apiAuthRequest, ApiResponse } from './apiService';
 import { getToken } from './authService';
+import { HOST_URL } from"../services/hots";
 
 // URL base para membresías
-const MEMBERSHIP_API_URL = "http://localhost:8081/api";
+const MEMBERSHIP_API_URL = `${HOST_URL}:8081/api`;
 
 // Endpoints específicos para membresías
 export const MEMBERSHIP_ENDPOINTS = {
@@ -46,103 +47,20 @@ export interface UserMembership {
 export async function getAvailableMemberships(): Promise<Membership[]> {
   try {
     console.log('🔍 Cargando membresías disponibles...');
-    
     const response = await apiGet<Membership[]>(MEMBERSHIP_ENDPOINTS.AVAILABLE);
-    
     if (response.success && response.data) {
       console.log('✅ Membresías cargadas exitosamente desde API:', response.data);
       return response.data;
     }
-    
     throw new Error(response.message || 'No se pudieron cargar las membresías');
   } catch (error: any) {
     console.error('❌ Error al cargar membresías desde API:', error);
-    
-    // Si hay error de conexión, usar datos de fallback
-    if (error.message.includes('conexión') || 
-        error.message.includes('fetch') || 
-        error.message.includes('Tiempo de espera') ||
-        error.message.includes('CORS')) {
-      
-      console.log('🔄 Usando datos de fallback debido a error de conexión...');
-      return getMockMemberships();
-    }
-    
     throw new Error(error.message || 'Error al cargar los planes disponibles');
   }
 }
 
-// ===============================
-// Datos de fallback para membresías
-// ===============================
-function getMockMemberships(): Membership[] {
-  console.log('🧪 Cargando membresías de prueba...');
-  
-  return [
-    {
-      membershipId: 1,
-      planName: "Plan Básico",
-      price: 29990,
-      durationDays: 30,
-      description: "Acceso completo al gimnasio durante 30 días",
-      status: "available",
-      features: [
-        "Acceso a todas las máquinas",
-        "Horario completo",
-        "Vestuarios y duchas",
-        "WiFi gratuito"
-      ],
-      isPopular: false
-    },
-    {
-      membershipId: 2,
-      planName: "Plan Premium",
-      price: 49990,
-      durationDays: 30,
-      description: "Incluye clases grupales y asesoría nutricional",
-      status: "available",
-      features: [
-        "Todo lo del plan básico",
-        "Clases grupales ilimitadas",
-        "Asesoría nutricional",
-        "Área VIP",
-        "Toallas incluidas"
-      ],
-      isPopular: true
-    },
-    {
-      membershipId: 3,
-      planName: "Plan Trimestral",
-      price: 79990,
-      durationDays: 90,
-      description: "Ahorra con nuestro plan de 3 meses",
-      status: "available",
-      features: [
-        "Todo lo del plan premium",
-        "15% de descuento",
-        "Evaluación física mensual",
-        "Plan de entrenamiento personalizado"
-      ],
-      isPopular: false
-    },
-    {
-      membershipId: 4,
-      planName: "Plan Anual",
-      price: 299990,
-      durationDays: 365,
-      description: "El mejor precio - Membresía completa por 1 año",
-      status: "available",
-      features: [
-        "Todo incluido",
-        "30% de descuento",
-        "Entrenador personal (2h/mes)",
-        "Acceso a todas las sucursales",
-        "Invitados gratis (2/mes)"
-      ],
-      isPopular: false
-    }
-  ];
-}
+
+
 
 // ===============================
 // Comprar una membresía
@@ -257,7 +175,7 @@ export function getMembershipIcon(days: number): string {
 
 // Validar si una membresía está disponible
 export function isMembershipAvailable(membership: Membership): boolean {
-  return membership.status === 'available';
+  return membership.status === 'available' || membership.status === 'ACTIVE';
 }
 
 // Calcular descuento (si aplica)

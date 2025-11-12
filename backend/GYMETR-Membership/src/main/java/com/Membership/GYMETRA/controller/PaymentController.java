@@ -11,16 +11,20 @@ import com.Membership.GYMETRA.service.PaymentService;
 import com.Membership.GYMETRA.service.StripePaymentService;
 import com.Membership.GYMETRA.service.EmailService;
 import com.stripe.model.PaymentIntent;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/payments")
+@Tag(name = "Pagos", description = "Controlador para gestionar pagos y transacciones")
 public class PaymentController {
 
     private final StripePaymentService stripePaymentService;
@@ -49,6 +53,7 @@ public class PaymentController {
     /**
      * Crear un PaymentIntent en Stripe
      */
+    @Operation(summary = "Crear intención de pago", description = "Crea una intención de pago en Stripe para procesar el pago de una membresía")
     @PostMapping("/create-payment-intent")
     public ResponseEntity<?> createPaymentIntent(@RequestBody Map<String, Object> request) {
         try {
@@ -101,6 +106,7 @@ public class PaymentController {
     /**
      * Confirmar el pago y crear la membresía del usuario
      */
+    @Operation(summary = "Confirmar pago", description = "Confirma el pago realizado y activa la membresía del usuario")
     @PostMapping("/confirm-payment")
     public ResponseEntity<?> confirmPayment(@RequestBody Map<String, Object> request) {
         try {
@@ -195,6 +201,21 @@ public class PaymentController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Error al confirmar el pago: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Obtener todos los pagos
+     */
+    @Operation(summary = "Obtener todos los pagos", description = "Devuelve una lista de todos los pagos registrados en el sistema")
+    @GetMapping("/all")
+    public ResponseEntity<List<Payment>> getAllPayments() {
+        try {
+            List<Payment> payments = paymentService.getAllPayments();
+            return ResponseEntity.ok(payments);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(null);
         }
     }
 }

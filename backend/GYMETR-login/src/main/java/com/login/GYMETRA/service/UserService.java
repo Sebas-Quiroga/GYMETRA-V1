@@ -2,13 +2,16 @@ package com.login.GYMETRA.service;
 
 import com.login.GYMETRA.dto.JwtResponse;
 import com.login.GYMETRA.dto.RegisterRequest;
+import com.login.GYMETRA.dto.EditUserRequest;
 import com.login.GYMETRA.entity.Role;
 import com.login.GYMETRA.entity.User;
 import com.login.GYMETRA.entity.UserRole;
 import com.login.GYMETRA.repository.RoleRepository;
 import com.login.GYMETRA.repository.UserRepository;
+import com.login.GYMETRA.repository.UserRoleRepository;
 import com.login.GYMETRA.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,11 +26,15 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     private static final String DEFAULT_USER_ROLE = "Client";
 
+    // ==============================================================
+    // REGISTRO DE USUARIO
+    // ==============================================================
     @Transactional
     public JwtResponse register(RegisterRequest request) {
         try {
@@ -57,7 +64,6 @@ public class UserService {
             clientRole.getUserRoles().add(userRole);
 
             User savedUser = userRepository.save(user);
-
             String token = jwtService.generateToken(buildJwtClaims(savedUser), savedUser);
 
             return new JwtResponse(true, token, "Bearer", "Registro exitoso");
@@ -67,6 +73,129 @@ public class UserService {
         }
     }
 
+    // ==============================================================
+    // LOGIN DE USUARIO
+    // ==============================================================
+    public JwtResponse login(String email, String password) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+
+        if (optionalUser.isEmpty()) {
+            return new JwtResponse(false, null, null, "Usuario no encontrado");
+        }
+
+        User user = optionalUser.get();
+
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            return new JwtResponse(false, null, null, "Contraseña incorrecta");
+        }
+
+        String token = jwtService.generateToken(buildJwtClaims(user), user);
+        return new JwtResponse(true, token, "Bearer", "Login exitoso");
+    }
+
+    // ==============================================================
+    // EDICIÓN DE USUARIO
+    // ==============================================================
+    @Transactional
+    public JwtResponse editUser(Long userId, EditUserRequest request) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+            // Verificar si el email ya está en uso por otro usuario
+            if (request.getEmail() != null && !request.getEmail().equals(user.getEmail()) &&
+                    userRepository.existsByEmail(request.getEmail())) {
+                throw new UserAlreadyExistsException("El email ya está registrado");
+            }
+
+            // Actualizar campos no nulos
+            if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+            if (request.getLastName() != null) user.setLastName(request.getLastName());
+            if (request.getEmail() != null) user.setEmail(request.getEmail());
+            if (request.getPhone() != null) user.setPhone(request.getPhone());
+            if (request.getPhotoUrl() != null) user.setPhotoUrl(request.getPhotoUrl());
+            if (request.getPassword() != null) {
+                user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            }
+
+            // Actualizar rol si se proporciona
+            if (request.getRoleId() != null) {
+                Role newRole = roleRepository.findById(request.getRoleId())
+                        .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado"));
+
+                // Buscar el UserRole existente
+                List<UserRole> userRoles = userRoleRepository.findByUser_UserId(userId);
+                if (!userRoles.isEmpty()) {
+                    UserRole existingUserRole = userRoles.get(0); // Asumiendo un solo rol por usuario
+                    existingUserRole.setRole(newRole);
+                    userRoleRepository.save(existingUserRole);
+                } else {
+                    // Si no existe, crear uno nuevo
+                    UserRole newUserRole = UserRole.builder()
+                            .user(user)
+                            .role(newRole)
+                            .build();
+                    userRoleRepository.save(newUserRole);
+                }
+            }
+
+            User updatedUser = userRepository.save(user);
+            String token = jwtService.generateToken(buildJwtClaims(updatedUser), updatedUser);
+
+            return new JwtResponse(true, token, "Bearer", "Usuario actualizado exitosamente");
+
+        } catch (IllegalArgumentException | UserAlreadyExistsException ex) {
+            return new JwtResponse(false, null, null, ex.getMessage());
+        }
+    }
+
+    // ==============================================================
+    // OBTENER TODOS LOS USUARIOS
+    // ==============================================================
+    public List<User> getAllUsers() {
+        return userRepository.findAll(Sort.by(Sort.Direction.ASC, "userId"));
+    }
+
+    // ==============================================================
+    // ELIMINAR USUARIO
+    // ==============================================================
+    @Transactional
+    public boolean deleteUser(Long userId) {
+        try {
+            if (userRepository.existsById(userId)) {
+                userRepository.deleteById(userId);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ==============================================================
+    // SUSPENDER/ACTIVAR CUENTA DE USUARIO
+    // ==============================================================
+    @Transactional
+    public boolean updateUserStatus(Long userId, String status) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+            if (!"active".equals(status) && !"suspended".equals(status)) {
+                throw new IllegalArgumentException("Estado inválido. Debe ser 'active' o 'suspended'");
+            }
+
+            user.setStatus(status);
+            userRepository.save(user);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // ==============================================================
+    // VALIDACIONES Y UTILIDADES
+    // ==============================================================
     private void validateRegistrationRequest(RegisterRequest request) {
         validateIdentification(request.getIdentification());
 
@@ -105,23 +234,9 @@ public class UserService {
         return claims;
     }
 
-    public JwtResponse login(String email, String password) {
-        Optional<User> optionalUser = userRepository.findByEmail(email);
-
-        if (optionalUser.isEmpty()) {
-            return new JwtResponse(false, null, null, "Usuario no encontrado");
-        }
-
-        User user = optionalUser.get();
-
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            return new JwtResponse(false, null, null, "Contraseña incorrecta");
-        }
-
-        String token = jwtService.generateToken(buildJwtClaims(user), user);
-        return new JwtResponse(true, token, "Bearer", "Login exitoso");
-    }
-
+    // ==============================================================
+    // EXCEPCIÓN PERSONALIZADA
+    // ==============================================================
     public static class UserAlreadyExistsException extends RuntimeException {
         public UserAlreadyExistsException(String message) {
             super(message);

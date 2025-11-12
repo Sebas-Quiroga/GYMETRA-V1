@@ -9,6 +9,8 @@ import com.Membership.GYMETRA.service.MembershipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -20,6 +22,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/diagnostic")
 @CrossOrigin(origins = {"http://localhost:5501", "http://localhost:8100", "http://localhost:3000", "http://localhost:8081"}, allowCredentials = "true")
+@Tag(name = "Diagnóstico", description = "Controlador para pruebas y diagnóstico del sistema")
 public class DiagnosticController {
 
     private final PaymentService paymentService;
@@ -37,6 +40,7 @@ public class DiagnosticController {
         this.membershipService = membershipService;
     }
 
+    @Operation(summary = "Probar creación de pago", description = "Ejecuta una prueba de creación de pago para verificar el funcionamiento del sistema")
     @PostMapping("/test-payment")
     public ResponseEntity<?> testPaymentCreation() {
         try {
@@ -96,6 +100,7 @@ public class DiagnosticController {
         }
     }
     
+    @Operation(summary = "Verificar estructura de tabla", description = "Consulta la estructura de la tabla payment en la base de datos")
     @GetMapping("/check-table-structure")
     public ResponseEntity<?> checkTableStructure() {
         try {
@@ -126,6 +131,7 @@ public class DiagnosticController {
         }
     }
 
+    @Operation(summary = "Test simple de conexión", description = "Realiza una prueba básica de conexión a la base de datos")
     @GetMapping("/simple-test")
     public ResponseEntity<?> simpleTest() {
         try {
@@ -145,6 +151,7 @@ public class DiagnosticController {
         }
     }
 
+    @Operation(summary = "Verificar membresías de usuario", description = "Consulta todas las membresías asociadas a un usuario específico")
     @GetMapping("/user-membership/{userId}")
     public ResponseEntity<?> checkUserMembership(@PathVariable Integer userId) {
         try {
@@ -181,6 +188,7 @@ public class DiagnosticController {
         }
     }
 
+    @Operation(summary = "Verificar tabla user_membership", description = "Consulta la estructura de la tabla user_membership en la base de datos")
     @GetMapping("/check-user-membership-table")
     public ResponseEntity<?> checkUserMembershipTable() {
         try {
