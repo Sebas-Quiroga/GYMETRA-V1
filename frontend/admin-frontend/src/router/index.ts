@@ -40,6 +40,12 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/EditUserPage.vue'),
     meta: { requiresAuth: true },
     props: true
+  },
+  {
+    path: '/adminreportes',
+    name: 'ReportesPage',
+    component: () => import('@/views/ReportesPage.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

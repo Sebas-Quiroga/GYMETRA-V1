@@ -17,7 +17,7 @@
   "dependencies": {
     "@ionic/vue": "^7.0.0",
     "@ionic/vue-router": "^7.0.0",
-    "axios": "^1.6.0",
+    "axios": "^1.13.1",
     "ionicons": "^7.0.0",
     "pinia": "^2.1.7",
     "vue": "^3.3.0",
