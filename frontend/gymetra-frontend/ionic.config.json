@@ -1,0 +1,7 @@
+{
+  "name": "gymetra-frontend",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
