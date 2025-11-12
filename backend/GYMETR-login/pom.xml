@@ -22,7 +22,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<maven.resources.encoding>UTF-8</maven.resources.encoding>
-		<springdoc.version>2.1.0</springdoc.version>
 	</properties>
 
 	<dependencies>
