@@ -2,12 +2,12 @@ package com.login.GYMETRA.service;
 
 import com.login.GYMETRA.dto.JwtResponse;
 import com.login.GYMETRA.dto.RegisterRequest;
+import com.login.GYMETRA.dto.EditUserRequest;
 import com.login.GYMETRA.entity.Role;
 import com.login.GYMETRA.entity.User;
 import com.login.GYMETRA.entity.UserRole;
 import com.login.GYMETRA.repository.RoleRepository;
 import com.login.GYMETRA.repository.UserRepository;
-import com.login.GYMETRA.repository.UserRoleRepository;
 import com.login.GYMETRA.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,9 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,73 +24,139 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
+    private static final String DEFAULT_USER_ROLE = "Client";
+
     @Transactional
     public JwtResponse register(RegisterRequest request) {
+        try {
+            validateRegistrationRequest(request);
+
+            Role clientRole = roleRepository.findByRoleName(DEFAULT_USER_ROLE)
+                    .orElseThrow(() -> new IllegalStateException("Rol " + DEFAULT_USER_ROLE + " no encontrado"));
+
+            User user = User.builder()
+                    .firstName(request.getFirstName())
+                    .lastName(request.getLastName())
+                    .email(request.getEmail())
+                    .passwordHash(passwordEncoder.encode(request.getPassword()))
+                    .phone(request.getPhone())
+                    .status("active")
+                    .identification(Long.valueOf(request.getIdentification()))
+                    .photoUrl(request.getPhotoUrl())
+                    .createdAt(OffsetDateTime.now())
+                    .build();
+
+            UserRole userRole = UserRole.builder()
+                    .user(user)
+                    .role(clientRole)
+                    .build();
+
+            user.setUserRoles(new HashSet<>(Set.of(userRole)));
+            clientRole.getUserRoles().add(userRole);
+
+            User savedUser = userRepository.save(user);
+
+            String token = jwtService.generateToken(buildJwtClaims(savedUser), savedUser);
+
+            return new JwtResponse(true, token, "Bearer", "Registro exitoso");
+
+        } catch (UserAlreadyExistsException | IllegalArgumentException ex) {
+            return new JwtResponse(false, null, null, ex.getMessage());
+        }
+    }
+
+    private void validateRegistrationRequest(RegisterRequest request) {
+        validateIdentification(request.getIdentification());
+
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("El email ya está registrado");
+            throw new UserAlreadyExistsException("El email ya está registrado");
         }
 
-        User user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .phone(request.getPhone())
-                .status("active")
-                .createdAt(OffsetDateTime.now())
-                .build();
-        userRepository.save(user);
+        if (userRepository.existsByIdentification(request.getIdentification())) {
+            throw new UserAlreadyExistsException("La identificación ya está registrada");
+        }
+    }
 
-        Role role = roleRepository.findByRoleName("Client")
-                .orElseThrow(() -> new IllegalStateException("Rol 'Client' no encontrado"));
+    private void validateIdentification(Long identification) {
+        if (identification == null || identification <= 0) {
+            throw new IllegalArgumentException("El número de identificación es obligatorio");
+        }
 
-        UserRole userRole = UserRole.builder()
-                .user(user)
-                .role(role)
-                .build();
-        userRoleRepository.save(userRole);
+        int length = identification.toString().length();
+        if (length < 6 || length > 12) {
+            throw new IllegalArgumentException("El número de identificación debe tener entre 6 y 12 dígitos");
+        }
+    }
 
-        // Construimos los claims para el token
+    private Map<String, Object> buildJwtClaims(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getUserId());
         claims.put("email", user.getEmail());
+        claims.put("firstName", user.getFirstName());
+        claims.put("lastName", user.getLastName());
+        claims.put("status", user.getStatus());
+        claims.put("identification", user.getIdentification());
+        claims.put("photoUrl", user.getPhotoUrl());
         claims.put("roleIds", user.getUserRoles().stream()
                 .map(ur -> ur.getRole().getRoleId())
                 .collect(Collectors.toList()));
-
-        String token = jwtService.generateToken(claims, user);
-
-        return new JwtResponse(token, "Bearer");
+        return claims;
     }
 
     public JwtResponse login(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Optional<User> optionalUser = userRepository.findByEmail(email);
 
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new RuntimeException("Contraseña incorrecta");
+        if (optionalUser.isEmpty()) {
+            return new JwtResponse(false, null, null, "Usuario no encontrado");
         }
 
-        // Construimos los claims para el token
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", user.getUserId());
-        claims.put("email", user.getEmail());
-        claims.put("roleIds", user.getUserRoles().stream()
-                .map(ur -> ur.getRole().getRoleId())
-                .collect(Collectors.toList()));
+        User user = optionalUser.get();
 
-        String token = jwtService.generateToken(claims, user);
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            return new JwtResponse(false, null, null, "Contraseña incorrecta");
+        }
 
-        // Tomamos el primer rol asignado (si hay más, puedes ajustarlo)
-        Long roleId = user.getUserRoles().stream()
-                .findFirst()
-                .map(ur -> ur.getRole().getRoleId())
-                .orElseThrow(() -> new RuntimeException("Usuario sin rol asignado"));
+        String token = jwtService.generateToken(buildJwtClaims(user), user);
+        return new JwtResponse(true, token, "Bearer", "Login exitoso");
+    }
 
-        return new JwtResponse(token, "Bearer");
+    @Transactional
+    public JwtResponse editUser(Long userId, EditUserRequest request) {
+        try {
+            User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+            // Verificar si el email ya está en uso por otro usuario
+            if (request.getEmail() != null && !request.getEmail().equals(user.getEmail()) &&
+                userRepository.existsByEmail(request.getEmail())) {
+                throw new UserAlreadyExistsException("El email ya está registrado");
+            }
+
+            // Actualizar campos si no son null
+            if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+            if (request.getLastName() != null) user.setLastName(request.getLastName());
+            if (request.getEmail() != null) user.setEmail(request.getEmail());
+            if (request.getPhone() != null) user.setPhone(request.getPhone());
+            if (request.getPhotoUrl() != null) user.setPhotoUrl(request.getPhotoUrl());
+            if (request.getPassword() != null) {
+                user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+            }
+
+            User updatedUser = userRepository.save(user);
+            String token = jwtService.generateToken(buildJwtClaims(updatedUser), updatedUser);
+
+            return new JwtResponse(true, token, "Bearer", "Usuario actualizado exitosamente");
+        } catch (IllegalArgumentException | UserAlreadyExistsException ex) {
+            return new JwtResponse(false, null, null, ex.getMessage());
+        }
+    }
+
+    public static class UserAlreadyExistsException extends RuntimeException {
+        public UserAlreadyExistsException(String message) {
+            super(message);
+        }
     }
 }
