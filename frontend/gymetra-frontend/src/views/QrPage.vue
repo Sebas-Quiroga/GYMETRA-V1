@@ -21,7 +21,7 @@
     </div>
 
     <!-- 🔹 Contenido principal -->
-    <ion-content role="main" aria-label="QR de acceso" class="qr-content">
+    <ion-content role="main" aria-label="QR de acceso">
       <div class="qr-container">
         <div class="qr-card" aria-label="Tarjeta QR de acceso">
           <div class="qr-title">QR de acceso</div>

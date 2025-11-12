@@ -61,7 +61,6 @@ export async function getAvailableMemberships(): Promise<Membership[]> {
 
 
 
-
 // ===============================
 // Comprar una membresía
 // ===============================
@@ -175,7 +174,7 @@ export function getMembershipIcon(days: number): string {
 
 // Validar si una membresía está disponible
 export function isMembershipAvailable(membership: Membership): boolean {
-  return membership.status === 'available' || membership.status === 'ACTIVE';
+  return membership.status === 'available';
 }
 
 // Calcular descuento (si aplica)

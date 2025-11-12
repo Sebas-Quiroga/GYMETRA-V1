@@ -43,7 +43,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="role in paginatedRoles" :key="role.roleId">
+              <tr v-for="role in roles" :key="role.roleId">
                 <td>{{ role.roleId }}</td>
                 <td>{{ role.roleName }}</td>
                 <td class="actions-cell">
@@ -57,17 +57,6 @@
               </tr>
             </tbody>
           </table>
-
-          <!-- Pagination for Roles Table -->
-          <Pagination
-            :total-items="roles.length"
-            :current-page="rolesCurrentPage"
-            :page-size="rolesPageSize"
-            item-name="roles"
-            component-id="roles"
-            @update:current-page="rolesCurrentPage = $event"
-            @update:page-size="rolesPageSize = $event"
-          />
 
           <!-- Empty State -->
           <div v-if="roles.length === 0" class="empty-state">
@@ -107,10 +96,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminSidebar from '@/components/AdminSidebar.vue'
-import Pagination from '@/components/Pagination.vue'
 import { userService, RoleResponse } from '@/services/userService'
 import {
   shieldCheckmarkOutline,
@@ -141,17 +129,6 @@ const roles = ref<RoleResponse[]>([])
 const showDeleteModal = ref(false)
 const deleting = ref(false)
 const roleToDelete = ref<RoleResponse | null>(null)
-
-// Estado de paginación para roles
-const rolesCurrentPage = ref(1)
-const rolesPageSize = ref(10)
-
-// Computed para datos paginados
-const paginatedRoles = computed(() => {
-  const start = (rolesCurrentPage.value - 1) * rolesPageSize.value
-  const end = start + rolesPageSize.value
-  return roles.value.slice(start, end)
-})
 
 // Load roles on mount
 onMounted(async () => {
