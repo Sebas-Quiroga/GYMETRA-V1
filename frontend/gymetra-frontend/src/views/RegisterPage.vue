@@ -56,9 +56,6 @@
               inputmode="numeric"
               autocomplete="off"
               :disabled="registerLoading"
-              aria-label="Número de identificación"
-              :aria-invalid="!!errors.identification"
-              role="textbox"
             ></ion-input>
           </ion-item>
           <div v-if="errors.identification" class="field-error">{{ errors.identification }}</div>
@@ -78,9 +75,6 @@
                 autocomplete="given-name"
                 :maxlength="50"
                 :disabled="registerLoading"
-                aria-label="Nombre"
-                :aria-invalid="!!errors.firstName"
-                role="textbox"
               ></ion-input>
             </ion-item>
             <div v-if="errors.firstName" class="field-error">{{ errors.firstName }}</div>
@@ -98,9 +92,6 @@
                 autocomplete="family-name"
                 :maxlength="50"
                 :disabled="registerLoading"
-                aria-label="Apellido"
-                :aria-invalid="!!errors.lastName"
-                role="textbox"
               ></ion-input>
             </ion-item>
             <div v-if="errors.lastName" class="field-error">{{ errors.lastName }}</div>
@@ -121,9 +112,6 @@
               autocomplete="email"
               :maxlength="100"
               :disabled="registerLoading"
-              aria-label="Correo Electrónico"
-              :aria-invalid="!!errors.email"
-              role="textbox"
             ></ion-input>
           </ion-item>
           <div v-if="errors.email" class="field-error">{{ errors.email }}</div>
@@ -143,9 +131,6 @@
               autocomplete="new-password"
               :maxlength="100"
               :disabled="registerLoading"
-              aria-label="Contraseña"
-              :aria-invalid="!!errors.password"
-              role="textbox"
             ></ion-input>
             <ion-icon
               slot="end"
@@ -183,9 +168,6 @@
               autocomplete="new-password"
               :maxlength="100"
               :disabled="registerLoading"
-              aria-label="Confirmar Contraseña"
-              :aria-invalid="!!errors.confirmPassword"
-              role="textbox"
             ></ion-input>
             <ion-icon
               slot="end"
@@ -212,15 +194,12 @@
               autocomplete="tel"
               :maxlength="15"
               :disabled="registerLoading"
-              aria-label="Teléfono"
-              :aria-invalid="!!errors.phone"
-              role="textbox"
             ></ion-input>
           </ion-item>
           <div v-if="errors.phone" class="field-error">{{ errors.phone }}</div>
 
-          <!-- Foto de perfil (directo, sin modal) -->
-          <ion-item button @click="triggerFileInput" class="photo-item" :disabled="registerLoading" aria-label="Seleccionar foto de perfil" role="button">
+          <!-- Foto de perfil -->
+          <ion-item button @click="openPhotoOptions" class="photo-item" :disabled="registerLoading">
             <ion-icon :icon="cameraOutline" slot="start"></ion-icon>
             <ion-label>Foto de Perfil (Opcional)</ion-label>
             <div slot="end" class="photo-preview">
@@ -236,9 +215,6 @@
               class="custom-checkbox" 
               :disabled="registerLoading"
               @ionChange="validateField('acceptData')"
-              aria-label="Aceptar términos y condiciones"
-              :aria-checked="formData.acceptData"
-              role="checkbox"
             ></ion-checkbox>
             <div class="checkbox-content" @click="toggleAcceptData">
               <span class="checkbox-text">
@@ -268,13 +244,10 @@
               @click="handleRegister" 
               :disabled="registerLoading || !isFormValid"
               type="submit"
-              aria-label="Crear mi cuenta"
-              :aria-disabled="registerLoading || !isFormValid"
-              role="button"
             >
               <ion-spinner v-if="registerLoading" name="crescent"></ion-spinner>
               <span v-else>
-                <ion-icon :icon="checkmarkCircleOutline" class="btn-icon" aria-hidden="true"></ion-icon>
+                <ion-icon :icon="checkmarkCircleOutline" class="btn-icon"></ion-icon>
                 Crear Mi Cuenta
               </span>
             </ion-button>
@@ -291,7 +264,43 @@
       </div>
       </div>
 
-
+      <!-- Modal seleccionar foto -->
+      <ion-modal :is-open="showPhotoModal" @did-dismiss="closePhotoModal">
+        <div class="modal-content">
+          <h2>Seleccionar Foto</h2>
+          
+          <div class="photo-instructions">
+            <ion-icon :icon="informationCircleOutline" class="info-icon"></ion-icon>
+            <p>Selecciona una foto para tu perfil. Solo se permiten archivos PNG, JPG o JPEG.</p>
+          </div>
+          
+          <div class="btn-container">
+            <ion-button @click="selectFromGallery">
+              <ion-icon :icon="imagesOutline" slot="start"></ion-icon>
+              Desde Galería
+            </ion-button>
+            <ion-button @click="takePhoto">
+              <ion-icon :icon="cameraOutline" slot="start"></ion-icon>
+              Tomar Foto
+            </ion-button>
+          </div>
+          
+          <div v-if="photoPreview" class="current-photo">
+            <h4>Vista Previa:</h4>
+            <img :src="photoPreview" alt="Foto seleccionada" class="preview-large" />
+            <ion-button fill="clear" @click="removePhoto" color="danger">
+              <ion-icon :icon="trashOutline" slot="start"></ion-icon>
+              Eliminar foto
+            </ion-button>
+          </div>
+          
+          <div class="btn-container">
+            <ion-button @click="closePhotoModal" fill="clear" color="medium">
+              Cancelar
+            </ion-button>
+          </div>
+        </div>
+      </ion-modal>
 
       <!-- Modal de términos y condiciones -->
       <ion-modal :is-open="showTermsModal" @did-dismiss="closeTermsModal">
@@ -488,6 +497,7 @@ const photoUrl = ref("");
 const photoPreview = ref("");
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
+const showPhotoModal = ref(false);
 const showTermsModal = ref(false);
 const showPrivacyModal = ref(false);
 const fileInput = ref<HTMLInputElement>();
@@ -807,19 +817,36 @@ const closePrivacyModal = () => {
   showPrivacyModal.value = false;
 };
 
-// Función para disparar el input de archivo directamente
-const triggerFileInput = () => {
-  if (fileInput.value) {
-    fileInput.value.accept = "image/png,image/jpeg,image/jpg";
-    fileInput.value.removeAttribute('capture'); // Siempre galería/cámara según el sistema
-    fileInput.value.click();
-  }
+// Funciones de foto
+const openPhotoOptions = () => {
+  showPhotoModal.value = true;
 };
 
-// Eliminar foto (sin modal)
+const closePhotoModal = () => {
+  showPhotoModal.value = false;
+};
+
+const selectFromGallery = () => {
+  if (fileInput.value) {
+    fileInput.value.accept = "image/png,image/jpeg,image/jpg";
+    fileInput.value.click();
+  }
+  closePhotoModal();
+};
+
+const takePhoto = () => {
+  if (fileInput.value) {
+    fileInput.value.accept = "image/png,image/jpeg,image/jpg";
+    fileInput.value.capture = "camera";
+    fileInput.value.click();
+  }
+  closePhotoModal();
+};
+
 const removePhoto = () => {
   photoPreview.value = "";
   photoUrl.value = "";
+  closePhotoModal();
 };
 
 const resizeImage = (file: File, maxSize: number = 150): Promise<string> => {
