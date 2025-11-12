@@ -37,10 +37,6 @@
         <ion-icon :icon="barChartOutline"></ion-icon>
         <span>Métricas</span>
       </div>
-      <div class="nav-item" @click="handleNavigation(navigateToRoles)" :class="{ active: activeSection === 'roles' }">
-        <ion-icon :icon="shieldCheckmarkOutline"></ion-icon>
-        <span>Roles</span>
-      </div>
     </nav>
 
     <div class="sidebar-footer">
@@ -81,7 +77,6 @@ const emit = defineEmits<{
   navigateToReports: []
   navigateToCharts: []
   navigateToPayments: []
-  navigateToRoles: []
   logout: []
 }>()
 

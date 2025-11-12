@@ -168,47 +168,6 @@
           />
         </div>
 
-        <!-- Membresías Disponibles Section -->
-        <div class="memberships-section">
-          <h3>Membresías Disponibles</h3>
-          <button class="create-membership-btn" @click="openCreateModal">
-            <ion-icon name="add"></ion-icon>
-            Crear Nueva Membresía
-          </button>
-          <table class="memberships-table">
-            <thead>
-              <tr>
-                <th>ID Plan</th>
-                <th>Nombre del Plan</th>
-                <th>Precio</th>
-                <th>Duración (días)</th>
-                <th>Descripción</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="membership in memberships" :key="membership.membershipId">
-                <td>{{ membership.membershipId }}</td>
-                <td>{{ membership.planName }}</td>
-                <td>${{ formatPrice(membership.price) }}</td>
-                <td>{{ membership.durationDays }}</td>
-                <td>{{ membership.description || 'Sin descripción' }}</td>
-                <td>{{ membership.status }}</td>
-                <td>
-                  <button class="edit-btn" @click="openEditModal(membership)">
-                    <ion-icon name="create"></ion-icon>
-                    Editar
-                  </button>
-                </td>
-              </tr>
-              <tr v-if="memberships.length === 0">
-                <td colspan="7" class="no-data">No hay membresías disponibles</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
         <!-- Payments Section -->
         <div class="payments-section">
           <h3>Historial de Pagos</h3>
