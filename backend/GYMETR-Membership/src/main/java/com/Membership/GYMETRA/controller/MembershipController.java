@@ -49,6 +49,14 @@ public class MembershipController {
         return ResponseEntity.ok(userMemberships);
     }
 
+    // Endpoint para obtener todas las membresías de usuario
+    @Operation(summary = "Listar todas las membresías de usuario", description = "Obtiene una lista completa de todas las membresías de usuario en el sistema")
+    @GetMapping("/user-memberships/all")
+    public ResponseEntity<List<UserMembership>> getAllUserMemberships() {
+        List<UserMembership> userMemberships = membershipService.getAllUserMemberships();
+        return ResponseEntity.ok(userMemberships);
+    }
+
     // Obtener membresía por ID
     @Operation(summary = "Obtener membresía por ID", description = "Obtiene los detalles de una membresía específica por su identificador")
     @GetMapping("/memberships/{id}")
