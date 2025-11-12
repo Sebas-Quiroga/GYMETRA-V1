@@ -19,11 +19,13 @@
     "@capacitor/status-bar": "7.0.3",
     "@ionic/vue": "^8.0.0",
     "@ionic/vue-router": "^8.0.0",
+    "@stripe/stripe-js": "^8.0.0",
     "axios": "^1.12.2",
     "chart.js": "^4.5.0",
     "ionicons": "^7.0.0",
     "jwt-decode": "^4.0.0",
     "pinia": "^3.0.3",
+    "qrcode.vue": "^3.6.0",
     "vue": "^3.3.0",
     "vue-router": "^4.2.0"
   },

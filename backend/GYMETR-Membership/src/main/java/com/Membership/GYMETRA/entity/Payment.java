@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.ToString;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -29,7 +31,22 @@ public class Payment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_membership_id", nullable = false)
+    @JsonIgnore
     private UserMembership userMembership;
+
+    // Campo adicional para exponer el userId en JSON sin cargar toda la relación
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("userId")
+    public Integer getUserId() {
+        return userMembership != null ? userMembership.getUserId() : null;
+    }
+
+    // Campo adicional para exponer el membershipId en JSON sin cargar toda la relación
+    @Transient
+    @com.fasterxml.jackson.annotation.JsonProperty("membershipId")
+    public Integer getMembershipId() {
+        return userMembership != null ? userMembership.getMembership().getMembershipId() : null;
+    }
 
     @Column(name = "payment_date", nullable = false)
     private LocalDateTime paymentDate;

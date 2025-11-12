@@ -2,7 +2,7 @@
 
 /* Página principal */
 .home-page {
-  --background: #07B7E0 !important;
+  --background: #ffffff !important;
   --padding-start: 0 !important;
   --padding-end: 0 !important;
   --padding-top: 0 !important;
@@ -10,7 +10,7 @@
 }
 
 .home-page::part(scroll) {
-  background: #07B7E0 !important;
+  background: #ffffff !important;
 }
 
 /* Header personalizado */
@@ -18,6 +18,8 @@
   --background: #07B7E0;
   --color: white;
   --border-width: 0;
+  position: relative;
+  z-index: 10;
 }
 
 .page-title {
@@ -34,18 +36,19 @@
 .dashboard-container {
   padding: 20px;
   min-height: 100vh;
-  background: #07B7E0;
+  background: #ffffff;
+  color: #333333;
 }
 
 /* Card de Bienvenida */
 .welcome-card {
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   backdrop-filter: blur(20px);
   border-radius: 20px;
   padding: 25px;
   margin-bottom: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 183, 224, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 183, 224, 0.1);
 }
 
 .welcome-content {
@@ -55,7 +58,7 @@
 }
 
 .welcome-text h2 {
-  color: white;
+  color: #333333;
   font-size: 1.8rem;
   font-weight: 700;
   margin: 0 0 5px 0;
@@ -63,7 +66,7 @@
 }
 
 .welcome-text p {
-  color: rgba(255, 255, 255, 0.9);
+  color: #666666;
   font-size: 1rem;
   font-weight: 500;
   margin: 0;
@@ -76,22 +79,24 @@
 .avatar-circle {
   width: 60px;
   height: 60px;
-  background: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 3px solid rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
   overflow: hidden; /* Para que la imagen se recorte en círculo */
   cursor: pointer; /* Indicar que es clickeable */
   transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
 }
 
 .avatar-circle:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: scale(1.05);
+  background: linear-gradient(135deg, #0097A7 0%, #00BCD4 100%);
+  border-color: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
 }
 
 /* Estilos para la imagen de avatar */
@@ -117,26 +122,27 @@
 
 .stat-card {
   flex: 1;
-  background: rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   backdrop-filter: blur(20px);
   border-radius: 16px;
   padding: 20px 15px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  border: 2px solid rgba(0, 183, 224, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 183, 224, 0.08);
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 183, 224, 0.15);
+  background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+  border-color: rgba(0, 183, 224, 0.3);
 }
 
 /* Card de días restantes - Estados dinámicos */
 .record-card .stat-number {
-  color: white;
+  color: #333333;
   font-size: 2.2rem;
   font-weight: 800;
   margin-bottom: 5px;
@@ -192,11 +198,11 @@
 }
 
 .record-card.active-state .stat-number {
-  color: white;
+  color: #333333;
 }
 
 .stat-label {
-  color: white;
+  color: #666666;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -208,18 +214,18 @@
 
 .stat-icon ion-icon {
   font-size: 32px;
-  color: white;
+  color: #07B7E0;
   filter: none;
 }
 
 /* Sección de entrenamiento */
 .training-section {
-  background: rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   backdrop-filter: blur(20px);
   border-radius: 20px;
   padding: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(0, 183, 224, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 183, 224, 0.08);
 }
 
 .section-header {
@@ -230,7 +236,7 @@
 }
 
 .section-header h3 {
-  color: white;
+  color: #333333;
   font-size: 1.3rem;
   font-weight: 700;
   margin: 0;
@@ -284,16 +290,17 @@
 }
 
 .bar-active {
-  background: white;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
+  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.4);
 }
 
 .bar-inactive {
-  background: rgba(255, 255, 255, 0.7);
+  background: linear-gradient(135deg, #B0BEC5 0%, #90A4AE 100%);
+  box-shadow: 0 2px 8px rgba(176, 190, 197, 0.3);
 }
 
 .bar-label {
-  color: white;
+  color: #666666;
   font-size: 0.85rem;
   font-weight: 600;
   text-align: center;
