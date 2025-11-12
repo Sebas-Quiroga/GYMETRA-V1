@@ -42,23 +42,10 @@ const routes: Array<RouteRecordRaw> = [
     props: true
   },
   {
-    path: '/admin/roles',
-    name: 'RolesPage',
-    component: () => import('@/views/RolesPage.vue'),
+    path: '/adminreportes',
+    name: 'ReportesPage',
+    component: () => import('@/views/ReportesPage.vue'),
     meta: { requiresAuth: true }
-  },
-  {
-    path: '/admin/roles/add',
-    name: 'AddRolePage',
-    component: () => import('@/views/AddRolePage.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/admin/roles/edit/:roleId',
-    name: 'EditRolePage',
-    component: () => import('@/views/EditRolePage.vue'),
-    meta: { requiresAuth: true },
-    props: true
   }
 ]
 

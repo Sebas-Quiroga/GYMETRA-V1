@@ -35,7 +35,8 @@ export interface Payment {
 export const membershipService = {
   async getAllMemberships(): Promise<Membership[]> {
     try {
-      const response = await axios.get(`${MEMBERSHIP_API_URL}/memberships/available`);
+      // Para admin, obtener TODAS las membresías (no solo las disponibles)
+      const response = await axios.get(`${MEMBERSHIP_API_URL}/memberships`);
       return response.data;
     } catch (error) {
       console.error('Error fetching memberships:', error);
@@ -79,6 +80,15 @@ export const membershipService = {
       return response.data;
     } catch (error) {
       console.error('Error updating membership:', error);
+      throw error;
+    }
+  },
+
+  async deleteMembership(id: number): Promise<void> {
+    try {
+      await axios.delete(`${MEMBERSHIP_API_URL}/memberships/${id}`);
+    } catch (error) {
+      console.error('Error deleting membership:', error);
       throw error;
     }
   }
