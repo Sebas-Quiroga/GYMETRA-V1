@@ -62,6 +62,7 @@ import {
   personCircleOutline,
   documentOutline,
   cardOutline,
+  shieldCheckmarkOutline,
   menuOutline,
   closeOutline
 } from 'ionicons/icons'
@@ -142,7 +143,7 @@ const navigateToUsers = () => {
 }
 
 const navigateToReports = () => {
-  router.push('/adminreportes')
+  emit('navigateToReports')
 }
 
 const navigateToCharts = () => {
@@ -153,6 +154,9 @@ const navigateToPayments = () => {
   emit('navigateToPayments')
 }
 
+const navigateToRoles = () => {
+  emit('navigateToRoles')
+}
 
 const logout = () => {
   emit('logout')

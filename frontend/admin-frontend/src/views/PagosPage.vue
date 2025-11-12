@@ -58,7 +58,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="membership in paginatedActiveMemberships" :key="membership.id">
+              <tr v-for="membership in userMemberships" :key="membership.id">
                 <td>{{ membership.id }}</td>
                 <td>{{ membership.userName }}</td>
                 <td>{{ membership.membership?.planName || 'Sin plan' }}</td>
@@ -71,101 +71,6 @@
               </tr>
             </tbody>
           </table>
-
-          <!-- Pagination for Active Memberships -->
-          <Pagination
-            :total-items="userMemberships.length"
-            :current-page="activeMembershipsCurrentPage"
-            :page-size="activeMembershipsPageSize"
-            item-name="membresías activas"
-            component-id="active-memberships"
-            @update:current-page="activeMembershipsCurrentPage = $event"
-            @update:page-size="activeMembershipsPageSize = $event"
-          />
-        </div>
-
-        <!-- Membresías Disponibles Section -->
-        <div class="memberships-section">
-          <h3>Membresías Disponibles</h3>
-          <button class="create-membership-btn" @click="openCreateModal">
-            <ion-icon name="add"></ion-icon>
-            Crear Nueva Membresía
-          </button>
-          <table class="memberships-table">
-            <thead>
-              <tr>
-                <th>ID Plan</th>
-                <th>Nombre del Plan</th>
-                <th>Precio</th>
-                <th>Duración (días)</th>
-                <th>Descripción</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="membership in paginatedAvailableMemberships" :key="membership.membershipId">
-                <td>{{ membership.membershipId }}</td>
-                <td>{{ membership.planName }}</td>
-                <td>${{ formatPrice(membership.price) }}</td>
-                <td>{{ membership.durationDays }}</td>
-                <td>{{ membership.description || 'Sin descripción' }}</td>
-                <td>{{ membership.status }}</td>
-                <td>
-                  <div class="action-buttons">
-                    <button @click="openEditModal(membership)" class="action-btn edit-btn" title="Editar membresía">
-                      <ion-icon :icon="createOutline"></ion-icon>
-                    </button>
-
-                    <!-- Toggle Switch Mejorado -->
-                    <div class="status-toggle-wrapper">
-                      <label
-                        class="status-toggle"
-                        :class="{ 'disabled': statusUpdating }"
-                        :title="getToggleTitle(membership.status)"
-                      >
-                        <input
-                          type="checkbox"
-                          :checked="membership.status === 'available'"
-                          @change="toggleMembershipStatus(membership)"
-                          :disabled="statusUpdating"
-                        />
-                        <span class="toggle-slider">
-                          <span class="toggle-icon icon-active">
-                            <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                          </span>
-                          <span class="toggle-icon icon-suspended">
-                            <ion-icon :icon="banOutline"></ion-icon>
-                          </span>
-                        </span>
-                        <span class="toggle-label">
-                          {{ membership.status === 'available' ? 'Disponible' : 'Inactivo' }}
-                        </span>
-                      </label>
-                    </div>
-
-                    <button @click="deleteMembership(membership)" class="action-btn delete-btn" title="Eliminar membresía">
-                      <ion-icon :icon="trashOutline"></ion-icon>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr v-if="memberships.length === 0">
-                <td colspan="7" class="no-data">No hay membresías disponibles</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- Pagination for Available Memberships -->
-          <Pagination
-            :total-items="memberships.length"
-            :current-page="availableMembershipsCurrentPage"
-            :page-size="availableMembershipsPageSize"
-            item-name="membresías disponibles"
-            component-id="available-memberships"
-            @update:current-page="availableMembershipsCurrentPage = $event"
-            @update:page-size="availableMembershipsPageSize = $event"
-          />
         </div>
 
         <!-- Membresías Disponibles Section -->
@@ -225,13 +130,13 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="payment in paginatedPayments" :key="payment.id">
+              <tr v-for="payment in payments" :key="payment.id">
                 <td>{{ payment.idPago }}</td>
                 <td>{{ payment.identificacion }}</td>
                 <td>{{ formatDate(payment.fechaPago) }}</td>
                 <td>${{ formatPrice(payment.costo) }}</td>
                 <td>{{ payment.plan }}</td>
-                <td>{{ payment.metodoPago === 'GATEWAY' ? 'TARJETA' : (payment.metodoPago || 'GATEWAY') }}</td>
+                <td>{{ payment.metodoPago === 'GATEWAY' ? 'TARGETA' : (payment.metodoPago || 'GATEWAY') }}</td>
                 <td :class="getStatusClass(payment.estado)">{{ payment.estado }}</td>
               </tr>
               <tr v-if="payments.length === 0">
@@ -239,17 +144,6 @@
               </tr>
             </tbody>
           </table>
-
-          <!-- Pagination for Payments Table -->
-          <Pagination
-            :total-items="payments.length"
-            :current-page="paymentsCurrentPage"
-            :page-size="paymentsPageSize"
-            item-name="pagos"
-            component-id="payments"
-            @update:current-page="paymentsCurrentPage = $event"
-            @update:page-size="paymentsPageSize = $event"
-          />
         </div>
       </div>
     </div>
@@ -275,6 +169,13 @@
             <label for="description">Descripción:</label>
             <textarea id="description" v-model="currentMembership.description"></textarea>
           </div>
+          <div class="form-group">
+            <label for="status">Estado:</label>
+            <select id="status" v-model="currentMembership.status" required>
+              <option value="ACTIVE">Activo</option>
+              <option value="INACTIVE">Inactivo</option>
+            </select>
+          </div>
           <div class="modal-actions">
             <button type="button" @click="closeModal">Cancelar</button>
             <button type="submit" :disabled="saving">{{ saving ? 'Guardando...' : 'Guardar' }}</button>
@@ -290,15 +191,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { logout as authLogout } from '@/services/authService'
 import AdminSidebar from '@/components/AdminSidebar.vue'
-import Pagination from '@/components/Pagination.vue'
 import { membershipService, type Payment as ApiPayment, type UserMembership as ApiUserMembership, type Membership } from '@/services/membershipService'
 import { userService } from '@/services/userService'
-import {
-  createOutline,
-  trashOutline,
-  checkmarkCircleOutline,
-  banOutline
-} from 'ionicons/icons'
 
 // Mobile responsive state
 const isMobile = ref(false)
@@ -362,49 +256,17 @@ const userMemberships = ref<(ApiUserMembership & { userName?: string; membership
 const memberships = ref<Membership[]>([])
 const users = ref<any[]>([])
 
-// Estado de paginación para membresías activas
-const activeMembershipsCurrentPage = ref(1)
-const activeMembershipsPageSize = ref(10)
-
-// Estado de paginación para membresías disponibles
-const availableMembershipsCurrentPage = ref(1)
-const availableMembershipsPageSize = ref(10)
-
-// Estado de paginación para pagos
-const paymentsCurrentPage = ref(1)
-const paymentsPageSize = ref(10)
-
-// Computed para datos paginados
-const paginatedActiveMemberships = computed(() => {
-  const start = (activeMembershipsCurrentPage.value - 1) * activeMembershipsPageSize.value
-  const end = start + activeMembershipsPageSize.value
-  return userMemberships.value.slice(start, end)
-})
-
-const paginatedAvailableMemberships = computed(() => {
-  const start = (availableMembershipsCurrentPage.value - 1) * availableMembershipsPageSize.value
-  const end = start + availableMembershipsPageSize.value
-  return memberships.value.slice(start, end)
-})
-
-const paginatedPayments = computed(() => {
-  const start = (paymentsCurrentPage.value - 1) * paymentsPageSize.value
-  const end = start + paymentsPageSize.value
-  return payments.value.slice(start, end)
-})
-
 // Modal state
 const showModal = ref(false)
 const isEditing = ref(false)
 const saving = ref(false)
-const statusUpdating = ref(false)
 const currentMembership = ref<Membership>({
   membershipId: 0,
   planName: '',
   price: 0,
   durationDays: 0,
   description: '',
-  status: 'available'
+  status: 'ACTIVE'
 })
 const originalMembership = ref<Membership | null>(null)
 
@@ -432,7 +294,7 @@ const loadPayments = async () => {
     const [apiPayments, apiUserMemberships, apiMemberships, apiUsers] = await Promise.all([
       membershipService.getAllPayments(),
       membershipService.getAllUserMemberships(),
-      membershipService.getAllMemberships(), // Carga TODAS las membresías para admin
+      membershipService.getAllMemberships(),
       userService.getAllUsers()
     ])
 
@@ -530,7 +392,7 @@ const openCreateModal = () => {
     price: 0,
     durationDays: 0,
     description: '',
-    status: 'available'
+    status: 'ACTIVE'
   }
   originalMembership.value = null
   showModal.value = true
@@ -580,99 +442,6 @@ const saveMembership = async () => {
   } finally {
     saving.value = false
   }
-}
-
-// Toggle membership status (available/inactive)
-const toggleMembershipStatus = async (membership: Membership) => {
-  if (!membership.membershipId) return
-
-  try {
-    statusUpdating.value = true
-    const newStatus = membership.status === 'available' ? 'INACTIVE' : 'available'
-
-    const updateData = {
-      membershipId: membership.membershipId,
-      planName: membership.planName,
-      durationDays: membership.durationDays,
-      price: membership.price,
-      status: newStatus,
-      description: membership.description,
-      userMemberships: membership.userMemberships || []
-    }
-
-    await membershipService.updateMembership(membership.membershipId, updateData)
-
-    // Update local state immediately
-    membership.status = newStatus
-
-    // No need to reload all memberships - just update the local one
-    // The table will reflect the change immediately
-
-  } catch (error) {
-    console.error('Error toggling membership status:', error)
-    alert('Error al cambiar el estado de la membresía.')
-  } finally {
-    statusUpdating.value = false
-  }
-}
-
-// Hide membership from user view (set to INACTIVE)
-const hideMembership = async (membership: Membership) => {
-  if (confirm(`¿Estás seguro de ocultar "${membership.planName}" de la vista de usuarios?`)) {
-    try {
-      const updateData = {
-        membershipId: membership.membershipId,
-        planName: membership.planName,
-        durationDays: membership.durationDays,
-        price: membership.price,
-        status: 'INACTIVE',
-        description: membership.description,
-        userMemberships: membership.userMemberships || []
-      }
-
-      await membershipService.updateMembership(membership.membershipId, updateData)
-
-      // Update local state
-      membership.status = 'INACTIVE'
-
-      // Reload memberships to reflect changes
-      const updatedMemberships = await membershipService.getAllMemberships()
-      memberships.value = Array.isArray(updatedMemberships) ? updatedMemberships : []
-
-      alert('Membresía ocultada de la vista de usuarios.')
-
-    } catch (error) {
-      console.error('Error hiding membership:', error)
-      alert('Error al ocultar la membresía.')
-    }
-  }
-}
-
-// Delete membership permanently
-const deleteMembership = async (membership: Membership) => {
-  if (confirm(`¿Estás seguro de eliminar permanentemente "${membership.planName}"? Esta acción no se puede deshacer.`)) {
-    try {
-      await membershipService.deleteMembership(membership.membershipId)
-
-      // Remove from local state
-      memberships.value = memberships.value.filter(m => m.membershipId !== membership.membershipId)
-
-      alert('Membresía eliminada permanentemente.')
-
-    } catch (error) {
-      console.error('Error deleting membership:', error)
-      alert('Error al eliminar la membresía.')
-    }
-  }
-}
-
-// Helper functions for button states
-const getToggleTitle = (status: string): string => {
-  return status === 'available' ? 'Hacer inactiva' : 'Hacer disponible'
-}
-
-const getToggleIcon = (status: string): string => {
-  return status === 'available' ? 'eye-off' : 'eye'
 }
 
 onMounted(() => loadPayments())
@@ -824,256 +593,14 @@ onMounted(() => loadPayments())
   font-size: 16px;
 }
 
-/* ============================================
-   TOGGLE SWITCH MODERNO Y ELEGANTE
-   ============================================ */
-
-.status-toggle-wrapper {
-  display: inline-flex;
-  align-items: center;
-}
-
-.status-toggle {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.3s ease;
-}
-
-.status-toggle.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.status-toggle input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: relative;
-  width: 56px;
-  height: 28px;
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  border-radius: 34px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(231, 76, 60, 0.3);
-  overflow: hidden;
-}
-
-.status-toggle input:checked + .toggle-slider {
-  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(39, 174, 96, 0.4);
-}
-
-.toggle-slider::before {
-  content: '';
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  left: 3px;
-  top: 3px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 50%;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.25),
-    0 1px 3px rgba(0, 0, 0, 0.15);
-  z-index: 2;
-}
-
-.status-toggle input:checked + .toggle-slider::before {
-  transform: translateX(28px);
-}
-
-.toggle-icon {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  transition: all 0.3s ease;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icon-suspended {
-  left: 6px;
-  color: #fff;
-  opacity: 1;
-}
-
-.icon-active {
-  right: 6px;
-  color: #fff;
-  opacity: 0;
-}
-
-.status-toggle input:checked ~ .toggle-slider .icon-suspended {
-  opacity: 0;
-}
-
-.status-toggle input:checked ~ .toggle-slider .icon-active {
-  opacity: 1;
-}
-
-.toggle-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #495057;
-  white-space: nowrap;
-  transition: color 0.3s ease;
-  min-width: 75px;
-}
-
-.status-toggle input:checked ~ .toggle-label {
-  color: #27ae60;
-}
-
-.status-toggle input:not(:checked) ~ .toggle-label {
-  color: #e74c3c;
-}
-
-.status-toggle:hover:not(.disabled) .toggle-slider {
-  transform: scale(1.05);
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.status-toggle:hover:not(.disabled) input:checked + .toggle-slider {
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 4px 12px rgba(39, 174, 96, 0.5);
-}
-
-.status-toggle:hover:not(.disabled) input:not(:checked) + .toggle-slider {
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 4px 12px rgba(231, 76, 60, 0.5);
-}
-
-.status-toggle:active:not(.disabled) .toggle-slider {
-  transform: scale(0.98);
-}
-
-.status-toggle input:focus + .toggle-slider {
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
-
-.status-toggle.disabled .toggle-slider {
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* Botones de acción mejorados */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.action-btn {
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  font-family: 'Nunito', sans-serif;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
 .edit-btn {
   background-color: #2196F3;
   color: white;
-}
-
-.edit-btn:hover {
-  background-color: #1976D2;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-}
-
-.delete-btn {
-  background-color: #F44336;
-  color: white;
-}
-
-.delete-btn:hover {
-  background-color: #D32F2F;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
-}
-
-/* Eliminado - ya no se usa */
-
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .toggle-slider {
-    width: 48px;
-    height: 24px;
-  }
-
-  .toggle-slider::before {
-    width: 18px;
-    height: 18px;
-  }
-
-  .status-toggle input:checked + .toggle-slider::before {
-    transform: translateX(24px);
-  }
-
-  .toggle-label {
-    font-size: 11px;
-    min-width: 70px;
-  }
-
-  .toggle-icon {
-    font-size: 12px;
-  }
-}
-
-/* Responsive para botones */
-@media (max-width: 1200px) {
-  .action-buttons {
-    gap: 6px;
-  }
-
-  .action-btn {
-    width: 35px;
-    height: 35px;
-  }
-
-  .action-btn ion-icon {
-    font-size: 14px;
-  }
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: 'Nunito', sans-serif;
 }
 </style>

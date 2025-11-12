@@ -111,15 +111,15 @@ import { useRouter } from 'vue-router';
 import { IonPage, IonContent, IonIcon, IonButton } from '@ionic/vue';
 import { useAuth } from '@/composables/useAuth';
 import { checkmarkCircle, alertCircle, warningOutline, informationCircle, closeCircle } from 'ionicons/icons';
-import {
-  getAvailableMemberships,
+import { 
+  getAvailableMemberships, 
   purchaseMembership,
   checkBackendConnectivity,
-  formatPrice,
-  formatDuration,
+  formatPrice, 
+  formatDuration, 
   getMembershipIcon,
   isMembershipAvailable,
-  type Membership
+  type Membership 
 } from '@/services/membershipService';
 import { HOST_URL } from"../services/hots";
 
@@ -216,7 +216,7 @@ const selectedPlanName = ref('');
 const loadMemberships = async () => {
   loading.value = true;
   error.value = '';
-
+  
   try {
     // Verificar autenticación antes de hacer la petición
     if (!requireAuth()) {
@@ -233,7 +233,7 @@ const loadMemberships = async () => {
   } catch (err: any) {
     error.value = '';
     console.error('❌ Error loading memberships:', err);
-
+    
     // Si es un error de autenticación, redirigir al login
     if (err.message.includes('autenticado') || err.message.includes('Sesión expirada')) {
       showNotification('error', 'Sesión expirada', 'Por favor inicia sesión nuevamente.');
