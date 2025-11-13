@@ -175,9 +175,13 @@ gym-membership-system/
 ## 📄 License
 
 This project is developed for academic purposes at Corporación Universitaria del Huila.
+🔗 Enlaces a Repositorios Secundarios
 
+Backend: [GYMETRA_backend](https://github.com/Sebas-Quiroga/GYMETRA_backend.git)
 
+Frontend: [GYMETRA-V1_frontend](https://github.com/Sebas-Quiroga/GYMETRA-V1_frontend.git)
 
----
+🔧 Instalación y Configuración
+Para ver los pasos de instalación detallados, consulta la sección de instalación completa.
 
 ⭐ **Give the project a star if it was helpful!** ⭐
