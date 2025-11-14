@@ -126,21 +126,16 @@ const exportUsersToPDF = async () => {
       return
     }
 
-<<<<<<< Updated upstream
-    // Importar jsPDF
-    const { jsPDF } = await import('jspdf')
-=======
-    // Importar jsPDF con manejo de errores
+    // Importar jsPDF dinámicamente
     let jsPDF
     try {
       const jspdfModule = await import('jspdf')
-      jsPDF = jspdfModule.jsPDF
+      jsPDF = jspdfModule.jsPDF || jspdfModule.default
     } catch (error) {
-      console.error('jspdf no está instalado:', error)
-      alert('La biblioteca jspdf no está instalada. Instale jspdf para generar reportes PDF.')
+      console.error('Error al importar jsPDF:', error)
+      alert('Las dependencias necesarias no están instaladas. Ejecute "npm install jspdf" para instalar las dependencias requeridas.')
       return
     }
->>>>>>> Stashed changes
 
     // Crear documento PDF
     const doc = new jsPDF()
@@ -360,21 +355,16 @@ const exportPaymentsToPDF = async () => {
       return
     }
 
-<<<<<<< Updated upstream
-    // Importar jsPDF
-    const { jsPDF } = await import('jspdf')
-=======
-    // Importar jsPDF con manejo de errores
+    // Importar jsPDF dinámicamente
     let jsPDF
     try {
       const jspdfModule = await import('jspdf')
-      jsPDF = jspdfModule.jsPDF
+      jsPDF = jspdfModule.jsPDF || jspdfModule.default
     } catch (error) {
-      console.error('jspdf no está instalado:', error)
-      alert('La biblioteca jspdf no está instalada. Instale jspdf para generar reportes PDF.')
+      console.error('Error al importar jsPDF:', error)
+      alert('Las dependencias necesarias no están instaladas. Ejecute "npm install jspdf" para instalar las dependencias requeridas.')
       return
     }
->>>>>>> Stashed changes
 
     // Crear documento PDF
     const doc = new jsPDF()
