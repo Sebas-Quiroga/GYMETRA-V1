@@ -126,8 +126,21 @@ const exportUsersToPDF = async () => {
       return
     }
 
+<<<<<<< Updated upstream
     // Importar jsPDF
     const { jsPDF } = await import('jspdf')
+=======
+    // Importar jsPDF con manejo de errores
+    let jsPDF
+    try {
+      const jspdfModule = await import('jspdf')
+      jsPDF = jspdfModule.jsPDF
+    } catch (error) {
+      console.error('jspdf no está instalado:', error)
+      alert('La biblioteca jspdf no está instalada. Instale jspdf para generar reportes PDF.')
+      return
+    }
+>>>>>>> Stashed changes
 
     // Crear documento PDF
     const doc = new jsPDF()
@@ -347,8 +360,21 @@ const exportPaymentsToPDF = async () => {
       return
     }
 
+<<<<<<< Updated upstream
     // Importar jsPDF
     const { jsPDF } = await import('jspdf')
+=======
+    // Importar jsPDF con manejo de errores
+    let jsPDF
+    try {
+      const jspdfModule = await import('jspdf')
+      jsPDF = jspdfModule.jsPDF
+    } catch (error) {
+      console.error('jspdf no está instalado:', error)
+      alert('La biblioteca jspdf no está instalada. Instale jspdf para generar reportes PDF.')
+      return
+    }
+>>>>>>> Stashed changes
 
     // Crear documento PDF
     const doc = new jsPDF()

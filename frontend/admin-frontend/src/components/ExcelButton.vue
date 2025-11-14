@@ -81,8 +81,20 @@ const exportUsersToExcel = async () => {
       return
     }
 
+<<<<<<< Updated upstream
     // Importar XLSX dinámicamente
     const XLSX = await import('xlsx')
+=======
+    // Importar XLSX dinámicamente con manejo de errores
+    let XLSX
+    try {
+      XLSX = await import('xlsx')
+    } catch (error) {
+      console.error('xlsx no está instalado:', error)
+      alert('La biblioteca xlsx no está instalada. Instale xlsx para generar reportes Excel.')
+      return
+    }
+>>>>>>> Stashed changes
 
     // Crear libro de trabajo
     const wb = XLSX.utils.book_new()
@@ -273,8 +285,20 @@ const exportPaymentsToExcel = async () => {
       return
     }
 
+<<<<<<< Updated upstream
     // Importar XLSX dinámicamente
     const XLSX = await import('xlsx')
+=======
+    // Importar XLSX dinámicamente con manejo de errores
+    let XLSX
+    try {
+      XLSX = await import('xlsx')
+    } catch (error) {
+      console.error('xlsx no está instalado:', error)
+      alert('La biblioteca xlsx no está instalada. Instale xlsx para generar reportes Excel.')
+      return
+    }
+>>>>>>> Stashed changes
 
     // Crear libro de trabajo
     const wb = XLSX.utils.book_new()
