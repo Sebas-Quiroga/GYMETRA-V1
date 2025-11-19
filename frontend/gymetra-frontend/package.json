@@ -10,9 +10,15 @@
     "preview": "vite preview",
     "test:e2e": "cypress run",
     "test:unit": "vitest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:add:android": "npx cap add android",
+    "android:build": "npm run build && npx cap sync && npx cap open android",
+    "android:setup": "npm install @capacitor/android && npx cap add android && npm run build && npx cap sync"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.4",
     "@capacitor/app": "7.1.0",
     "@capacitor/core": "7.4.3",
     "@capacitor/haptics": "7.0.2",
