@@ -111,7 +111,7 @@ import {
 import { qrCodeOutline } from 'ionicons/icons';
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import { HOST_URL } from"../services/hots";
+import { getBackendUrl } from"../services/hots";
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -140,7 +140,7 @@ const navigateToQR = async () => {
     return;
   }
   try {
-    const response = await fetch(`${HOST_URL}:8090/api/qr-access/user/${userId}`);
+    const response = await fetch(`${getBackendUrl(8082)}/api/qr-access/user/${userId}`);
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     const data = await response.json();
     if (data && data.qrCode) {
@@ -306,27 +306,43 @@ const loadUserMemberships = async () => {
 
   try {
     loadingMemberships.value = true;
-  // Solo mostrar errores en consola
     
-    // Usar la API directamente como en el componente de estado
-    const response = await fetch(`${HOST_URL}:8081/api/user-memberships/user/${userData.value.userId}`);
+    // Construir la URL usando getBackendUrl para detectar automáticamente túneles públicos
+    const apiUrl = `${getBackendUrl(8081)}/api/user-memberships/user/${userData.value.userId}`;
+    console.log('🔍 Cargando membresías desde:', apiUrl);
+    console.log('👤 UserId:', userData.value.userId);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      credentials: 'include'
+    });
     
     if (!response.ok) {
+      console.error('❌ Error HTTP:', response.status, response.statusText);
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
     const memberships = await response.json();
-  // Solo mostrar errores en consola
+    console.log('📦 Membresías recibidas del backend:', memberships);
+    console.log('📊 Total de membresías:', memberships.length);
     
     // Filtrar solo membresías activas
     const activeMemberships = memberships
-      .filter((m: any) => m.status === 'ACTIVE')
+      .filter((m: any) => {
+        const isActive = m.status === 'ACTIVE' || m.status === 'Active';
+        console.log(`🔍 Membresía ID ${m.id}: status=${m.status}, isActive=${isActive}`);
+        return isActive;
+      })
       .sort((a: any, b: any) => 
         new Date(b.endDate).getTime() - new Date(a.endDate).getTime()
       );
     
+    console.log('✅ Membresías activas filtradas:', activeMemberships);
     userMemberships.value = activeMemberships;
-  // Solo mostrar errores en consola
     
   } catch (error: any) {
     console.error('❌ Error cargando membresías:', error);

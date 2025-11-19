@@ -1,7 +1,7 @@
-import { HOST_URL } from"../services/hots";
+import { getBackendUrl } from"../services/hots";
 
-// Configuración base de la API
-export const MAIN_API_URL = `${HOST_URL}:8080/api/auth`;
+// Configuración base de la API - usa detección automática para túneles públicos
+export const MAIN_API_URL = `${getBackendUrl(8080)}/api/auth`;
 
 // Configuración para diferentes endpoints
 export const API_ENDPOINTS = {

@@ -133,6 +133,16 @@ export async function getMetricsData(): Promise<MetricsData> {
     if (memberships.length > 0) {
       console.log('🏋️ Ejemplo membresía:', memberships[0]);
     }
+    if (userMemberships.length > 0) {
+      console.log('📋 Ejemplo userMembership:', userMemberships[0]);
+      console.log('📋 Estructura userMembership:', {
+        id: userMemberships[0].id,
+        userId: userMemberships[0].userId,
+        membershipId: userMemberships[0].membershipId,
+        membership: userMemberships[0].membership,
+        status: userMemberships[0].status
+      });
+    }
 
     // Calcular métricas
     const metrics = calculateMetrics(users, memberships, payments, userMemberships);
@@ -266,17 +276,51 @@ function calculateMembershipDistribution(userMemberships: any[], memberships: an
   const planRevenue = new Map<string, number>();
 
   userMemberships.forEach(um => {
-    const planName = memberships.find(m => m.membershipId === um.membershipId)?.planName || 'Desconocido';
+    let planName = 'Desconocido';
+    
+    // Intentar obtener el nombre del plan de diferentes formas
+    // 1. Si el objeto membership está incluido en la respuesta
+    if (um.membership && um.membership.planName) {
+      planName = um.membership.planName;
+    }
+    // 2. Si hay un membershipId directo
+    else if (um.membershipId) {
+      const membership = memberships.find(m => m.membershipId === um.membershipId);
+      if (membership && membership.planName) {
+        planName = membership.planName;
+      }
+    }
+    // 3. Si hay un membership.membershipId (objeto anidado con solo el ID)
+    else if (um.membership && um.membership.membershipId) {
+      const membership = memberships.find(m => m.membershipId === um.membership.membershipId);
+      if (membership && membership.planName) {
+        planName = membership.planName;
+      }
+    }
+    
+    // Log para debugging
+    if (planName === 'Desconocido') {
+      console.warn('⚠️ No se pudo encontrar el plan para userMembership:', {
+        id: um.id,
+        userId: um.userId,
+        membershipId: um.membershipId,
+        membership: um.membership,
+        availableMemberships: memberships.map(m => ({ id: m.membershipId, name: m.planName }))
+      });
+    }
+    
     planCount.set(planName, (planCount.get(planName) || 0) + 1);
   });
 
   const total = userMemberships.length;
-  return Array.from(planCount.entries()).map(([planName, count]) => ({
-    planName,
-    count,
-    percentage: total > 0 ? Math.round((count / total) * 100) : 0,
-    revenue: 0 // Se calcula después con pagos
-  }));
+  return Array.from(planCount.entries())
+    .map(([planName, count]) => ({
+      planName,
+      count,
+      percentage: total > 0 ? Math.round((count / total) * 100) : 0,
+      revenue: 0 // Se calcula después con pagos
+    }))
+    .sort((a, b) => b.count - a.count); // Ordenar por cantidad descendente
 }
 
 function calculateRevenueByPeriod(payments: any[], days: number): number {
@@ -452,10 +496,30 @@ function calculateDailyActivity(payments: any[], users: any[]): DailyActivityDat
 // Formatear números para display
 // ===============================
 export function formatNumber(num: number): string {
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  if (isNaN(num) || !isFinite(num)) return '0';
+  
+  // Redondear a 2 decimales máximo
+  const rounded = Math.round(num * 100) / 100;
+  
+  // Separar parte entera y decimal
+  const parts = rounded.toString().split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1] || '';
+  
+  // Formatear parte entera con puntos cada 3 dígitos
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  
+  // Si hay decimales, agregarlos (máximo 2)
+  if (decimalPart) {
+    const formattedDecimal = decimalPart.substring(0, 2);
+    return `${formattedInteger},${formattedDecimal}`;
+  }
+  
+  return formattedInteger;
 }
 
 export function formatCurrency(amount: number): string {
+  if (isNaN(amount) || !isFinite(amount)) return '$0';
   return `$${formatNumber(amount)}`;
 }
 

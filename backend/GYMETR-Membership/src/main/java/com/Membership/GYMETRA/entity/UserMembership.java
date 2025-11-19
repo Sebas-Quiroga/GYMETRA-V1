@@ -35,6 +35,12 @@ public class UserMembership {
     @JoinColumn(name = "membership_id", nullable = false)
     @JsonBackReference // evita ciclos infinitos al serializar JSON
     private Membership membership;
+    
+    // Getter para obtener el membershipId sin exponer el objeto completo
+    @JsonProperty("membershipId")
+    public Integer getMembershipId() {
+        return membership != null ? membership.getMembershipId() : null;
+    }
 
     @Column(name = "start_date", nullable = false)
     @JsonProperty("startDate")

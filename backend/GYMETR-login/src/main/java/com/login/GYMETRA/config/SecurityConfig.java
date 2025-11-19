@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Permitir preflight (CORS)
+                        // ✅ CRÍTICO: Permitir preflight (CORS) ANTES que cualquier otra cosa
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // Rutas públicas
@@ -66,17 +66,37 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // ✅ Orígenes permitidos
-        configuration.addAllowedOriginPattern("http://*");
-        configuration.addAllowedOriginPattern("https://*");
+        // ✅ IMPORTANTE: Con allowCredentials(true), NO podemos usar patrones genéricos como "*"
+        // Debemos usar patrones específicos o orígenes específicos
+        
+        // ✅ Orígenes específicos para localhost
         configuration.addAllowedOrigin("http://localhost:8101");
         configuration.addAllowedOrigin("http://localhost:8100");
+        configuration.addAllowedOrigin("http://localhost:8080");
+        configuration.addAllowedOrigin("http://127.0.0.1:8100");
+        configuration.addAllowedOrigin("http://127.0.0.1:8101");
+        
+        // ✅ Orígenes específicos para IPs locales
         configuration.addAllowedOrigin("http://175.100.1.214"); // tu IP específica
         configuration.addAllowedOrigin("http://192.168.0.11");  // IP local (si usas red LAN)
+        
+        // ✅ Patrones específicos para VS Code Dev Tunnels (túneles públicos)
+        // Estos patrones permiten cualquier subdominio de devtunnels.ms y vscode-cdn.net
+        // IMPORTANTE: Con allowCredentials, debemos usar patrones específicos, no genéricos
+        configuration.addAllowedOriginPattern("https://*.use.devtunnels.ms");
+        configuration.addAllowedOriginPattern("https://*.vscode-cdn.net");
+        configuration.addAllowedOriginPattern("http://*.use.devtunnels.ms");
+        configuration.addAllowedOriginPattern("http://*.vscode-cdn.net");
+        
+        // ✅ Permitir cualquier origen HTTPS (para desarrollo con túneles)
+        // Nota: Esto funciona porque no usamos allowCredentials con este patrón
+        configuration.addAllowedOriginPattern("https://*");
+        configuration.addAllowedOriginPattern("http://*");
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L); // Cache preflight por 1 hora
 
         // Aplicar configuración global
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

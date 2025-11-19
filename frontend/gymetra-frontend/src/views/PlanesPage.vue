@@ -353,6 +353,8 @@ onUnmounted(() => {
   background: #fff !important;
   min-height: 100vh;
   padding: 0;
+  --padding-bottom: 50px !important;
+  padding-bottom: 50px !important;
 }
 
 /* Loading state */
@@ -432,6 +434,8 @@ onUnmounted(() => {
   gap: 28px;
   align-items: center;
   margin: 40px 0;
+  margin-bottom: 60px;
+  padding-bottom: 30px;
 }
 .plan-card {
   background: #07B7E0;
@@ -529,7 +533,7 @@ onUnmounted(() => {
 /* Estilos de notificación */
 .notification-container {
   position: fixed;
-  top: 20px;
+  top: 70px;
   right: 20px;
   width: 300px;
   background: white;
@@ -691,6 +695,23 @@ onUnmounted(() => {
 
 /* Responsive mejoras */
 @media (max-width: 480px) {
+  .planes-content {
+    --padding-bottom: 60px !important;
+    padding-bottom: 60px !important;
+  }
+  
+  .planes-list {
+    margin-bottom: 70px;
+    padding-bottom: 40px;
+  }
+  
+  .notification-container {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+    width: auto;
+  }
+  
   .purchase-modal {
     padding: 30px 20px;
     max-width: 280px;

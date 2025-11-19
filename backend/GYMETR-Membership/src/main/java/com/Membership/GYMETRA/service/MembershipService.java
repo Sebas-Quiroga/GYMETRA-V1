@@ -40,8 +40,9 @@ public class MembershipService {
         membershipRepository.deleteById(id);
     }
 
-    // Obtener todas las membresías de usuario
+    // Obtener todas las membresías de usuario (cargando la relación membership)
     public List<UserMembership> getAllUserMemberships() {
-        return userMembershipRepository.findAll();
+        // Usar JOIN FETCH para cargar la relación membership explícitamente
+        return userMembershipRepository.findAllWithMembership();
     }
 }

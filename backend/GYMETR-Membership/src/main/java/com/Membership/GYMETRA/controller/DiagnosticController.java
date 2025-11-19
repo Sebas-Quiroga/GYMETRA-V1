@@ -21,7 +21,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/diagnostic")
-@CrossOrigin(origins = {"http://localhost:5501", "http://localhost:8100", "http://localhost:3000", "http://localhost:8081"}, allowCredentials = "true")
+// CORS configurado globalmente en CorsConfig.java - no necesita @CrossOrigin aquí
 @Tag(name = "Diagnóstico", description = "Controlador para pruebas y diagnóstico del sistema")
 public class DiagnosticController {
 

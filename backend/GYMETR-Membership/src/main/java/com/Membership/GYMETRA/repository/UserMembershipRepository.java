@@ -2,6 +2,7 @@ package com.Membership.GYMETRA.repository;
 
 import com.Membership.GYMETRA.entity.UserMembership;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -21,4 +22,8 @@ public interface UserMembershipRepository extends JpaRepository<UserMembership, 
 
     // Encontrar todas las membresías con un estado específico creadas antes de cierta fecha (para limpiar PENDING)
     List<UserMembership> findByStatusAndCreatedAtBefore(UserMembership.Status status, LocalDateTime dateTime);
+    
+    // Obtener todas las membresías de usuario cargando la relación membership
+    @Query("SELECT um FROM UserMembership um JOIN FETCH um.membership")
+    List<UserMembership> findAllWithMembership();
 }

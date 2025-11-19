@@ -68,7 +68,7 @@
               <div class="kpi-value">{{ formatNumber(metrics.suspendedUsers) }}</div>
               <div class="kpi-label">Cuentas Suspendidas</div>
               <div class="kpi-trend">
-                <span class="trend-neutral">{{ formatNumber(metrics.newUsersToday) }}</span> nuevos hoy
+                <span class="trend-neutral">{{ formatNumber(metrics.suspendedMemberships) }}</span> membresías suspendidas
               </div>
             </div>
           </div>
@@ -546,16 +546,21 @@ const getYAxisMaxValue = (): number => {
 }
 
 const getPurchasedPlans = () => {
-  // Obtener planes que realmente han sido comprados desde el backend
-  // Por ahora, devolver datos simulados basados en membresías activas
-  // En el futuro, esto debería venir de una API específica de compras/ventas
-  const purchasedPlans = [
-    { planName: 'Plan Básico', count: 2 },
-    { planName: 'Plan Premium', count: 1 },
-    { planName: 'Plan VIP', count: 0 }
-  ].filter(plan => plan.count > 0) // Solo mostrar planes con compras
+  // Usar datos reales de membershipDistribution del backend
+  if (!metrics.value.membershipDistribution || metrics.value.membershipDistribution.length === 0) {
+    console.log('📊 No hay datos de planes disponibles')
+    return []
+  }
 
-  console.log('📊 Planes comprados:', purchasedPlans)
+  // Mapear membershipDistribution a formato de purchasedPlans
+  const purchasedPlans = metrics.value.membershipDistribution
+    .filter(plan => plan.count > 0) // Solo mostrar planes con compras
+    .map(plan => ({
+      planName: plan.planName,
+      count: plan.count
+    }))
+
+  console.log('📊 Planes comprados (datos reales):', purchasedPlans)
   return purchasedPlans
 }
 
@@ -577,15 +582,40 @@ const getConversionRate = (): string => {
 }
 
 const getAverageRevenuePerUser = (): string => {
-  if (metrics.value.activeUsers === 0) return '$0'
-  const avg = metrics.value.monthlyRevenue / metrics.value.activeUsers
+  if (metrics.value.activeUsers === 0 || metrics.value.monthlyRevenue === 0) return '$0'
+  
+  // Asegurar que los valores sean números válidos
+  const monthlyRevenue = Number(metrics.value.monthlyRevenue) || 0
+  const activeUsers = Number(metrics.value.activeUsers) || 0
+  
+  if (activeUsers === 0) return '$0'
+  
+  const avg = monthlyRevenue / activeUsers
+  
+  // Validar que el resultado sea un número válido
+  if (isNaN(avg) || !isFinite(avg)) return '$0'
+  
   return formatCurrency(avg)
 }
 
 const getGrowthRate = (): string => {
-  if (metrics.value.newUsersThisMonth === 0) return '0.0'
-  const rate = (metrics.value.newUsersThisMonth / Math.max(metrics.value.totalUsers - metrics.value.newUsersThisMonth, 1)) * 100
-  return rate.toFixed(1)
+  // Calcular crecimiento basado en usuarios nuevos este mes vs mes anterior
+  const newUsers = metrics.value.newUsersThisMonth || 0
+  const totalUsers = metrics.value.totalUsers || 0
+  const previousMonthUsers = totalUsers - newUsers
+  
+  if (previousMonthUsers === 0) {
+    // Si no había usuarios el mes anterior, el crecimiento es 100% si hay nuevos usuarios
+    return newUsers > 0 ? '100.0' : '0.0'
+  }
+  
+  // Calcular tasa de crecimiento: (nuevos / anteriores) * 100
+  const rate = (newUsers / previousMonthUsers) * 100
+  
+  // Limitar a un máximo razonable (ej: 1000%)
+  const cappedRate = Math.min(rate, 1000)
+  
+  return cappedRate.toFixed(1)
 }
 
 const getRetentionRate = (): string => {

@@ -55,7 +55,7 @@ import { useRouter } from 'vue-router'
 import QrcodeVue from 'qrcode.vue'
 import { useAuthStore } from '@/stores/auth'
 import { arrowBackOutline } from 'ionicons/icons';
-import { HOST_URL } from"../services/hots";
+import { getBackendUrl } from"../services/hots";
 
 // 📦 Store de autenticación
 const auth = useAuthStore()
@@ -93,7 +93,7 @@ onMounted(async () => {
       return
     }
 
-    const response = await fetch(`${HOST_URL}:8090/api/qr-access/user/${userId}`)
+    const response = await fetch(`${getBackendUrl(8082)}/api/qr-access/user/${userId}`)
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 
     const data = await response.json()

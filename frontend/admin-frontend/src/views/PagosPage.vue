@@ -113,7 +113,7 @@
                 <td>{{ membership.status }}</td>
                 <td>
                   <div class="action-buttons">
-                    <button @click="openEditModal(membership)" class="action-btn edit-btn" title="Editar membresía">
+                    <button @click="openEditModal(membership)" class="action-btn edit-btn" title="Editar membresía" aria-label="Editar membresía">
                       <ion-icon :icon="createOutline"></ion-icon>
                     </button>
 
@@ -123,12 +123,14 @@
                         class="status-toggle"
                         :class="{ 'disabled': statusUpdating }"
                         :title="getToggleTitle(membership.status)"
+                        aria-label="Cambiar estado de membresía"
                       >
                         <input
                           type="checkbox"
                           :checked="membership.status === 'available'"
                           @change="toggleMembershipStatus(membership)"
                           :disabled="statusUpdating"
+                          aria-label="Estado de membresía"
                         />
                         <span class="toggle-slider">
                           <span class="toggle-icon icon-active">
@@ -138,13 +140,10 @@
                             <ion-icon :icon="banOutline"></ion-icon>
                           </span>
                         </span>
-                        <span class="toggle-label">
-                          {{ membership.status === 'available' ? 'Disponible' : 'Inactivo' }}
-                        </span>
                       </label>
                     </div>
 
-                    <button @click="deleteMembership(membership)" class="action-btn delete-btn" title="Eliminar membresía">
+                    <button @click="deleteMembership(membership)" class="action-btn delete-btn" title="Eliminar membresía" aria-label="Eliminar membresía">
                       <ion-icon :icon="trashOutline"></ion-icon>
                     </button>
                   </div>
@@ -790,16 +789,25 @@ onMounted(() => loadPayments())
 .status-toggle-wrapper {
   display: inline-flex;
   align-items: center;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.status-toggle-wrapper::before,
+.status-toggle-wrapper::after {
+  display: none !important;
+  content: none !important;
 }
 
 .status-toggle {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 0;
   cursor: pointer;
   user-select: none;
   transition: all 0.3s ease;
+  margin: 0;
 }
 
 .status-toggle.disabled {
@@ -887,22 +895,7 @@ onMounted(() => loadPayments())
   opacity: 1;
 }
 
-.toggle-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #495057;
-  white-space: nowrap;
-  transition: color 0.3s ease;
-  min-width: 75px;
-}
-
-.status-toggle input:checked ~ .toggle-label {
-  color: #27ae60;
-}
-
-.status-toggle input:not(:checked) ~ .toggle-label {
-  color: #e74c3c;
-}
+/* Eliminado - toggle-label ya no se usa */
 
 .status-toggle:hover:not(.disabled) .toggle-slider {
   transform: scale(1.05);
@@ -948,17 +941,39 @@ onMounted(() => loadPayments())
 /* Botones de acción mejorados */
 .action-buttons {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.action-buttons::before,
+.action-buttons::after {
+  display: none !important;
+  content: none !important;
+}
+
+.action-buttons * {
+  text-indent: 0;
+}
+
+.action-buttons button {
+  text-indent: -9999px;
+  line-height: 0;
+  font-size: 0;
+}
+
+.action-buttons button ion-icon {
+  text-indent: 0;
+  line-height: 1;
+  font-size: 20px;
+  display: block;
 }
 
 .action-btn {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
-  font-family: 'Nunito', sans-serif;
-  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -968,6 +983,20 @@ onMounted(() => loadPayments())
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
+  padding: 0;
+  margin: 0;
+  font-size: 0;
+  line-height: 0;
+  text-indent: -9999px;
+}
+
+.action-btn ion-icon {
+  font-size: 20px;
+  line-height: 1;
+  display: block;
+  text-indent: 0;
+  width: 20px;
+  height: 20px;
 }
 
 .edit-btn {
@@ -1010,10 +1039,7 @@ onMounted(() => loadPayments())
     transform: translateX(24px);
   }
 
-  .toggle-label {
-    font-size: 11px;
-    min-width: 70px;
-  }
+  /* Eliminado - toggle-label ya no se usa */
 
   .toggle-icon {
     font-size: 12px;
