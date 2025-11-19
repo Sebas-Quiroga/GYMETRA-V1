@@ -113,8 +113,9 @@
       <!-- Modal Recuperar Contraseña -->
       <ion-modal :is-open="showForgotModal" @did-dismiss="closeForgotModal" aria-modal="true" role="dialog">
         <div class="modal-content" aria-label="Recuperar Contraseña">
-          <button class="modal-close-btn" @click="closeForgotModal" aria-label="Cerrar modal" style="position:sticky;top:0;z-index:10;float:right;background:none;border:none;font-size:1.5rem;">×</button>
+          <button class="modal-close-btn" @click="closeForgotModal" aria-label="Cerrar modal">×</button>
           <h2>Recuperar Contraseña</h2>
+          
 
           <!-- Paso 1: ingresar correo -->
           <div v-if="forgotStep === 1">
@@ -155,7 +156,6 @@
                 <ion-spinner v-if="forgotLoading" name="crescent" aria-label="Cargando"></ion-spinner>
                 <span v-else>Enviar Código</span>
               </ion-button>
-              <ion-button fill="clear" color="medium" @click="closeForgotModal" aria-label="Cancelar recuperación">Cancelar</ion-button>
             </div>
           </div>
 

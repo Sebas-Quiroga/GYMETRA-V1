@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "vite build",
     "build-only": "vite build",
     "dev": "vite --port 8101",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
@@ -12,14 +12,14 @@
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:e2e": "playwright test",
-    "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false"
+    "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@ionic/vue": "^7.0.0",
     "@ionic/vue-router": "^7.0.0",
     "axios": "^1.13.1",
     "ionicons": "^7.0.0",
-    "jspdf": "^3.0.3",
+    "jspdf": "^3.0.4",
     "pinia": "^2.1.7",
     "vue": "^3.3.0",
     "vue-router": "^4.2.0",

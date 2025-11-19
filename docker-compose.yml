@@ -34,6 +34,10 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - JAVA_OPTS=-Xmx512m -Xms256m
       - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=gymdb
+      - DB_USER=postgres
+      - DB_PASSWORD=123456
     depends_on:
       - database
     restart: unless-stopped

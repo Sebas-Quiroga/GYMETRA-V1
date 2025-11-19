@@ -1,13 +1,13 @@
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar color="primary">
+      <ion-toolbar color="primary" class="custom-toolbar" role="banner" aria-label="Encabezado principal">
         <ion-buttons slot="start">
           <ion-button @click="goBack" fill="clear">
             <ion-icon :icon="arrowBackOutline"></ion-icon>
           </ion-button>
         </ion-buttons>
-        <ion-title>Crear Cuenta</ion-title>
+        <ion-title class="page-title" aria-label="Crear Cuenta">Crear Cuenta</ion-title>
       </ion-toolbar>
     </ion-header>
 

@@ -6,8 +6,8 @@
 /* —— Design Tokens (scoped por contenedor) —— */
 .payment-content {
   /* Paleta */
-  --pp-primary: #07B7E0;
-  --pp-primary-600: #0696c7;
+  --pp-primary: #3B82F6;
+  --pp-primary-600: #2563EB;
   --pp-bg: #ffffff;
   --pp-surface: #f8f9fa;
   --pp-card: #ffffff;
@@ -34,7 +34,7 @@
 
   /* Sombras (bajas y altas) */
   --pp-shadow-1: 0 8px 22px rgba(16, 24, 40, 0.06);
-  --pp-shadow-2: 0 12px 40px rgba(7, 183, 224, 0.18);
+  --pp-shadow-2: 0 12px 40px rgba(59, 130, 246, 0.18);
 
   /* Config base */
   background: var(--pp-bg) !important;
@@ -196,7 +196,7 @@
   justify-content: center;
   gap: .55rem;
   width: 100%;
-  box-shadow: 0 6px 18px rgba(7,183,224,.22);
+  box-shadow: 0 6px 18px rgba(59,130,246,.22);
 }
 .pay-btn:hover:not(:disabled) {
   transform: translateY(-1px);
@@ -253,7 +253,7 @@
 .error-container button:hover {
   background: var(--pp-primary);
   color: #fff;
-  box-shadow: 0 8px 24px rgba(7,183,224,.18);
+  box-shadow: 0 8px 24px rgba(59,130,246,.18);
 }
 
 /* —— Responsivo —— */
@@ -276,7 +276,7 @@
     --pp-muted: #b6c0cc;
     --pp-border: #223049;
     --pp-shadow-1: 0 8px 22px rgba(0,0,0,.35);
-    --pp-shadow-2: 0 12px 40px rgba(7,183,224,.24);
+    --pp-shadow-2: 0 12px 40px rgba(59,130,246,.24);
   }
 
   .purchase-summary,

@@ -28,12 +28,17 @@
       </div>
     </Transition>
 
-    <div class="planes-header-bar" role="banner" aria-label="Encabezado de planes">
-      <button class="planes-back-btn" @click="$router.back()" aria-label="Volver" tabindex="0">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <span class="planes-header-title" aria-label="Planes">Planes</span>
-    </div>
+    <!-- Header con navegación -->
+    <ion-header>
+      <ion-toolbar color="primary" class="custom-toolbar" role="banner" aria-label="Encabezado principal">
+        <ion-buttons slot="start">
+          <ion-button fill="clear" @click="$router.back()" aria-label="Volver">
+            <ion-icon :icon="arrowBackOutline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title class="page-title" aria-label="Planes">Planes</ion-title>
+      </ion-toolbar>
+    </ion-header>
     <ion-content class="planes-content" role="main" aria-label="Listado de planes">
       <!-- Loading state -->
       <div v-if="loading" class="loading-container" role="status" aria-live="polite">
@@ -108,9 +113,9 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, reactive, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { IonPage, IonContent, IonIcon, IonButton } from '@ionic/vue';
-import { useAuth } from '@/composables/useAuth';
-import { checkmarkCircle, alertCircle, warningOutline, informationCircle, closeCircle } from 'ionicons/icons';
+import { IonPage, IonHeader, IonToolbar, IonTitle, IonButtons, IonContent, IonIcon, IonButton } from '@ionic/vue';
+import { useAuthStore } from '@/stores/auth'
+import { checkmarkCircle, alertCircle, warningOutline, informationCircle, closeCircle, arrowBackOutline } from 'ionicons/icons';
 import {
   getAvailableMemberships,
   purchaseMembership,
@@ -197,7 +202,22 @@ const STRIPE_CONFIG = {
 };
 
 const router = useRouter();
-const { authenticated, userInfo, requireAuth, initAuth } = useAuth();
+const auth = useAuthStore();
+
+const requireAuth = () => {
+  if (!auth.token) {
+    router.push('/login');
+    return false;
+  }
+  return true;
+};
+
+const initAuth = (options?: any) => {
+  if (options?.requireAuth && !requireAuth()) {
+    return false;
+  }
+  return true;
+};
 
 // Estados existentes
 const memberships = ref<Membership[]>([]);

@@ -1,6 +1,8 @@
 <template>
   <div class="admin-login-page">
     <div class="login-card">
+
+      
       <div class="logo-section">
         <ion-icon :icon="fitnessOutline" class="logo-icon"></ion-icon>
         <h1>GYMETRA</h1>
@@ -41,11 +43,7 @@
           <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
         </div>
 
-        <div class="forgot-link">
-          <a href="#" class="forgot-password-link" @click.prevent="handleForgotPassword">
-            ¿Olvidaste tu contraseña?
-          </a>
-        </div>
+
 
         <div class="login-btn-container">
           <button type="submit" class="login-btn" :disabled="loading">
@@ -58,16 +56,9 @@
       </form>
 
       <div class="login-footer">
-        <p>¿No tienes cuenta de administrador?</p>
-        <a href="#" class="contact-link" @click.prevent="handleContactSupport">Contactar soporte</a>
+        <p>Si no tienes cuenta, contacta con administrador</p>
       </div>
 
-      <div class="back-link">
-        <button class="back-btn" @click="goToUserLogin">
-          <ion-icon :icon="arrowBackOutline"></ion-icon>
-          Volver al login de usuario
-        </button>
-      </div>
     </div>
   </div>
 </template>

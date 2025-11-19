@@ -1,14 +1,16 @@
 <template>
   <ion-page>
-    <div class="perfil-header-bar" role="banner" aria-label="Encabezado de perfil">
-      <button class="perfil-back-btn" @click="$router.back()" aria-label="Volver" tabindex="0">
-        <ion-icon :icon="arrowBackOutline" style="font-size: 1.7rem; color: #fff;" aria-hidden="true"></ion-icon>
-      </button>
-      <span class="perfil-header-title" aria-label="Perfil">Perfil</span>
-      <button class="perfil-settings-btn" aria-label="Configuración" tabindex="0">
-        <ion-icon :icon="settingsOutline" style="font-size: 1.5rem; color: #fff;" aria-hidden="true"></ion-icon>
-      </button>
-    </div>
+    <!-- Header con navegación -->
+    <ion-header>
+      <ion-toolbar color="primary" class="custom-toolbar" role="banner" aria-label="Encabezado principal">
+        <ion-buttons slot="start">
+          <ion-button fill="clear" @click="$router.back()" aria-label="Volver">
+            <ion-icon :icon="arrowBackOutline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title class="page-title" aria-label="Perfil">Perfil</ion-title>
+      </ion-toolbar>
+    </ion-header>
     
     <ion-content class="perfil-content">
       <!-- Avatar y datos -->

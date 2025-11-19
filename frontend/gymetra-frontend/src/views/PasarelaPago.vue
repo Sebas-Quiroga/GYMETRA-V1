@@ -1,5 +1,17 @@
 <template>
   <ion-page>
+    <!-- Header con navegación -->
+    <ion-header>
+      <ion-toolbar color="primary" class="custom-toolbar" role="banner" aria-label="Encabezado principal">
+        <ion-buttons slot="start">
+          <ion-button fill="clear" @click="$router.back()" aria-label="Volver">
+            <ion-icon :icon="arrowBackOutline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title class="page-title" aria-label="Pago de Membresía">Pago de Membresía</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
     <ion-content class="payment-content">
       <!-- Toast de notificación personalizado -->
       <div v-if="notification.show" class="notification-toast" :class="notification.type">
@@ -14,13 +26,6 @@
           </ion-button>
         </div>
         <div class="notification-progress" :style="{ width: notification.progress + '%' }"></div>
-      </div>
-
-      <div class="payment-header">
-        <button class="back-btn" @click="$router.back()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#07B7E0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <span class="payment-title">Pago de Membresía</span>
       </div>
 
       <div class="payment-form-container" v-if="membership">
@@ -61,8 +66,8 @@ import { ref, onMounted, nextTick, reactive, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { IonPage, IonContent, IonIcon, IonButton } from '@ionic/vue';
 import { formatPrice, formatDuration } from '@/services/membershipService';
-import { useAuth } from '@/composables/useAuth';
-import { checkmarkCircle, alertCircle, warningOutline, informationCircle, closeOutline } from 'ionicons/icons';
+import { useAuthStore } from '@/stores/auth'
+import { checkmarkCircle, alertCircle, warningOutline, informationCircle, closeOutline, arrowBackOutline } from 'ionicons/icons';
 import "@/theme/PasarelaPago.css";
 import { HOST_URL } from"../services/hots";
 
@@ -73,13 +78,13 @@ const STRIPE_CONFIG = {
 
 const route = useRoute();
 const router = useRouter();
-const { userInfo } = useAuth();
+const auth = useAuthStore()
 
 const membership = ref<any>(null);
 
 // Ya no se piden por UI; userId va oculto (sesión), ZIP se toma de Stripe Element
 const paymentData = ref({
-  userId: userInfo.value?.userId || null
+  userId: auth.user?.userId || null
 });
 
 const paymentProcessing = ref(false);
@@ -172,12 +177,12 @@ onMounted(async () => {
   }
 
   // Validar sesión para tener userId
-  if (!userInfo.value?.userId) {
+  if (!auth.user?.userId) {
     // si no hay sesión, envía a login
     router.push('/login');
     return;
   } else {
-    paymentData.value.userId = userInfo.value.userId;
+    paymentData.value.userId = auth.user.userId;
   }
 
   await initializeStripe();
