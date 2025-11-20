@@ -14,11 +14,17 @@ services:
     restart: unless-stopped
     networks:
       - gymetra-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     labels:
       com.gymetra.service: "database"
 
-  backend:
-    image: gymetra/backend:latest
+  # Backend de Autenticación (Login)
+  gymetr-login:
+    image: gymetra/backend-login:latest
     build:
       context: ./backend/GYMETR-login
       dockerfile: Dockerfile
@@ -27,7 +33,7 @@ services:
         - GIT_COMMIT=${GIT_COMMIT:-local}
         - BUILD_TIME=${BUILD_TIME:-unknown}
         - SKIP_TESTS=true
-    container_name: gymetra_backend
+    container_name: gymetra_backend_login
     ports:
       - "8080:8080"
     environment:
@@ -38,14 +44,109 @@ services:
       - DB_NAME=gymdb
       - DB_USER=postgres
       - DB_PASSWORD=123456
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/gymdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123456
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - gymetra-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     labels:
-      com.gymetra.service: "backend"
+      com.gymetra.service: "backend-login"
 
+  # Backend de Membresías
+  gymetr-membership:
+    image: gymetra/backend-membership:latest
+    build:
+      context: ./backend/GYMETR-Membership
+      dockerfile: Dockerfile
+      args:
+        - DOCKER_BUILDKIT=1
+        - GIT_COMMIT=${GIT_COMMIT:-local}
+        - BUILD_TIME=${BUILD_TIME:-unknown}
+        - SKIP_TESTS=true
+    container_name: gymetra_backend_membership
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=gymdb
+      - DB_USER=postgres
+      - DB_PASSWORD=123456
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/gymdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123456
+    depends_on:
+      database:
+        condition: service_healthy
+      gymetr-login:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - gymetra-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      com.gymetra.service: "backend-membership"
+
+  # Backend de QR
+  gymetra-qr:
+    image: gymetra/backend-qr:latest
+    build:
+      context: ./backend/GYMETRA - Qr
+      dockerfile: Dockerfile
+      args:
+        - DOCKER_BUILDKIT=1
+        - GIT_COMMIT=${GIT_COMMIT:-local}
+        - BUILD_TIME=${BUILD_TIME:-unknown}
+        - SKIP_TESTS=true
+    container_name: gymetra_backend_qr
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - DB_HOST=database
+      - DB_PORT=5432
+      - DB_NAME=gymdb
+      - DB_USER=postgres
+      - DB_PASSWORD=123456
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/gymdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=123456
+    depends_on:
+      database:
+        condition: service_healthy
+      gymetr-login:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - gymetra-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      com.gymetra.service: "backend-qr"
+
+  # Frontend Principal
   frontend:
     image: gymetra/frontend:latest
     build:
@@ -59,7 +160,9 @@ services:
     ports:
       - "8100:80"
     depends_on:
-      - backend
+      - gymetr-login
+      - gymetr-membership
+      - gymetra-qr
     restart: unless-stopped
     networks:
       - gymetra-net
@@ -67,6 +170,30 @@ services:
       - NODE_ENV=production
     labels:
       com.gymetra.service: "frontend"
+
+  # Frontend Admin
+  admin-frontend:
+    image: gymetra/admin-frontend:latest
+    build:
+      context: ./frontend/admin-frontend
+      dockerfile: Dockerfile
+      args:
+        - DOCKER_BUILDKIT=1
+        - GIT_COMMIT=${GIT_COMMIT:-local}
+        - BUILD_TIME=${BUILD_TIME:-unknown}
+    container_name: gymetra_admin_frontend
+    ports:
+      - "8101:80"
+    depends_on:
+      - gymetr-login
+      - gymetr-membership
+    restart: unless-stopped
+    networks:
+      - gymetra-net
+    environment:
+      - NODE_ENV=production
+    labels:
+      com.gymetra.service: "admin-frontend"
 
 networks:
   gymetra-net:

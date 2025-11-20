@@ -50,11 +50,8 @@ const routes: Array<RouteRecordRaw> = [
   }
 ]
 
-// Asegurar que BASE_URL tenga un valor por defecto para Android
-const baseUrl = import.meta.env.BASE_URL || '/'
-
 const router = createRouter({
-  history: createWebHistory(baseUrl),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
 
