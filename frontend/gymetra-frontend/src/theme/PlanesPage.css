@@ -1,0 +1,444 @@
+/* PlanesPage.css — KINETIC Membresías con Soporte de Temas */
+
+/* ─── Fondo ─── */
+.planes-content {
+    --background: var(--bg-page) !important;
+    background: var(--bg-page) !important;
+}
+
+/* ─── Header ─── */
+.planes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-card);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 12px 32px rgba(25, 28, 29, 0.04);
+}
+
+.planes-header-left,
+.planes-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 80px; /* Ancho para equilibrar el centro */
+}
+
+.planes-header-right {
+    justify-content: flex-end;
+}
+
+.planes-back-btn, .planes-logout-btn {
+    background: var(--bg-subtle);
+    border: none;
+    cursor: pointer;
+    color: var(--brand-primary);
+    display: flex;
+    align-items: center;
+    padding: 0.4rem;
+    border-radius: 50%;
+    transition: transform 0.15s, opacity 0.15s;
+}
+.planes-back-btn:active, .planes-logout-btn:active { transform: scale(0.9); }
+.planes-logout-btn { color: var(--text-sub); }
+
+.planes-logo-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    transition: transform 0.2s ease;
+}
+
+.planes-logo-link:active {
+    transform: scale(0.95);
+}
+
+.header-logo-img {
+    height: 28px;
+    width: auto;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    transition: filter 0.3s ease;
+}
+
+/* En modo claro lo invertimos para visibilidad */
+@media (prefers-color-scheme: light) {
+    .header-logo-img {
+        filter: invert(1) brightness(0.2) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    }
+}
+
+.header-logo-text {
+    font-family: var(--app-font-brand);
+    font-size: 1.2rem;
+    font-weight: 900;
+    font-style: italic;
+    color: var(--brand-primary);
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+}
+
+.planes-header-section {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-sub);
+    letter-spacing: 0.03em;
+}
+
+/* ─── Container ─── */
+.planes-container {
+    padding: 2.5rem 1.25rem 8rem;
+    max-width: 540px;
+    margin: 0 auto;
+}
+
+/* ─── Hero editorial ─── */
+.planes-hero {
+    margin-bottom: 3rem;
+}
+
+.planes-hero-eyebrow {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--brand-secondary);
+    margin: 0 0 0.75rem;
+}
+
+.planes-hero-title {
+    font-family: var(--app-font-brand);
+    font-size: 2.75rem;
+    font-weight: 950;
+    font-style: italic;
+    color: var(--text-main);
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+    margin: 0 0 1.25rem;
+}
+
+.planes-hero-accent {
+    color: var(--brand-primary);
+}
+
+.planes-hero-sub {
+    font-size: 0.9rem;
+    color: var(--text-sub);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 360px;
+    font-weight: 500;
+}
+
+/* ─── States ─── */
+.planes-loading,
+.planes-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 240px;
+    color: var(--text-sub);
+    gap: 1.25rem;
+    font-size: 1rem;
+}
+
+.planes-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--brand-primary);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+}
+
+.planes-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2.5rem 1rem;
+    color: var(--color-error);
+    text-align: center;
+}
+
+.planes-retry-btn {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    color: var(--brand-primary);
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+/* ─── Lista de planes ─── */
+.planes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* ─── Plan card base ─── */
+.plan-card {
+    background: var(--bg-card);
+    border-radius: 1.75rem;
+    padding: 2.25rem;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.plan-card:hover { transform: translateY(-4px); box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08); }
+
+/* Glass (básico y elite) */
+.plan-card-glass {
+    background: var(--bg-card);
+}
+
+/* Featured (premium) */
+.plan-card-featured {
+    background: var(--bg-card);
+    border: 2px solid var(--brand-secondary);
+    box-shadow: 0 20px 60px rgba(0, 172, 193, 0.12);
+}
+
+/* ─── Badge ─── */
+.plan-badge {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: var(--brand-secondary);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.35rem 1rem;
+    border-radius: 9999px;
+    box-shadow: 0 4px 14px rgba(0, 172, 193, 0.3);
+}
+
+/* ─── Ícono decorativo ─── */
+.plan-deco-icon {
+    position: absolute;
+    bottom: -1rem;
+    right: -1rem;
+    opacity: 0.05;
+    color: var(--brand-primary);
+    transform: rotate(12deg);
+    pointer-events: none;
+}
+
+/* ─── Contenido ─── */
+.plan-content {
+    position: relative;
+    z-index: 1;
+}
+
+.plan-name {
+    font-family: var(--app-font-brand);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0 0 0.75rem;
+    letter-spacing: -0.01em;
+}
+
+.plan-name-featured {
+    font-size: 1.4rem;
+    font-weight: 900;
+    font-style: italic;
+    color: var(--brand-primary);
+}
+
+.plan-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.plan-price {
+    font-family: var(--app-font-brand);
+    font-size: 2.25rem;
+    font-weight: 950;
+    color: var(--text-main);
+    letter-spacing: -0.05em;
+    line-height: 1;
+}
+
+.plan-card-featured .plan-price {
+    font-size: 3rem;
+    color: var(--brand-primary);
+}
+
+.plan-period {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-sub);
+}
+
+.plan-description {
+    font-size: 0.9rem;
+    color: var(--text-sub);
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+}
+
+/* ─── Features ─── */
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.plan-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-sub);
+    font-weight: 600;
+}
+
+.plan-check {
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 50%;
+    background: var(--bg-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--brand-secondary);
+}
+
+.check-featured {
+    background: rgba(var(--ion-color-primary-rgb), 0.1);
+    color: var(--brand-primary);
+}
+
+/* ─── Botones ─── */
+.plan-btn {
+    width: 100%;
+    padding: 1.15rem 1.75rem;
+    border: none;
+    border-radius: 9999px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    letter-spacing: 0.01em;
+    transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.plan-btn-glass {
+    background: var(--bg-subtle);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+
+.plan-btn-featured {
+    background: var(--brand-primary);
+    color: #ffffff;
+    box-shadow: 0 8px 24px rgba(var(--ion-color-primary-rgb), 0.25);
+}
+
+.plan-btn:active { transform: scale(0.97); }
+.plan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Compare link ─── */
+.planes-compare { text-align: center; margin-top: 2.5rem; }
+.planes-compare-btn {
+    background: transparent;
+    border: none;
+    color: var(--brand-primary);
+    font-size: 0.9rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+/* ─── Toasts / Notificaciones ─── */
+.notif-toast {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    width: 320px;
+    background: var(--bg-card);
+    border-radius: 1.125rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.notif-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem;
+}
+
+.notif-icon { font-size: 1.5rem; }
+.notif-success .notif-icon { color: var(--color-success); }
+.notif-error .notif-icon { color: var(--color-error); }
+.notif-info .notif-icon { color: var(--brand-primary); }
+
+.notif-text strong { display: block; font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.2rem; }
+.notif-text span { font-size: 0.85rem; color: var(--text-sub); line-height: 1.4; }
+
+.notif-progress-bar { height: 4px; background: var(--bg-subtle); }
+.notif-progress-fill { height: 100%; transition: width 0.05s linear; }
+.fill-success { background: var(--color-success); }
+.fill-error { background: var(--color-error); }
+.fill-info { background: var(--brand-primary); }
+
+/* ─── Overlay ─── */
+.purchase-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.purchase-modal-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1.5rem;
+    padding: 3rem 2rem;
+    text-align: center;
+    max-width: 340px;
+    width: 90%;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Animaciones ─── */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Responsive ─── */
+@media (max-width: 420px) {
+    .planes-hero-title { font-size: 2.25rem; }
+}

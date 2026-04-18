@@ -2,7 +2,7 @@
   <ion-page>
     <!-- Encabezado superior estilo KINETIC -->
     <div class="qr-header-bar" role="banner" aria-label="Encabezado de QR">
-      <div class="qr-header-left">
+      <div class="header-side header-left">
         <div class="qr-avatar-wrap" @click="navigateToProfile" tabindex="0" role="button" aria-label="Ir al perfil">
           <img
             v-if="profilePhoto"
@@ -16,14 +16,21 @@
             {{ firstName.charAt(0) }}
           </div>
         </div>
-        <span class="qr-header-logo">{{ APP_NAME }}</span>
       </div>
-      <button class="qr-back-btn" @click="$router.back()" aria-label="Volver" tabindex="0">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
+
+      <router-link to="/home" class="header-logo-link" aria-label="Ir al inicio">
+        <img src="/logo.png" alt="Logo" class="header-logo-img" />
+        <span class="header-logo-text">{{ APP_NAME }}</span>
+      </router-link>
+
+      <div class="header-side header-right">
+        <button class="qr-back-btn" @click="$router.back()" aria-label="Volver" tabindex="0">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Contenido principal -->

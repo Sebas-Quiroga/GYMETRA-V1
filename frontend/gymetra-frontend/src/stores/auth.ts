@@ -1,9 +1,9 @@
 import { defineStore } from "pinia";
 import { fetchAuthSession, fetchUserAttributes } from 'aws-amplify/auth';
 import axios from "axios";
-import { HOST_URL } from "@/services/hots";
+import { LOGIN_API_URL } from "@/services/apiService";
 
-const ME_URL = `${HOST_URL}:8080/api/me`;
+const ME_URL = `${LOGIN_API_URL}/me`;
 
 interface UserData {
   userId?: string | number;
@@ -102,11 +102,13 @@ export const useAuthStore = defineStore("auth", {
     async logout() {
       try {
         const { signOut } = await import('aws-amplify/auth');
-        await signOut();
+        await signOut({ global: true }); // Cierre de sesión global para mayor seguridad
       } catch (err) {
         console.error("❌ Error al cerrar sesión en Cognito:", err);
       } finally {
         this.clearToken();
+        // Forzar recarga o limpieza adicional si fuera necesario
+        console.log("🚪 Sesión cerrada y estado limpiado");
       }
     },
   },

@@ -104,10 +104,45 @@ export function useRegister(): UseRegisterReturn {
     }
   };
 
+  /**
+   * Confirma el registro del usuario con el código enviado por email.
+   */
+  const confirmRegistration = async (username: string, code: string): Promise<ApiResponse<any>> => {
+    loading.value = true;
+    error.value = '';
+    try {
+      const { isSignUpComplete, nextStep } = await import('aws-amplify/auth').then(m => m.confirmSignUp({
+        username: username.toLowerCase().trim(),
+        confirmationCode: code.trim()
+      }));
+      return { success: true, message: 'Cuenta verificada con éxito', data: { isSignUpComplete, nextStep } };
+    } catch (err: any) {
+      const msg = err.message || 'Código inválido o expirado';
+      error.value = msg;
+      return { success: false, message: msg };
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  /**
+   * Reenvía el código de confirmación.
+   */
+  const resendSignUpCode = async (username: string): Promise<ApiResponse<any>> => {
+    try {
+      await import('aws-amplify/auth').then(m => m.resendSignUpCode({ username: username.toLowerCase().trim() }));
+      return { success: true, message: 'Código reenviado con éxito' };
+    } catch (err: any) {
+      return { success: false, message: err.message || 'Error al reenviar código' };
+    }
+  };
+
   return {
     loading,
     error,
     register,
+    confirmRegistration,
+    resendSignUpCode,
     clearError
   };
 }

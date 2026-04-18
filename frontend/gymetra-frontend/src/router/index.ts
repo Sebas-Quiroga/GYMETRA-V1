@@ -47,6 +47,18 @@ const routes: Array<RouteRecordRaw> = [
     path: '/qr',
     name: 'Qr',
     component: () => import('../views/QrPage.vue')
+  },
+  {
+    path: '/nutrition-plan',
+    name: 'NutritionPlan',
+    component: () => import('../views/NutritionPlanView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/rutinas',
+    name: 'Rutinas',
+    component: () => import('../views/RutinasView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

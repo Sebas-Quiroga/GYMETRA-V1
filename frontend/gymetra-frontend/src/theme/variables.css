@@ -27,6 +27,34 @@ http://ionicframework.com/docs/theming/ */
   --app-font-brand: 'Outfit', sans-serif;
   --ion-font-family: var(--app-font-family);
   --input-font-family: var(--app-font-brand);
+
+  /* Semantic Theme Tokens - LIGHT */
+  --bg-page: #f8fafb;
+  --bg-card: #ffffff;
+  --bg-subtle: #f2f4f5;
+  --text-main: #191c1d;
+  --text-sub: #3d494b;
+  --brand-primary: #006876;
+  --brand-secondary: #00acc1;
+  --border-color: rgba(188, 201, 204, 0.25);
+  --color-success: #006876;
+  --color-error: #ba1a1a;
+}
+
+/* Semantic Theme Tokens - DARK */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #0f172a;
+    --bg-card: #1e293b;
+    --bg-subtle: #0f172a;
+    --text-main: #f8fafc;
+    --text-sub: #94a3b8;
+    --brand-primary: #22d3ee;
+    --brand-secondary: #67e8f9;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --color-success: #22d3ee;
+    --color-error: #f13e3e;
+  }
 }
 
 /* DISEÑO LIMPIO PARA INPUTS DE LOGIN COMO EN LA IMAGEN */

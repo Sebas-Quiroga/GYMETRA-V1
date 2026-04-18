@@ -16,16 +16,23 @@
             {{ firstName.charAt(0) }}
           </div>
         </div>
-        <span class="home-logo">{{ APP_NAME }}</span>
       </div>
-      <button class="home-logout-btn" @click="logout" aria-label="Cerrar sesión">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-      </button>
+
+      <router-link to="/home" class="home-logo-link" aria-label="Ir al inicio">
+        <img src="/logo.png" alt="Logo" class="header-logo-img" />
+        <span class="header-logo-text">{{ APP_NAME }}</span>
+      </router-link>
+
+      <div class="home-header-right">
+        <button class="home-logout-btn" @click="logout" aria-label="Cerrar sesión">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <ion-content class="home-content">
@@ -74,6 +81,27 @@
             <span class="bento-qr-sub">Acceso Rápido</span>
           </button>
 
+          <!-- Banner CTA Premium: Adquirir Plan -->
+          <div
+            class="bento-cta"
+            @click="navigateToMembership"
+            tabindex="0"
+            role="button"
+            aria-label="Adquirir plan de entrenamiento"
+          >
+            <div class="cta-content">
+              <span class="cta-eyebrow">Rendimiento de Élite</span>
+              <h3 class="cta-title">POTENCIA TU <span class="cta-accent">ENTRENO</span></h3>
+              <p class="cta-sub">Adquiere un plan PRO y domina el gimnasio</p>
+            </div>
+            <div class="cta-action">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </div>
+          </div>
+
           <!-- Gráfica semanal -->
           <div class="bento-chart" aria-label="Tiempo entrenado semanal">
             <div class="bento-chart-header">
@@ -104,13 +132,13 @@
             </div>
           </div>
 
-          <!-- Card planes -->
+          <!-- Card ejercicios: redirige a RutinasView -->
           <div
             class="bento-action-card"
-            @click="navigateToPlanes"
+            @click="navigateToRutinas"
             tabindex="0"
             role="button"
-            aria-label="Ver planes de entrenamiento"
+            aria-label="Ver mis planes de entrenamiento"
           >
             <div class="bento-action-icon bento-action-icon-teal">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -123,12 +151,12 @@
             </div>
             <div>
               <h4 class="bento-action-title">Planes de Entrenamiento</h4>
-              <p class="bento-action-sub">Ver mis rutinas</p>
+              <p class="bento-action-sub">Gestión de Rutinas</p>
             </div>
           </div>
 
           <!-- Card nutrición / info extra -->
-          <div class="bento-action-card" tabindex="0" role="button" aria-label="Plan nutricional">
+          <div class="bento-action-card" @click="navigateToNutrition" tabindex="0" role="button" aria-label="Plan nutricional">
             <div class="bento-action-icon bento-action-icon-amber">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -154,7 +182,6 @@ import { IonPage, IonContent, onIonViewWillEnter } from "@ionic/vue"
 import { useAuthStore } from "@/stores/auth"
 import { useRouter } from "vue-router"
 import { apiAuthRequest, MEMBERSHIP_API_URL } from "@/services/apiService"
-import { HOST_URL } from "@/services/hots"
 import { APP_NAME } from "@/config/branding"
 
 const auth = useAuthStore()
@@ -179,9 +206,11 @@ const greeting = computed(() => {
 })
 
 // --- Navegación ---
-const logout = () => { auth.clearToken(); router.push("/login") }
+const logout = async () => { await auth.logout(); router.push("/login") }
 const navigateToProfile = () => router.push("/perfil")
-const navigateToPlanes = () => router.push("/Planes")
+const navigateToMembership = () => router.push("/Planes")
+const navigateToNutrition = () => router.push("/nutrition-plan")
+const navigateToRutinas = () => router.push("/rutinas")
 const navigateToQR = () => router.push({ path: "/qr", query: { fromHome: "1" } })
 const handleImageError = (e: any) => { e.target.src = "" }
 

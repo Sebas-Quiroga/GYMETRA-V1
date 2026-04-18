@@ -1,10 +1,9 @@
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { HOST_URL } from './hots';
 
-// URLs de los diferentes microservicios
-export const LOGIN_API_URL = `${HOST_URL}:8080/api`;
-export const MEMBERSHIP_API_URL = `${HOST_URL}:8081/api`; 
-export const QR_API_URL = `${HOST_URL}:8090/api`;
+// URLs de los diferentes microservicios (Usa variables de entorno con fallback a localhost)
+export const LOGIN_API_URL = import.meta.env.VITE_API_URL_LOGIN || "http://localhost:8080/api";
+export const MEMBERSHIP_API_URL = import.meta.env.VITE_API_URL_MEMBERSHIP || "http://localhost:8081/api"; 
+export const QR_API_URL = import.meta.env.VITE_API_URL_QR || "http://localhost:8090/api";
 
 // Compatibilidad con código existente que usa MAIN_API_URL
 export const MAIN_API_URL = LOGIN_API_URL;

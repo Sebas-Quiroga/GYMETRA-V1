@@ -1,221 +1,235 @@
-/* Header más compacto y moderno */
+/* PerfilPage.css — KINETIC Modern Profile Theme */
+
 .perfil-header-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--ion-color-primary, #04b8e5);
-  padding: 0.7rem 1.1rem 0.7rem 0.5rem;
-  border-bottom-left-radius: 18px;
-  border-bottom-right-radius: 18px;
-  box-shadow: 0 2px 8px rgba(4,184,229,0.10);
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--border-color);
 }
-.perfil-header-title {
-  color: #fff;
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-.perfil-back-btn, .perfil-settings-btn {
-  background: none;
-  border: none;
-  outline: none;
+
+.header-side {
   display: flex;
   align-items: center;
-  cursor: pointer;
-  padding: 0.2rem 0.3rem;
+  gap: 0.75rem;
+  width: 80px;
 }
 
+.header-right { justify-content: flex-end; }
 
-/* Fuente y colores del sistema */
-body, .perfil-content, .perfil-toolbar, .perfil-avatar-section, .perfil-info-card, .perfil-edit-btn, .perfil-username, .perfil-info-card ion-item {
-  font-family: var(--input-font-family, 'Nunito', sans-serif) !important;
-  color: var(--input-color, #222) !important;
+.header-logo-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  transition: transform 0.2s ease;
 }
 
-.perfil-content {
-  --background: #f6f6f6;
-  padding: 0;
+.header-logo-link:active { transform: scale(0.95); }
+
+.header-logo-img {
+  height: 28px;
+  width: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  transition: filter 0.3s ease;
 }
 
-.perfil-toolbar {
-  font-family: var(--input-font-family, 'Nunito', sans-serif) !important;
-  font-weight: 700;
+@media (prefers-color-scheme: light) {
+  .header-logo-img {
+    filter: invert(1) brightness(0.2) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  }
+}
+
+.header-logo-text {
+  font-family: var(--app-font-brand);
   font-size: 1.2rem;
+  font-weight: 900;
+  font-style: italic;
+  color: var(--brand-primary);
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.perfil-back-btn, .perfil-settings-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  border: none;
+  cursor: pointer;
+  color: var(--brand-primary);
+  border-radius: 50%;
+  transition: transform 0.1s;
+}
+
+.perfil-back-btn:active, .perfil-settings-btn:active { transform: scale(0.9); }
+
+/* ─── Content ─── */
+.perfil-content {
+  --background: var(--bg-page);
+  padding-bottom: 5rem;
 }
 
 .perfil-avatar-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 32px;
-  margin-bottom: 16px;
+  padding: 3rem 1.5rem 2rem;
 }
 
 .perfil-avatar {
   position: relative;
-  width: 160px;
-  height: 160px;
+  width: 140px;
+  height: 140px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 4px 18px rgba(4,184,229,0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: box-shadow 0.2s;
+  background: var(--bg-card);
+  padding: 5px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+  transition: transform 0.3s ease;
 }
+
 .perfil-avatar img {
-  width: 130px;
-  height: 130px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 2px 8px rgba(4,184,229,0.10);
 }
-.perfil-avatar .avatar-overlay {
+
+.avatar-overlay {
   position: absolute;
-  bottom: 12px;
-  right: 12px;
-  background: linear-gradient(135deg, #04b8e5 80%, #fff 100%);
+  bottom: 0;
+  right: 0;
+  width: 42px;
+  height: 42px;
+  background: var(--brand-primary);
   border-radius: 50%;
-  width: 44px;
-  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(4,184,229,0.18);
-  border: 2px solid #fff;
+  border: 4px solid var(--bg-page);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  transition: background 0.2s;
-}
-.perfil-avatar .avatar-overlay:hover {
-  background: linear-gradient(135deg, #04b8e5 60%, #fff 100%);
 }
 
 .perfil-username-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-top: 12px;
-  margin-bottom: 4px;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
 }
+
 .perfil-username {
-  font-size: 1.18rem;
-  font-weight: 700;
-  color: var(--ion-color-primary);
-  font-family: var(--input-font-family, 'Nunito', sans-serif);
-  margin: 0;
+  font-family: var(--app-font-brand);
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
 }
+
 .perfil-edit-btn-inline {
-  --background: var(--ion-color-primary);
-  --color: #fff;
+  --background: var(--bg-subtle);
+  --color: var(--brand-primary);
   --border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 1.1rem;
-  box-shadow: 0 2px 8px rgba(4,184,229,0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 2px;
-}
-.perfil-username {
-  margin-top: 12px;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--ion-color-primary);
-  font-family: var(--input-font-family, 'Nunito', sans-serif);
+  margin: 0;
+  width: 32px;
+  height: 32px;
+  --padding-start: 0;
+  --padding-end: 0;
 }
 
+/* ─── Info Card ─── */
 .perfil-info-card {
-  margin: 0 auto;
-  max-width: 340px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(4,184,229,0.08);
-  padding: 8px 0 0 0;
+  margin: 0 1.5rem 2rem;
+  background: var(--bg-card);
+  border-radius: 1.5rem;
+  padding: 0.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border-color);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
-.perfil-info-card ion-list {
-  background: transparent;
-}
+
 .perfil-info-card ion-item {
-  font-family: var(--input-font-family, 'Nunito', sans-serif) !important;
-  font-size: 1.08rem;
-  font-weight: 700;
-  color: #8c8686 !important;
-  --color: #8c8686 !important;
-  --background: transparent !important;
-  border-radius: 12px;
-  margin-bottom: 6px;
-  box-shadow: none;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.perfil-info-card ion-item ion-icon {
-  font-size: 1.3rem;
-  margin-right: 0.5rem;
+  --background: transparent;
+  --border-color: var(--border-color);
+  --color: var(--text-main);
+  --padding-start: 1rem;
+  --inner-padding-end: 1rem;
+  font-family: var(--app-font-brand);
+  font-weight: 600;
 }
 
-/* Botón de editar principal eliminado, ahora está junto al nombre */
+.perfil-info-card ion-icon {
+  color: var(--brand-primary);
+  margin-right: 0.75rem;
+}
 
-/* —— Avatar y Carga —— */
-.avatar-loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+.perfil-info-card span { font-size: 0.95rem; }
+
+/* ─── Modal ─── */
+.modal-content {
+  background: var(--bg-card);
+  padding: 2.5rem;
   height: 100%;
-  background: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content h2 {
+  font-family: var(--app-font-brand);
+  font-size: 1.75rem;
+  font-weight: 950;
+  color: var(--text-main);
+  margin-bottom: 1.5rem;
+}
+
+.modal-content ion-item {
+  --background: var(--bg-subtle) !important;
+  --border-radius: 1rem;
+  margin-bottom: 1rem;
+  --padding-start: 1rem;
+}
+
+.btn-container {
+  margin-top: 2rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  z-index: 5;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.avatar-loading-overlay ion-spinner {
-  --color: #ffffff;
-  width: 40px;
-  height: 40px;
+/* ─── Toast ─── */
+.notification-toast {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  left: 1.5rem;
+  max-width: 400px;
+  margin: 0 auto;
+  background: var(--bg-card);
+  border-radius: 1.125rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.perfil-avatar.uploading img {
-  opacity: 0.6;
-}
+.notification-content { display: flex; align-items: flex-start; gap: 1rem; padding: 1.25rem; }
+.notification-icon { font-size: 1.5rem; margin-top: 0.2rem; }
+.success .notification-icon { color: var(--color-success); }
+.error .notification-icon { color: var(--color-error); }
 
-/* —— Responsivo —— */
-@media (max-width: 600px) {
-  .perfil-content {
-    padding: 0 24px;
-  }
-  .perfil-avatar-section {
-    margin-top: 48px;
-    margin-bottom: 24px;
-  }
-  .perfil-info-card {
-    max-width: 420px;
-    padding: 16px 0 0 0;
-  }
-}
-
-@media (min-width: 900px) {
-  .perfil-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding: 0 0 32px 0;
-  }
-  .perfil-avatar-section {
-    margin-top: 64px;
-    margin-bottom: 32px;
-  }
-  .perfil-info-card {
-    max-width: 520px;
-    padding: 24px 0 0 0;
-    box-shadow: 0 4px 16px rgba(4,184,229,0.10);
-  }
-  .perfil-edit-btn {
-    margin-top: 32px;
-  }
-}
+.notification-text h4 { font-family: var(--app-font-brand); font-size: 1rem; font-weight: 800; color: var(--text-main); margin: 0 0 0.25rem; }
+.notification-text p { font-size: 0.85rem; color: var(--text-sub); line-height: 1.4; margin: 0; }

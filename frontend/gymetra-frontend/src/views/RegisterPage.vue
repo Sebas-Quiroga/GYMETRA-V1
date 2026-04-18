@@ -1,17 +1,58 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-buttons slot="start">
-          <ion-button @click="goBack" fill="clear">
-            <ion-icon :icon="arrowBackOutline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-        <ion-title>Crear Cuenta</ion-title>
-      </ion-toolbar>
-    </ion-header>
+    <!-- Header KINETIC Global -->
+    <div class="register-header" role="banner">
+      <div class="header-side header-left">
+        <button class="register-back-btn" @click="goBack" aria-label="Volver">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+      </div>
 
-    <ion-content class="ion-padding register-page">
+      <router-link to="/home" class="header-logo-link" aria-label="Ir al inicio">
+        <img src="/logo.png" alt="Logo" class="header-logo-img" />
+        <span class="header-logo-text">{{ APP_NAME }}</span>
+      </router-link>
+
+      <div class="header-side header-right">
+        <!-- Espacio para equilibrio -->
+      </div>
+    </div>
+
+    <ion-content class="register-page-content">
+      <!-- Verificación Modal -->
+      <ion-modal :is-open="isVerifying" class="kinetic-modal">
+        <div class="modal-content verification-modal">
+          <h2>Verifica tu cuenta</h2>
+          <p class="verification-sub">Hemos enviado un código de 6 dígitos a <strong>{{ formData.email }}</strong></p>
+          
+          <div class="code-container">
+            <ion-item lines="none" class="verification-item">
+              <ion-input
+                v-model="verificationCode"
+                type="text"
+                placeholder="000000"
+                maxlength="6"
+                class="code-input"
+                text-center
+              ></ion-input>
+            </ion-item>
+          </div>
+
+          <div class="btn-container">
+            <ion-button expand="block" class="register-btn" @click="handleVerification" :disabled="confirmLoading">
+              <ion-spinner v-if="confirmLoading" name="crescent"></ion-spinner>
+              <span v-else>Confirmar Código</span>
+            </ion-button>
+            <ion-button fill="clear" class="resend-btn" @click="handleResendCode" :disabled="confirmLoading">
+              Reenviar código
+            </ion-button>
+          </div>
+        </div>
+      </ion-modal>
+
       <!-- Toast de notificación personalizado -->
       <div v-if="notification.show" class="notification-toast" :class="notification.type">
         <div class="notification-content">
@@ -455,7 +496,14 @@ interface NotificationState {
 }
 
 // Composable de registro
-const { loading: registerLoading, error: registerError, register, clearError } = useRegister();
+const { 
+  loading: registerLoading, 
+  error: registerError, 
+  register, 
+  confirmRegistration,
+  resendSignUpCode,
+  clearError 
+} = useRegister();
 
 // Estado reactivo del formulario
 const formData = reactive<FormData>({
@@ -782,6 +830,35 @@ const toggleAcceptData = () => {
   validateField('acceptData');
 };
 
+// --- Estado de Verificación ---
+const isVerifying = ref(false);
+const verificationCode = ref("");
+const confirmLoading = ref(false);
+
+const handleVerification = async () => {
+  if (verificationCode.value.length < 6) {
+    showNotification('warning', 'Código incompleto', 'Ingresa los 6 dígitos');
+    return;
+  }
+  confirmLoading.value = true;
+  const res = await confirmRegistration(formData.email, verificationCode.value);
+  confirmLoading.value = false;
+  
+  if (res.success) {
+    showNotification('success', '¡Cuenta Activada!', 'Ya puedes iniciar sesión');
+    isVerifying.value = false;
+    setTimeout(() => router.push("/login"), 1500);
+  } else {
+    showNotification('error', 'Error', res.message);
+  }
+};
+
+const handleResendCode = async () => {
+  const res = await resendSignUpCode(formData.email);
+  if (res.success) showNotification('success', 'Enviado', 'Código reenviado con éxito');
+  else showNotification('error', 'Error', res.message);
+};
+
 const goBack = () => {
   router.back();
 };
@@ -955,26 +1032,12 @@ const handleRegister = async () => {
 
     // Manejar diferentes tipos de respuesta del backend
     if (response && response.success !== false) {
-      // Registro exitoso
+      // Registro exitoso en Cognito
       dismissNotification();
       
-      const successMessage = response.message || 'Cuenta creada exitosamente';
-      showNotification('success', '🎉 ¡Registro Exitoso!', successMessage, 6000);
-      
-      const alert = await alertController.create({
-        header: '🎉 ¡Bienvenido!',
-        message: 'Tu cuenta ha sido creada correctamente. Serás redirigido al inicio de sesión.',
-        buttons: [{
-          text: 'Continuar',
-          handler: () => {
-            clearForm();
-            setTimeout(() => {
-              router.push("/login");
-            }, 500);
-          }
-        }]
-      });
-      await alert.present();
+      // Activar modo verificación
+      isVerifying.value = true;
+      showNotification('success', '¡Casi listo!', 'Por favor ingresa el código enviado a tu correo', 6000);
 
     } else {
       // Error de registro

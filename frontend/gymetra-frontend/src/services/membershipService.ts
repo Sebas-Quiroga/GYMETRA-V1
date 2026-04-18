@@ -1,8 +1,4 @@
-import { apiGet, apiPost, apiAuthRequest, ApiResponse } from './apiService';
-import { HOST_URL } from"../services/hots";
-
-// URL base para membresías
-const MEMBERSHIP_API_URL = `${HOST_URL}:8081/api`;
+import { apiGet, apiPost, apiAuthRequest, ApiResponse, MEMBERSHIP_API_URL } from './apiService';
 
 // Endpoints específicos para membresías
 export const MEMBERSHIP_ENDPOINTS = {

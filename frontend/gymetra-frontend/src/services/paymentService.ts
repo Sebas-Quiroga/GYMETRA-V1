@@ -1,4 +1,4 @@
-import { apiAuthRequest } from './apiService';
+import { apiAuthRequest, MEMBERSHIP_API_URL } from './apiService';
 import { useAuthStore } from '@/stores/auth';
 
 let stripePromise: Promise<Stripe | null> | null = null;
@@ -14,7 +14,7 @@ export function getStripe() {
 
 type CreatePIResponse = { clientSecret: string; membershipName?: string; amount?: number };
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || `${HOST_URL}:8081/api`;
+const API_BASE = import.meta.env.VITE_API_BASE_URL || MEMBERSHIP_API_URL;
 
 export async function createPaymentIntent(membershipId: number): Promise<CreatePIResponse> {
   const auth = useAuthStore();
