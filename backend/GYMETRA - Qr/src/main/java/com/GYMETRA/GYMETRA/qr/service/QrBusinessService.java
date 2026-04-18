@@ -2,11 +2,11 @@ package com.GYMETRA.GYMETRA.qr.service;
 
 import com.GYMETRA.GYMETRA.qr.entity.QrAccess;
 import com.GYMETRA.GYMETRA.qr.repository.QrAccessRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,9 +15,12 @@ public class QrBusinessService {
     private final QrAccessRepository qrAccessRepository;
     private final RestTemplate restTemplate;
 
-    public QrBusinessService(QrAccessRepository qrAccessRepository) {
+    @Value("${app.services.membership-url}")
+    private String membershipApiUrl;
+
+    public QrBusinessService(QrAccessRepository qrAccessRepository, RestTemplate restTemplate) {
         this.qrAccessRepository = qrAccessRepository;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
     }
 
     public QrAccess getOrCreateQrForUser(Long userId) {
@@ -49,7 +52,7 @@ public class QrBusinessService {
     }
 
     private boolean getMembershipStatus(Long userId) {
-        String url = "http://localhost:8081/api/user-memberships/user/" + userId;
+        String url = membershipApiUrl + "/user-memberships/user/" + userId;
         try {
             Object[] response = restTemplate.getForObject(url, Object[].class);
             if (response != null) {

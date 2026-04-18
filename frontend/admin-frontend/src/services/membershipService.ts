@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const MEMBERSHIP_API_URL = '/membership-api'; // Usar proxy específico para backend de membresías
+import { MEMBERSHIP_API_URL } from './apiService';
 
 export interface Membership {
   membershipId: number;

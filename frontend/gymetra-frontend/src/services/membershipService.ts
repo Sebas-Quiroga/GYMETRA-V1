@@ -1,6 +1,4 @@
-// src/services/membershipService.ts
 import { apiGet, apiPost, apiAuthRequest, ApiResponse } from './apiService';
-import { getToken } from './authService';
 import { HOST_URL } from"../services/hots";
 
 // URL base para membresías
@@ -47,7 +45,8 @@ export interface UserMembership {
 export async function getAvailableMemberships(): Promise<Membership[]> {
   try {
     console.log('🔍 Cargando membresías disponibles...');
-    const response = await apiGet<Membership[]>(MEMBERSHIP_ENDPOINTS.AVAILABLE);
+    // Usar apiAuthRequest por si el endpoint requiere seguridad en el futuro
+    const response = await apiAuthRequest<Membership[]>(MEMBERSHIP_ENDPOINTS.AVAILABLE, { method: 'GET' });
     if (response.success && response.data) {
       console.log('✅ Membresías cargadas exitosamente desde API:', response.data);
       return response.data;
@@ -67,26 +66,14 @@ export async function getAvailableMemberships(): Promise<Membership[]> {
 // ===============================
 export async function purchaseMembership(purchaseData: PurchaseRequest): Promise<any> {
   try {
-    const token = getToken();
-    if (!token) {
-      throw new Error('Usuario no autenticado');
-    }
-
-    // Validar que userId esté presente
-    if (!purchaseData.userId) {
-      throw new Error('ID de usuario requerido para la compra');
-    }
-
     console.log('💳 Procesando compra de membresía:', purchaseData);
-    console.log('🔑 Token disponible:', !!token);
     
     const response = await apiAuthRequest(
       MEMBERSHIP_ENDPOINTS.PURCHASE,
       {
         method: 'POST',
         body: JSON.stringify(purchaseData)
-      },
-      token
+      }
     );
     
     if (response.success) {
@@ -112,17 +99,11 @@ export async function purchaseMembership(purchaseData: PurchaseRequest): Promise
 // ===============================
 export async function getUserMemberships(): Promise<UserMembership[]> {
   try {
-    const token = getToken();
-    if (!token) {
-      throw new Error('Usuario no autenticado');
-    }
-
     console.log('👤 Cargando membresías del usuario...');
     
     const response = await apiAuthRequest<UserMembership[]>(
       MEMBERSHIP_ENDPOINTS.USER_MEMBERSHIPS,
-      { method: 'GET' },
-      token
+      { method: 'GET' }
     );
     
     if (response.success && response.data) {

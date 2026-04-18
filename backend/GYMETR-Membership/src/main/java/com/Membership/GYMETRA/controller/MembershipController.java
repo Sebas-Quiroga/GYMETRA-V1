@@ -5,6 +5,7 @@ import com.Membership.GYMETRA.entity.UserMembership;
 import com.Membership.GYMETRA.service.MembershipService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,32 +14,23 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 @Tag(name = "Membresías", description = "Controlador para gestionar membresías disponibles")
+@RequiredArgsConstructor
 public class MembershipController {
 
     private final MembershipService membershipService;
-
-    public MembershipController(MembershipService membershipService) {
-        this.membershipService = membershipService;
-    }
 
     // Listar todas las membresías
     @Operation(summary = "Listar membresías", description = "Obtiene una lista de todas las membresías disponibles")
     @GetMapping("/memberships")
     public ResponseEntity<List<Membership>> getAllMemberships() {
-        List<Membership> memberships = membershipService.getAllMemberships();
-        return ResponseEntity.ok(memberships);
+        return ResponseEntity.ok(membershipService.getAllMemberships());
     }
 
     // Endpoint específico para obtener membresías disponibles (filtradas por estado)
     @Operation(summary = "Listar membresías disponibles", description = "Obtiene una lista de membresías disponibles para compra (solo activas)")
     @GetMapping("/memberships/available")
     public ResponseEntity<List<Membership>> getAvailableMemberships() {
-        List<Membership> allMemberships = membershipService.getAllMemberships();
-        // Filtrar solo membresías con estado "available" o "ACTIVE"
-        List<Membership> availableMemberships = allMemberships.stream()
-            .filter(membership -> "available".equals(membership.getStatus()) || "ACTIVE".equals(membership.getStatus()))
-            .collect(java.util.stream.Collectors.toList());
-        return ResponseEntity.ok(availableMemberships);
+        return ResponseEntity.ok(membershipService.getAvailableMemberships());
     }
 
     // Endpoint para obtener todas las membresías de usuario

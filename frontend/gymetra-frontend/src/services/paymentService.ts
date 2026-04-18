@@ -1,6 +1,6 @@
-// src/services/paymentService.ts
-import { loadStripe, Stripe } from '@stripe/stripe-js';
-import { HOST_URL } from"../services/hots";
+import { apiAuthRequest } from './apiService';
+import { useAuthStore } from '@/stores/auth';
+
 let stripePromise: Promise<Stripe | null> | null = null;
 
 export function getStripe() {
@@ -12,34 +12,46 @@ export function getStripe() {
   return stripePromise!;
 }
 
-type CreatePIResponse = { clientSecret: string };
+type CreatePIResponse = { clientSecret: string; membershipName?: string; amount?: number };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || `${HOST_URL}:8081/api`;
 
 export async function createPaymentIntent(membershipId: number): Promise<CreatePIResponse> {
-  const res = await fetch(`${API_BASE}/payments/create-payment-intent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ membershipId }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(text || 'No se pudo crear el PaymentIntent');
+  const auth = useAuthStore();
+  const userId = auth.user?.userId;
+
+  if (!userId) {
+    throw new Error('Debe iniciar sesión para realizar un pago');
   }
-  return res.json();
+
+  const response = await apiAuthRequest(`${API_BASE}/payments/create-payment-intent`, {
+    method: 'POST',
+    body: JSON.stringify({ membershipId, userId })
+  });
+
+  if (!response.success) {
+    throw new Error(response.message || 'No se pudo crear el intento de pago');
+  }
+
+  return response.data;
 }
 
-export async function confirmPaymentInBackend(paymentIntentId: string, membershipId: number, userId?: number) {
-  const res = await fetch(`${API_BASE}/payments/confirm-payment`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ paymentIntentId, membershipId, userId }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(text || 'Error al confirmar en backend');
+export async function confirmPaymentInBackend(paymentIntentId: string, membershipId: number) {
+  const auth = useAuthStore();
+  const userId = auth.user?.userId;
+
+  if (!userId) {
+    throw new Error('Sesión perdida al confirmar pago');
   }
-  return res.json().catch(() => ({}));
+
+  const response = await apiAuthRequest(`${API_BASE}/payments/confirm-payment`, {
+    method: 'POST',
+    body: JSON.stringify({ paymentIntentId, membershipId, userId })
+  });
+
+  if (!response.success) {
+    throw new Error(response.message || 'Error al confirmar el pago en el servidor');
+  }
+
+  return response.data;
 }

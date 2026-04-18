@@ -1,4 +1,3 @@
-// src/services/authService.ts
 import { 
   signIn, 
   signOut as amplifySignOut, 
@@ -30,7 +29,6 @@ export async function login(email: string, password: string) {
       }
 
       const idToken = session.tokens?.idToken?.toString();
-      localStorage.setItem("admin_jwt", idToken || '');
       axios.defaults.headers.common["Authorization"] = `Bearer ${idToken}`;
 
       return { token: idToken };
@@ -42,7 +40,6 @@ export async function login(email: string, password: string) {
       console.log('ℹ️ Admin ya autenticado. Recuperando sesión...');
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
-      localStorage.setItem("admin_jwt", idToken || '');
       axios.defaults.headers.common["Authorization"] = `Bearer ${idToken}`;
       return { token: idToken };
     }
@@ -57,35 +54,22 @@ export async function login(email: string, password: string) {
 export async function logout() {
   try {
     await amplifySignOut();
-    localStorage.removeItem("admin_jwt");
     delete axios.defaults.headers.common["Authorization"];
     window.location.href = "/loginadmin";
   } catch (err) {
+    console.error('Error al cerrar sesión:', err);
     window.location.href = "/loginadmin";
   }
 }
 
 /**
- * Verifica si el usuario está autenticado y es Admin.
- * Esta función se usa en el Router Guard.
- * Nota: Al ser síncrona en el Guard original, 
- * intentaremos leer del localStorage pero lo ideal sería que el Guard fuera async.
+ * Verifica si el usuario está autenticado y es Admin de forma asíncrona.
  */
-export function isAuthenticated(): boolean {
-  const token = localStorage.getItem("admin_jwt");
-  if (!token) return false;
-
+export async function isAuthenticatedAsync(): Promise<boolean> {
   try {
-    const payloadBase64 = token.split(".")[1];
-    const decoded = JSON.parse(atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/")));
-    
-    // Verificar si el token expiró
-    if (decoded.exp && Date.now() >= decoded.exp * 1000) {
-      return false;
-    }
-
-    // El ID Token de Cognito también puede contener los grupos
-    const groups = decoded['cognito:groups'] as string[] || [];
+    await getCurrentUser();
+    const session = await fetchAuthSession();
+    const groups = session.tokens?.accessToken?.payload['cognito:groups'] as string[] || [];
     return groups.includes('Admin');
   } catch (err) {
     return false;
@@ -93,7 +77,7 @@ export function isAuthenticated(): boolean {
 }
 
 /**
- * Helper para obtener el token actual de forma asíncrona (más seguro).
+ * Helper para obtener el token actual de forma asíncrona.
  */
 export async function getAsyncToken(): Promise<string | undefined> {
   try {

@@ -1,9 +1,13 @@
-import { HOST_URL } from"../services/hots";
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { HOST_URL } from './hots';
 
-// Configuración base de la API
-// Hemos movido la base a /api para dar soporte a /api/me y /api/auth/*
-export const MAIN_API_URL = `${HOST_URL}:8080/api`;
+// URLs de los diferentes microservicios
+export const LOGIN_API_URL = `${HOST_URL}:8080/api`;
+export const MEMBERSHIP_API_URL = `${HOST_URL}:8081/api`; 
+export const QR_API_URL = `${HOST_URL}:8090/api`;
+
+// Compatibilidad con código existente que usa MAIN_API_URL
+export const MAIN_API_URL = LOGIN_API_URL;
 
 // Configuración para diferentes endpoints
 export const API_ENDPOINTS = {

@@ -1,4 +1,4 @@
-package com.Membership.GYMETRA.exception;
+package com.GYMETRA.GYMETRA.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Global exception handler for the Membership microservice.
+ * Global exception handler for the QR microservice.
+ * Standardizes error responses across all endpoints.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -20,7 +21,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put("error", "Internal Server Error");
+        body.put("error", "Error de ejecución");
         body.put("message", ex.getMessage());
         
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -31,8 +32,8 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put("error", "Unexpected error");
-        body.put("message", "Ha ocurrido un error inesperado en el sistema.");
+        body.put("error", "Error inesperado");
+        body.put("message", "Ha ocurrido un error inesperado. Por favor, contacte al administrador.");
         
         return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }

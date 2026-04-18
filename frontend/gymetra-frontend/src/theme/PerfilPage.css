@@ -158,8 +158,33 @@ body, .perfil-content, .perfil-toolbar, .perfil-avatar-section, .perfil-info-car
 
 /* Botón de editar principal eliminado, ahora está junto al nombre */
 
-/* Responsive: tablet y desktop */
-@media (min-width: 600px) {
+/* —— Avatar y Carga —— */
+.avatar-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 5;
+}
+
+.avatar-loading-overlay ion-spinner {
+  --color: #ffffff;
+  width: 40px;
+  height: 40px;
+}
+
+.perfil-avatar.uploading img {
+  opacity: 0.6;
+}
+
+/* —— Responsivo —— */
+@media (max-width: 600px) {
   .perfil-content {
     padding: 0 24px;
   }

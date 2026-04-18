@@ -106,24 +106,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, reactive, onUnmounted } from 'vue';
+import { ref, onMounted, reactive, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { IonPage, IonContent, IonIcon, IonButton } from '@ionic/vue';
-import { useAuth } from '@/composables/useAuth';
+import { IonPage, IonContent, IonIcon } from '@ionic/vue';
+import { useAuthStore } from '@/stores/auth';
 import { checkmarkCircle, alertCircle, warningOutline, informationCircle, closeCircle } from 'ionicons/icons';
 import {
   getAvailableMemberships,
-  purchaseMembership,
-  checkBackendConnectivity,
   formatPrice,
   formatDuration,
   getMembershipIcon,
   isMembershipAvailable,
   type Membership
 } from '@/services/membershipService';
-import { HOST_URL } from"../services/hots";
 
-// Configuración de Stripe
+const auth = useAuthStore();
+const router = useRouter();
+
 // Estado de notificaciones
 const notification = reactive({
   show: false,
@@ -135,30 +134,14 @@ const notification = reactive({
   duration: 5000,
 });
 
-// Variables para los timers de notificación
-let notificationTimer: NodeJS.Timeout | null = null;
-let notificationProgressTimer: NodeJS.Timeout | null = null;
+let notificationTimer: any = null;
+let notificationProgressTimer: any = null;
 
-// Funciones de notificación
-const showNotification = (
-  type: 'success' | 'error' | 'warning' | 'info',
-  title: string,
-  message: string,
-  duration: number = 5000
-) => {
-  // Limpiar timers previos
+const showNotification = (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string, duration: number = 5000) => {
   if (notificationTimer) clearTimeout(notificationTimer);
   if (notificationProgressTimer) clearInterval(notificationProgressTimer);
 
-  // Configurar icono según el tipo
-  const icons = {
-    success: checkmarkCircle,
-    error: alertCircle,
-    warning: warningOutline,
-    info: informationCircle,
-  };
-
-  // Configurar notificación
+  const icons = { success: checkmarkCircle, error: alertCircle, warning: warningOutline, info: informationCircle };
   notification.type = type;
   notification.title = title;
   notification.message = message;
@@ -167,132 +150,74 @@ const showNotification = (
   notification.progress = 0;
   notification.show = true;
 
-  // Animar barra de progreso
-  const progressInterval = 50; // 50ms
+  const progressInterval = 50;
   const progressStep = (progressInterval / duration) * 100;
-  
   notificationProgressTimer = setInterval(() => {
     notification.progress += progressStep;
-    if (notification.progress >= 100) {
-      dismissNotification();
-    }
+    if (notification.progress >= 100) dismissNotification();
   }, progressInterval);
 
-  // Auto-dismiss después del tiempo especificado
-  notificationTimer = setTimeout(() => {
-    dismissNotification();
-  }, duration);
+  notificationTimer = setTimeout(() => dismissNotification(), duration);
 };
 
 const dismissNotification = () => {
   if (notificationTimer) clearTimeout(notificationTimer);
   if (notificationProgressTimer) clearInterval(notificationProgressTimer);
   notification.show = false;
-  notification.progress = 0;
 };
 
-const STRIPE_CONFIG = {
-  PUBLISHABLE_KEY: 'pk_test_51S9c29RPJMMOJ1bv1BejUA5NyJ7gsg0rvFcEjdAa8JuyMI7Zs3S9aCklSsGvTfGE2rVa6fhbwug33zIqK7b1ni8M00SLlPxKFx', // Tu clave real de Stripe
-  API_BASE_URL: `${HOST_URL}:8081/api`
-};
-
-const router = useRouter();
-const { authenticated, userInfo, requireAuth, initAuth } = useAuth();
-
-// Estados existentes
+// Estados de Planes
 const memberships = ref<Membership[]>([]);
 const loading = ref(false);
 const error = ref('');
 const purchasing = ref(false);
 const selectedMembershipId = ref<number | null>(null);
-const selectedPlanName = ref('');
 
-
-// ===============================
-// Función existente actualizada
-// ===============================
-
-// Función para cargar las membresías disponibles
 const loadMemberships = async () => {
+  if (!auth.token) {
+      showNotification('error', 'Sesión expirada', 'Por favor inicia sesión.');
+      router.push('/login');
+      return;
+  }
+
   loading.value = true;
   error.value = '';
-
   try {
-    // Verificar autenticación antes de hacer la petición
-    if (!requireAuth()) {
-      showNotification('error', 'Error de autenticación', 'Por favor inicia sesión para ver los planes disponibles.');
-      return;
-    }
-
     const data = await getAvailableMemberships();
     memberships.value = data;
-  // Solo mostrar errores en consola
     if (data.length > 0) {
       showNotification('success', '¡Planes cargados!', `${data.length} planes disponibles`);
     }
   } catch (err: any) {
-    error.value = '';
     console.error('❌ Error loading memberships:', err);
-
-    // Si es un error de autenticación, redirigir al login
-    if (err.message.includes('autenticado') || err.message.includes('Sesión expirada')) {
-      showNotification('error', 'Sesión expirada', 'Por favor inicia sesión nuevamente.');
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
-    } else {
-      showNotification('error', 'Error al cargar planes', err.message);
-    }
+    showNotification('error', 'Error al cargar planes', err.message);
   } finally {
     loading.value = false;
   }
 };
 
-// Manejar selección y compra de plan - Redirigir a la vista de pago
-const selectPlan = async (membership: Membership) => {
-  if (!requireAuth()) {
-    showNotification('error', 'Error de autenticación', 'Por favor inicia sesión para seleccionar un plan.');
+const selectPlan = (membership: Membership) => {
+  if (!auth.token) {
+    router.push('/login');
     return;
   }
   if (!isMembershipAvailable(membership)) {
-  // Solo mostrar errores en consola
-    showNotification('warning', 'Plan no disponible', 'Este plan no se encuentra disponible en este momento.');
+    showNotification('warning', 'Plan no disponible', 'Intenta con otro plan.');
     return;
   }
-  showNotification('info', 'Procesando...', `Preparando el plan ${membership.planName} para el pago.`);
-  // Redirigir a la vista de pago y pasar el plan por query param
+  
   router.push({
     path: '/Pasarelapago',
     query: { plan: encodeURIComponent(JSON.stringify(membership)) }
   });
 };
 
-// Obtener el path del ícono SVG según la duración
-const getIconPath = (days: number): string => {
-  return getMembershipIcon(days);
-};
+const getIconPath = (days: number): string => getMembershipIcon(days);
 
-// Función para mostrar confirmación antes de comprar
-const confirmPurchase = (membership: Membership): boolean => {
-  const message = `¿Estás seguro de que quieres comprar el plan ${membership.planName}?\n\nPrecio: $${formatPrice(membership.price)}\nDuración: ${formatDuration(membership.durationDays)}`;
-  return confirm(message);
-};
-
-// Verificar autenticación y cargar membresías al montar el componente
-onMounted(async () => {
-  if (initAuth({ requireAuth: true })) {
-    // Verificar conectividad antes de cargar datos
-  // Solo mostrar errores en consola
-    const isBackendConnected = await checkBackendConnectivity();
-    if (!isBackendConnected) {
-      console.warn('⚠️ Backend no disponible, modo offline o error de CORS');
-      showNotification('warning', 'Problemas de conexión', 'El servidor no está disponible. Algunas funciones pueden no funcionar correctamente.');
-    }
-    loadMemberships();
-  }
+onMounted(() => {
+  loadMemberships();
 });
 
-// Limpiar timers al desmontar el componente
 onUnmounted(() => {
   if (notificationTimer) clearTimeout(notificationTimer);
   if (notificationProgressTimer) clearInterval(notificationProgressTimer);

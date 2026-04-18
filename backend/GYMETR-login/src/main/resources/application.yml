@@ -40,7 +40,6 @@ spring:
           issuer-uri: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt
           # Explicit JWKS URI avoids cold-start DNS/cache issues
           jwk-set-uri: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt/.well-known/jwks.json
-
   # -----------------------------------------------
   # Correo electrónico (SMTP)
   # -----------------------------------------------
@@ -64,6 +63,15 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
+
+# -----------------------------------------------
+# Configuración Unificada de Aplicación
+# -----------------------------------------------
+app:
+  security:
+    cognito:
+      issuer: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt
+      client-id: 3gnvfec5v6tfp32u634mq645ll
 
 # -----------------------------------------------
 # Servidor

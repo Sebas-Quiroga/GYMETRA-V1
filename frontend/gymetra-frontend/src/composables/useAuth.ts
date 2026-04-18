@@ -1,7 +1,7 @@
-// src/composables/useAuth.ts
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { isAuthenticated, getToken, decodeJWT, logout } from '@/services/authService';
+import { useAuthStore } from '@/stores/auth';
 
 export function useAuth() {
   const router = useRouter();
@@ -11,26 +11,19 @@ export function useAuth() {
   const authenticated = computed(() => isAuthenticated());
   const token = computed(() => getToken());
 
-  // Obtener información del usuario desde el token
+  // Obtener información del usuario desde el store (Consumimos el nuevo sistema)
   const userInfo = computed(() => {
-    const currentToken = getToken();
-    if (!currentToken) return null;
-    
-    const decoded = decodeJWT(currentToken);
-    if (!decoded) return null;
-    
-    console.log('🔍 Token decodificado en useAuth:', decoded);
+    const auth = useAuthStore();
+    if (!auth.user) return null;
     
     return {
-      userId: decoded.userId,
-      email: decoded.email,
-      firstName: decoded.firstName,
-      lastName: decoded.lastName,
-      status: decoded.status,
-      roleIds: decoded.roleIds,
-      photoUrl: decoded.photoUrl,
-      exp: decoded.exp,
-      iat: decoded.iat
+      userId: auth.user.userId,
+      email: auth.user.email,
+      firstName: auth.user.firstName,
+      lastName: auth.user.lastName,
+      status: auth.user.status,
+      photoUrl: auth.user.photoUrl,
+      cognitoSub: auth.user.cognitoSub
     };
   });
 

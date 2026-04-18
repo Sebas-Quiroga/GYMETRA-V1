@@ -1,67 +1,67 @@
+import { updateUserAttributes } from 'aws-amplify/auth';
 import { useAuthStore } from '@/stores/auth';
-import { HOST_URL } from"../services/hots";
+import { apiAuthRequest, LOGIN_API_URL } from './apiService';
 
-export type UpdateUserProfileOptions = {
-  userId: string;
-  data: Record<string, any>;
-  successMsg: string;
+export type ProfileUpdateOptions = {
+  data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    photoUrl?: string;
+    identification?: string;
+  };
   onSuccess?: () => void;
-  loadingRef?: { value: boolean };
   showNotification: (type: 'success' | 'error' | 'info', title: string, message: string) => void;
-  setUserData: (data: any) => void;
 };
 
-export const updateUserProfile = async ({
-  userId,
-  data,
-  successMsg,
-  onSuccess,
-  loadingRef,
-  showNotification,
-  setUserData
-}: UpdateUserProfileOptions) => {
+/**
+ * Actualiza el perfil de usuario en Cognito y en la base de datos local.
+ * Garantiza que la información esté sincronizada en ambas plataformas.
+ */
+export const syncUserProfileUpdate = async (options: ProfileUpdateOptions) => {
+  const { data, onSuccess, showNotification } = options;
   const auth = useAuthStore();
-  if (loadingRef) loadingRef.value = true;
+  
   try {
-    const response = await fetch(`${HOST_URL}:8080/api/auth/users/${userId}`, {
+    // 1. Preparar y actualizar atributos en AWS Cognito (Solo si hay datos de perfil, NO la foto)
+    const updatedAttributes: any = {};
+    if (data.firstName) updatedAttributes.given_name = data.firstName;
+    if (data.lastName) updatedAttributes.family_name = data.lastName;
+    if (data.phone) {
+      updatedAttributes.phone_number = data.phone.startsWith('+') ? data.phone : `+57${data.phone}`;
+    }
+    if (data.identification) updatedAttributes.preferred_username = data.identification;
+
+    // Solo llamamos a Cognito si hay atributos para actualizar
+    if (Object.keys(updatedAttributes).length > 0) {
+      await updateUserAttributes({
+        userAttributes: updatedAttributes
+      });
+      console.log('✅ Atributos sincronizados en Cognito:', updatedAttributes);
+    }
+
+    // 2. Actualizar base de datos local (Spring Boot) - SIEMPRE, incluye la foto si viene
+    const userId = auth.user?.userId;
+    if (!userId) throw new Error("No hay un ID de usuario local disponible");
+
+    // Limpiamos el objeto data para enviar solo lo que viene en la petición parcial
+    const response = await apiAuthRequest(`${LOGIN_API_URL}/auth/users/${userId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify(data)
     });
-    let responseData;
-    let newToken = null;
-    try {
-      responseData = await response.json();
-      if (responseData.token) {
-        newToken = responseData.token;
-        auth.setToken(newToken);
-        showNotification('success', successMsg, 'Datos y sesión actualizados.');
-      } else {
-        showNotification('success', successMsg, 'Datos actualizados.');
-      }
-    } catch (e) {
-      responseData = await response.text();
-      showNotification('success', successMsg, responseData);
+
+    if (response.success) {
+      // 3. Sincronizar el store local
+      auth.updateUser(data);
+      if (onSuccess) onSuccess();
+    } else {
+      throw new Error(response.message);
     }
-    if (newToken) {
-      setUserData({
-        userId: auth.user?.userId || '',
-        email: auth.user?.email || '',
-        firstName: auth.user?.firstName || '',
-        lastName: auth.user?.lastName || '',
-        phone: auth.user?.phone || '',
-        status: auth.user?.status || '',
-        photoUrl: auth.user?.photoUrl || '',
-      });
-    } else if (responseData && typeof responseData === 'object') {
-      setUserData((prev: any) => ({ ...prev, ...responseData }));
-    }
-    if (onSuccess) onSuccess();
-  } catch (error) {
-    showNotification('error', 'Error', 'Hubo un error al actualizar el perfil.');
-  } finally {
-    if (loadingRef) loadingRef.value = false;
+
+  } catch (error: any) {
+    console.error('❌ Error en sincronización de perfil:', error);
+    showNotification('error', 'Error de Actualización', error.message || 'No se pudieron sincronizar los datos.');
+    throw error; // Re-lanzar para que el modal/UI pueda manejar el fin del loading
   }
 };

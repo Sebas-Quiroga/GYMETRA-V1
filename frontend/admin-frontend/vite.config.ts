@@ -34,16 +34,8 @@ export default defineConfig({
             console.log('proxy error', err);
           });
           proxy.on('proxyReq', (proxyReq, req, res) => {
-            // Ensure headers are set correctly
             if (req.headers.authorization) {
-              // Truncate authorization header if too long
-              const authHeader = req.headers.authorization;
-              if (authHeader.length > 8000) { // Safe limit under 8KB
-                console.warn('Authorization header too long, truncating...');
-                proxyReq.setHeader('Authorization', authHeader.substring(0, 8000));
-              } else {
-                proxyReq.setHeader('Authorization', authHeader);
-              }
+              proxyReq.setHeader('Authorization', req.headers.authorization);
             }
           });
         }
@@ -59,10 +51,29 @@ export default defineConfig({
         },
         configure: (proxy, options) => {
           proxy.on('error', (err, req, res) => {
-            console.log('proxy error', err);
+            console.log('membership-proxy error', err);
           });
           proxy.on('proxyReq', (proxyReq, req, res) => {
-            // Ensure headers are set correctly
+            if (req.headers.authorization) {
+              proxyReq.setHeader('Authorization', req.headers.authorization);
+            }
+          });
+        }
+      },
+      '/qr-api': {
+        target: 'http://localhost:8090',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/qr-api/, '/api'),
+        timeout: 60000,
+        headers: {
+          'Connection': 'keep-alive'
+        },
+        configure: (proxy, options) => {
+          proxy.on('error', (err, req, res) => {
+            console.log('qr-proxy error', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
             if (req.headers.authorization) {
               proxyReq.setHeader('Authorization', req.headers.authorization);
             }

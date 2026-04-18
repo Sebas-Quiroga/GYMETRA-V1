@@ -64,9 +64,8 @@ export function useRegister(): UseRegisterReturn {
             given_name: data.firstName.trim(),
             family_name: data.lastName.trim(),
             phone_number: formattedPhone,
-          },
-          // Si tienes atributos personalizados en Cognito, agrégalos aquí:
-          // 'custom:identification': data.identification
+            preferred_username: data.identification.trim()
+          }
         }
       });
 

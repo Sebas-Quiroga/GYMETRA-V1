@@ -64,7 +64,6 @@ export async function login(email: string, password: string) {
 export async function logout() {
   try {
     await amplifySignOut();
-    localStorage.removeItem("jwt"); // Limpieza adicional
     window.location.href = "/login";
   } catch (err) {
     console.error('Error al cerrar sesión:', err);
@@ -105,9 +104,14 @@ export async function isAuthenticated(): Promise<boolean> {
  * Función legacy para decodificar JWT si es necesario,
  * aunque con Amplify v6 es mejor usar fetchUserAttributes().
  */
-export function decodeJWT(token: string) {
+export function decodeJWT(token: any) {
+  if (!token || typeof token !== 'string') {
+    return null;
+  }
   try {
-    const payloadBase64 = token.split(".")[1];
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payloadBase64 = parts[1];
     const decodedStr = atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/"));
     return JSON.parse(decodedStr);
   } catch (err: any) {

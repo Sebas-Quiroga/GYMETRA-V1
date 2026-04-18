@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { LOGIN_API_URL } from './apiService';
 
-const API_BASE_URL = '/api/auth'; // Usar proxy de Vite
+const API_BASE_URL = `${LOGIN_API_URL}/auth`;
 
 export interface User {
   userId: number;

@@ -59,9 +59,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { IonPage, IonContent } from '@ionic/vue'
 import QrcodeVue from 'qrcode.vue'
 import { useAuthStore } from '@/stores/auth'
-import { HOST_URL } from"../services/hots";
+import { apiAuthRequest, QR_API_URL } from '@/services/apiService'
 
 // 📦 Store de autenticación
 const auth = useAuthStore()
@@ -87,59 +88,39 @@ function formatDate(dateStr: string) {
 
 // 🚀 Cargar QR desde el backend
 onMounted(async () => {
-  try {
-    const token = auth.token
-    const decoded = token ? decodeJWT(token) : null
-    const userId = decoded?.userId || localStorage.getItem('userId')
-
-    if (!userId) {
-      qrStatus.value = 'Usuario no autenticado'
-      return
+    if (!auth.user?.userId) {
+        qrStatus.value = 'Usuario no autenticado';
+        return;
     }
 
-    const response = await fetch(`${HOST_URL}:8090/api/qr-access/user/${userId}`)
-    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    try {
+        const response = await apiAuthRequest(`${QR_API_URL}/qr-access/user/${auth.user.userId}`);
+        
+        if (response.success && response.data) {
+            const data = response.data;
+            qrCode.value = data.qrCode;
+            qrEndDate.value = data.endDate ? formatDate(data.endDate) : null;
 
-    const data = await response.json()
+            const status = data.status?.toLowerCase();
+            if (status === 'active') {
+                qrStatus.value = 'Membresía activa ✅';
+            } else if (status === 'inactive') {
+                qrStatus.value = 'Membresía inactiva ❌';
+            } else {
+                qrStatus.value = `Estado: ${data.status || 'sin datos'}`;
+            }
 
-    if (data && data.qrCode) {
-      qrCode.value = data.qrCode
-      qrEndDate.value = data.endDate ? formatDate(data.endDate) : null
-
-      // 🔍 Validar estado real del backend
-      const status = data.status?.toLowerCase()
-      if (status === 'active') {
-        qrStatus.value = 'Membresía activa ✅'
-      } else if (status === 'inactive') {
-        qrStatus.value = 'Membresía inactiva ❌'
-      } else {
-        qrStatus.value = `Estado desconocido (${data.status || 'sin datos'})`
-      }
-
-      // Guardar para próximos accesos
-      ;(window as any).qrCodeData = data.qrCode
-      localStorage.setItem('qrCodeData', data.qrCode)
-    } else {
-      qrCode.value = null
-      qrStatus.value = 'No hay QR disponible'
+            // Guardar para próximos accesos
+            localStorage.setItem('qrCodeData', data.qrCode);
+        } else {
+            qrCode.value = null;
+            qrStatus.value = response.message || 'No hay QR disponible';
+        }
+    } catch (error) {
+        console.error('❌ Error cargando QR:', error);
+        qrStatus.value = 'Error al conectar con el servicio de QR';
     }
-  } catch (error) {
-    console.error('❌ Error cargando QR:', error)
-    qrStatus.value = 'Error al cargar el código'
-  }
-})
-
-// 🧩 Decodificador JWT (para obtener userId del token)
-function decodeJWT(token: string) {
-  try {
-    const parts = token.split('.')
-    if (parts.length !== 3) throw new Error('Token inválido')
-    const payload = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
-    return JSON.parse(payload)
-  } catch {
-    return null
-  }
-}
+});
 </script>
 
 <style src="../theme/QrPage.css"></style>

@@ -76,8 +76,11 @@ app.component('ion-spinner', IonSpinner);
 // Registrar QRCode globalmente
 app.component('qrcode-vue', QrcodeVue);
 
-useAuthStore().initialize(); // <-- Sincroniza el token al iniciar
-
-router.isReady().then(() => {
-  app.mount('#app');
+// Inicializar Auth y esperar a la sincronización antes de montar
+const auth = useAuthStore();
+auth.initialize().then(() => {
+  router.isReady().then(() => {
+    app.mount('#app');
+    console.log('🚀 Aplicación montada con sesión inicializada');
+  });
 });

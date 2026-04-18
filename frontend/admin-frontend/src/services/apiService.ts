@@ -1,8 +1,15 @@
 import axios from 'axios';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
-// Base URL configurada para apuntar al backend a través del proxy de Vite
-export const MAIN_API_URL = "/api";
+/**
+ * Standardized URLs using Vite proxies defined in vite.config.ts
+ */
+export const LOGIN_API_URL = "/api";
+export const MEMBERSHIP_API_URL = "/membership-api";
+export const QR_API_URL = "/qr-api";
+
+// Compatibility with existing code
+export const MAIN_API_URL = LOGIN_API_URL;
 
 // Configurar interceptor para inyectar token de Cognito automáticamente
 axios.interceptors.request.use(async (config) => {
@@ -14,7 +21,6 @@ axios.interceptors.request.use(async (config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   } catch (err) {
-    // Si falla la obtención de la sesión, el backend devolverá 401 y el router manejará la redirección
     console.warn('⚠️ No se pudo obtener sesión activa de Cognito para la petición API');
   }
   return config;
@@ -30,7 +36,6 @@ axios.interceptors.response.use(
       console.error('🚫 Sesión expirada o inválida. Redirigiendo...');
       // Evitar bucles infinitos si ya estamos en login
       if (!window.location.pathname.includes('/loginadmin')) {
-        localStorage.removeItem('admin_jwt');
         window.location.href = '/loginadmin';
       }
     }

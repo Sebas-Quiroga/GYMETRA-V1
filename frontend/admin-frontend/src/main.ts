@@ -5,7 +5,7 @@ import { IonicVue } from '@ionic/vue'
 
 import App from './App.vue'
 import routes from './router'
-import { isAuthenticated } from './services/authService'
+import { isAuthenticatedAsync } from './services/authService'
 import { configureAmplify } from './config/cognito'
 
 // Configurar AWS Cognito para Admin
@@ -46,16 +46,18 @@ const router = createRouter({
 // ===============================
 // 🔒 Router Guard - Protección de Rutas Administrativas
 // ===============================
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   // Si la ruta requiere autenticación
   if (to.meta.requiresAuth) {
-    // Verificar si el usuario está autenticado como administrador
-    if (isAuthenticated()) {
+    // Verificar si el usuario está autenticado como administrador de forma asíncrona
+    const isAuth = await isAuthenticatedAsync();
+    
+    if (isAuth) {
       // Usuario autenticado, permitir acceso
       next()
     } else {
       // Usuario no autenticado, redirigir al login de admin
-      console.warn('🚫 Acceso denegado: usuario no autenticado. Redirigiendo al login...')
+      console.warn('🚫 Acceso denegado: usuario no autenticado o no es administrador. Redirigiendo...')
       next('/loginadmin')
     }
   } else {
@@ -68,4 +70,21 @@ app.use(IonicVue)
 app.use(pinia)
 app.use(router)
 
-app.mount('#app')
+// Inicialización asíncrona para asegurar la sesión antes de montar
+const initApp = async () => {
+  try {
+    // Configurar Amplify ya se hizo arriba
+    // Esperar a que el router esté listo
+    await router.isReady();
+    
+    // El router guard se encarga de llamar a isAuthenticatedAsync()
+    // pero podemos forzar una verificación aquí si fuera necesario poblado de un store
+    
+    app.mount('#app');
+    console.log('🚀 Admin App montada exitosamente');
+  } catch (error) {
+    console.error('❌ Error fatal al iniciar Admin App:', error);
+  }
+};
+
+initApp();

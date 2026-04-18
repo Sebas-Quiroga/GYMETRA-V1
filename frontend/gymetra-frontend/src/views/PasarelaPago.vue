@@ -31,26 +31,18 @@
           <p class="total-price"><strong>Total:</strong> ${{ formatPrice(membership.price) }} USD</p>
         </div>
 
-        <!-- NOTA: Ya no se muestra el campo de ID ni el de Código Postal -->
         <form @submit.prevent="processPayment" class="payment-form">
           <div class="form-group">
             <label>Información de Pago</label>
-            <div v-if="!stripeAvailable" class="test-mode-notice">
-              🧪 Modo de Prueba - No se requiere tarjeta
-            </div>
-            <div v-else>
-              <div id="stripe-card-element" class="stripe-element"></div>
-              <small class="help-text">El código postal se ingresa directamente en la pasarela de pago.</small>
-            </div>
+            <div id="stripe-card-element" class="stripe-element"></div>
+            <small class="help-text">El código postal se ingresa directamente en la pasarela de pago.</small>
           </div>
 
-          <button type="submit" class="pay-btn" :disabled="paymentProcessing" :class="{ 'processing': paymentProcessing }">
+          <button type="submit" class="pay-btn" :disabled="paymentProcessing || !stripeAvailable" :class="{ 'processing': paymentProcessing }">
             <span v-if="paymentProcessing"><div class="btn-spinner"></div>Procesando...</span>
             <span v-else>💳 Pagar Ahora</span>
           </button>
         </form>
-
-
       </div>
     </ion-content>
   </ion-page>
@@ -61,7 +53,8 @@ import { ref, onMounted, nextTick, reactive, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { IonPage, IonContent, IonIcon, IonButton } from '@ionic/vue';
 import { formatPrice, formatDuration } from '@/services/membershipService';
-import { useAuth } from '@/composables/useAuth';
+import { useAuthStore } from '@/stores/auth';
+import { apiAuthRequest } from '@/services/apiService';
 import { checkmarkCircle, alertCircle, warningOutline, informationCircle, closeOutline } from 'ionicons/icons';
 import "@/theme/PasarelaPago.css";
 import { HOST_URL } from"../services/hots";
@@ -73,20 +66,13 @@ const STRIPE_CONFIG = {
 
 const route = useRoute();
 const router = useRouter();
-const { userInfo } = useAuth();
+const auth = useAuthStore();
 
 const membership = ref<any>(null);
 
-// Ya no se piden por UI; userId va oculto (sesión), ZIP se toma de Stripe Element
-const paymentData = ref({
-  userId: userInfo.value?.userId || null
-});
-
 const paymentProcessing = ref(false);
 const stripeAvailable = ref(false);
-const cardError = ref('');
 
-// Estado de notificaciones
 const notification = reactive({
   show: false,
   type: 'info' as 'success' | 'error' | 'warning' | 'info',
@@ -97,109 +83,95 @@ const notification = reactive({
   duration: 5000,
 });
 
-// Variables para los timers de notificación
-let notificationTimer: NodeJS.Timeout | null = null;
-let notificationProgressTimer: NodeJS.Timeout | null = null;
+let notificationTimer: any = null;
+let notificationProgressTimer: any = null;
 
 let stripe: any = null;
 let elements: any = null;
 let cardElement: any = null;
 
-// Funciones de notificación
-const showNotification = (
-  type: 'success' | 'error' | 'warning' | 'info',
-  title: string,
-  message: string,
-  duration: number = 5000
-) => {
-  // Limpiar timers previos
+const showNotification = (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string, duration: number = 5000) => {
   if (notificationTimer) clearTimeout(notificationTimer);
   if (notificationProgressTimer) clearInterval(notificationProgressTimer);
-
-  // Configurar icono según el tipo
-  const icons = {
-    success: checkmarkCircle,
-    error: alertCircle,
-    warning: warningOutline,
-    info: informationCircle,
-  };
-
-  // Configurar notificación
   notification.type = type;
   notification.title = title;
   notification.message = message;
-  notification.icon = icons[type];
+  notification.icon = { success: checkmarkCircle, error: alertCircle, warning: warningOutline, info: informationCircle }[type];
   notification.duration = duration;
   notification.progress = 0;
   notification.show = true;
-
-  // Animar barra de progreso
-  const progressInterval = 50; // 50ms
+  const progressInterval = 50;
   const progressStep = (progressInterval / duration) * 100;
-  
   notificationProgressTimer = setInterval(() => {
     notification.progress += progressStep;
-    if (notification.progress >= 100) {
-      dismissNotification();
-    }
+    if (notification.progress >= 100) dismissNotification();
   }, progressInterval);
-
-  // Auto-dismiss después del tiempo especificado
-  notificationTimer = setTimeout(() => {
-    dismissNotification();
-  }, duration);
+  notificationTimer = setTimeout(() => dismissNotification(), duration);
 };
 
 const dismissNotification = () => {
   if (notificationTimer) clearTimeout(notificationTimer);
   if (notificationProgressTimer) clearInterval(notificationProgressTimer);
   notification.show = false;
-  notification.progress = 0;
 };
 
 onMounted(async () => {
-  // Recibe el plan por query params (como JSON string)
   const planParam = route.query.plan as string;
   if (planParam) {
     try {
       membership.value = JSON.parse(decodeURIComponent(planParam));
     } catch {
-      membership.value = null;
-      showNotification('warning', 'Plan no encontrado', 'No se encontró información del plan seleccionado', 5000);
+      showNotification('warning', 'Plan no encontrado', 'No se encontró información del plan', 5000);
       router.push('/planes');
       return;
     }
   }
 
-  // Validar sesión para tener userId
-  if (!userInfo.value?.userId) {
-    // si no hay sesión, envía a login
+  if (!auth.user?.userId) {
+    showNotification('error', 'Sesión requerida', 'Debes iniciar sesión para realizar un pago', 5000);
     router.push('/login');
     return;
-  } else {
-    paymentData.value.userId = userInfo.value.userId;
   }
 
   await initializeStripe();
   if (stripeAvailable.value) {
-    setTimeout(() => {
+    // Intentar montar con reintentos si es necesario
+    let retries = 0;
+    const tryMount = () => {
+      if (retries > 10) return;
       setupStripeElements();
-    }, 100);
+      const container = document.getElementById('stripe-card-element');
+      if (!container || container.childElementCount === 0) {
+        retries++;
+        setTimeout(tryMount, 500);
+      }
+    };
+    setTimeout(tryMount, 300);
   }
 });
 
 const initializeStripe = async () => {
   try {
-    if (!window.Stripe) return false;
-    if (STRIPE_CONFIG.PUBLISHABLE_KEY.startsWith('pk_test_') || STRIPE_CONFIG.PUBLISHABLE_KEY.startsWith('pk_live_')) {
-      stripe = window.Stripe(STRIPE_CONFIG.PUBLISHABLE_KEY);
-      elements = stripe.elements();
-      stripeAvailable.value = true;
-      return true;
-    } else {
-      return false;
+    // 1. Asegurar que el script de Stripe esté cargado
+    if (!(window as any).Stripe) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://js.stripe.com/v3/';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
     }
-  } catch {
+
+    const stripeScript = (window as any).Stripe;
+    if (!stripeScript) return false;
+    
+    stripe = stripeScript(STRIPE_CONFIG.PUBLISHABLE_KEY);
+    elements = stripe.elements();
+    stripeAvailable.value = true;
+    return true;
+  } catch (e) {
+    console.error('❌ Error initializing Stripe:', e);
     return false;
   }
 };
@@ -207,45 +179,58 @@ const initializeStripe = async () => {
 const setupStripeElements = async () => {
   if (!stripe || !elements) return;
   await nextTick();
-  const cardElementContainer = document.getElementById('stripe-card-element');
-  if (cardElementContainer && !cardElement) {
-    cardElement = elements.create('card', {
-      // Aseguramos que el ZIP se pida dentro del widget de Stripe
-      hidePostalCode: false,
-      style: {
-        base: {
-          fontSize: '16px',
-          color: '#424770',
-          '::placeholder': { color: '#aab7c4' },
+  
+  const container = document.getElementById('stripe-card-element');
+  if (container && container.childElementCount === 0) {
+    try {
+      cardElement = elements.create('card', {
+        hidePostalCode: false,
+        style: { 
+          base: { 
+            fontSize: '16px', 
+            color: '#ffffff', // Texto Blanco
+            fontFamily: '"Nunito", sans-serif',
+            '::placeholder': { color: '#aab7c4' } 
+          },
+          invalid: {
+            color: '#e74c3c',
+          }
         },
-      },
-    });
-    cardElement.mount('#stripe-card-element');
-    cardElement.on('change', (event: any) => {
-      if (event.error) {
-        showNotification('warning', 'Error en la tarjeta', event.error.message, 5000);
-      }
-    });
+      });
+      cardElement.mount('#stripe-card-element');
+      console.log('✅ Stripe Card Element montado');
+    } catch (err) {
+      console.error('❌ Error mounting Stripe Card:', err);
+    }
   }
 };
 
 const processPayment = async () => {
-  if (!membership.value) return;
-
-  // Validar que tengamos userId desde la sesión
-  if (!paymentData.value.userId || parseInt(String(paymentData.value.userId)) < 1) {
-    showNotification('warning', 'Sesión requerida', 'Debes iniciar sesión para continuar con el pago', 5000);
-    router.push('/login');
+  if (!membership.value || !auth.user?.userId) return;
+  if (!stripeAvailable.value) {
+    showNotification('error', 'Error', 'La pasarela no está disponible', 5000);
     return;
   }
-
   paymentProcessing.value = true;
   try {
-    if (stripeAvailable.value && cardElement) {
-      await processStripePayment();
-    } else {
-      await simulatePayment();
-    }
+    const response = await apiAuthRequest(`${STRIPE_CONFIG.API_BASE_URL}/payments/create-payment-intent`, {
+      method: 'POST',
+      body: JSON.stringify({ membershipId: membership.value.membershipId, userId: auth.user?.userId })
+    });
+    if (!response.success) throw new Error(response.message);
+    
+    const { clientSecret } = response.data;
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, { payment_method: { card: cardElement } });
+    if (error) throw error;
+
+    const confirmRes = await apiAuthRequest(`${STRIPE_CONFIG.API_BASE_URL}/payments/confirm-payment`, {
+      method: 'POST',
+      body: JSON.stringify({ paymentIntentId: paymentIntent.id, membershipId: membership.value.membershipId, userId: auth.user?.userId })
+    });
+    if (!confirmRes.success) throw new Error('Error al confirmar en el servidor');
+
+    showNotification('success', '¡Pago exitoso!', 'Membresía activada', 5000);
+    setTimeout(() => router.push('/'), 2000);
   } catch (error: any) {
     showNotification('error', 'Error en el pago', error?.message || 'Error desconocido', 5000);
   } finally {
@@ -253,69 +238,12 @@ const processPayment = async () => {
   }
 };
 
-const processStripePayment = async () => {
-  if (!membership.value || !stripe || !cardElement) return;
-
-  // 1. Crear PaymentIntent en backend
-  const response = await fetch(`${STRIPE_CONFIG.API_BASE_URL}/payments/create-payment-intent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      membershipId: membership.value.membershipId,
-      userId: parseInt(String(paymentData.value.userId))
-    })
-  });
-  if (!response.ok) throw new Error('Error al crear PaymentIntent');
-  const { clientSecret } = await response.json();
-
-  // 2. Confirmar pago con Stripe
-  // IMPORTANTE: no pasamos postal_code; Stripe utiliza el que el usuario ingresó en el Card Element
-  const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-    payment_method: {
-      card: cardElement
-      // billing_details opcional; si no ponemos address.postal_code, Stripe toma el del widget
-    }
-  });
-  if (error) {
-    showNotification('error', 'Error en el pago', error.message, 5000);
-    throw error;
-  }
-
-  // 3. Confirmar en backend (asociar membresía al usuario)
-  const confirmResponse = await fetch(`${STRIPE_CONFIG.API_BASE_URL}/payments/confirm-payment`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      paymentIntentId: paymentIntent.id,
-      membershipId: membership.value.membershipId,
-      userId: parseInt(String(paymentData.value.userId))
-    })
-  });
-  if (!confirmResponse.ok) {
-    showNotification('error', 'Error en la confirmación', 'No se pudo confirmar el pago en el servidor', 5000);
-    throw new Error('Error al confirmar en backend');
-  }
-
-  showNotification('success', '¡Pago exitoso!', 'La membresía ha sido activada correctamente', 5000);
-  setTimeout(() => {
-    router.push('/');
-  }, 2000);
-};
-
-const simulatePayment = async () => {
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  showNotification('success', '¡Pago exitoso!', 'La membresía ha sido activada correctamente', 5000);
-  setTimeout(() => {
-    router.push('/');
-  }, 2000);
-};
-
-const goToHome = () => {
-  router.push('/');
-};
-
 onUnmounted(() => {
   if (notificationTimer) clearTimeout(notificationTimer);
   if (notificationProgressTimer) clearInterval(notificationProgressTimer);
 });
 </script>
+
+<style scoped>
+@import '../theme/PasarelaPago.css';
+</style>

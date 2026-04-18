@@ -54,31 +54,73 @@ public class CognitoUserSyncService {
      */
     @Transactional
     public User syncUser(Jwt jwt) {
-        String sub   = jwt.getSubject();
-        String email = jwt.getClaimAsString("email");
-        String given = jwt.getClaimAsString("given_name");
-        String family = jwt.getClaimAsString("family_name");
+        String sub = jwt.getSubject();
+        log.debug("Syncing user for sub: {}", sub);
 
         return userRepository.findByCognitoSub(sub)
-                .map(existing -> updateExisting(existing, email))
-                .orElseGet(() -> createNew(sub, email, given, family));
+                .map(existingUser -> updateExistingUser(existingUser, jwt))
+                .orElseGet(() -> createNewUser(jwt));
     }
 
-    // ---------------------------------------------------------------
-    // Private helpers
-    // ---------------------------------------------------------------
+    private User updateExistingUser(User user, Jwt jwt) {
+        String email = jwt.getClaimAsString("email");
+        String givenName = jwt.getClaimAsString("given_name");
+        String familyName = jwt.getClaimAsString("family_name");
+        String phoneNumber = jwt.getClaimAsString("phone_number");
+        String photo = jwt.getClaimAsString("picture");
 
-    private User updateExisting(User user, String email) {
+        boolean modified = false;
+
         if (email != null && !email.equals(user.getEmail())) {
-            log.info("Cognito email changed for sub={} → updating local record", user.getCognitoSub());
             user.setEmail(email);
+            modified = true;
         }
+        if (givenName != null && !givenName.equals(user.getFirstName())) {
+            user.setFirstName(givenName);
+            modified = true;
+        }
+        if (familyName != null && !familyName.equals(user.getLastName())) {
+            user.setLastName(familyName);
+            modified = true;
+        }
+        if (phoneNumber != null && !phoneNumber.equals(user.getPhone())) {
+            user.setPhone(phoneNumber);
+            modified = true;
+        }
+        if (photo != null && !photo.equals(user.getPhotoUrl())) {
+            user.setPhotoUrl(photo);
+            modified = true;
+        }
+
         user.setLastLogin(OffsetDateTime.now());
+        
+        if (modified) {
+            log.info("Profile attributes updated for synced user: {}", user.getEmail());
+        }
+
         return userRepository.save(user);
     }
 
-    private User createNew(String sub, String email, String given, String family) {
-        log.info("Creating local profile for new Cognito user sub={}", sub);
+    private User createNewUser(Jwt jwt) {
+        String sub = jwt.getSubject();
+        String email = jwt.getClaimAsString("email");
+        String givenName = jwt.getClaimAsString("given_name");
+        String familyName = jwt.getClaimAsString("family_name");
+        String phoneNumber = jwt.getClaimAsString("phone_number");
+        String photo = jwt.getClaimAsString("picture");
+        
+        // Intentar obtener identificación de custom:identification o preferred_username
+        String identStr = jwt.getClaimAsString("custom:identification");
+        if (identStr == null) identStr = jwt.getClaimAsString("preferred_username");
+        
+        Long identification = 0L;
+        try {
+            if (identStr != null) identification = Long.parseLong(identStr.replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            log.warn("Could not parse identification '{}' for new user, defaulting to 0", identStr);
+        }
+
+        log.info("Creating local profile for new Cognito user email={}", email);
 
         Role clientRole = roleRepository.findByRoleName(DEFAULT_ROLE)
                 .orElseGet(() -> roleRepository.save(
@@ -91,12 +133,14 @@ public class CognitoUserSyncService {
         User user = User.builder()
                 .cognitoSub(sub)
                 .email(email != null ? email : sub + "@cognito.local")
-                .firstName(given  != null ? given  : "")
-                .lastName(family != null ? family : "")
+                .firstName(givenName != null ? givenName : "Nuevo")
+                .lastName(familyName != null ? familyName : "Usuario")
+                .phone(phoneNumber)
+                .photoUrl(photo)
+                .identification(identification)
                 .status("active")
                 .createdAt(OffsetDateTime.now())
                 .lastLogin(OffsetDateTime.now())
-                // passwordHash is intentionally null — authentication is handled by Cognito
                 .build();
 
         User saved = userRepository.save(user);
