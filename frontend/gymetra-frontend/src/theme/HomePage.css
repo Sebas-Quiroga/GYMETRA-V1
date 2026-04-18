@@ -1,336 +1,476 @@
-/* HomePage.css - Estilos para la página principal */
+/* HomePage.css — KINETIC Design System */
 
-/* Página principal */
-.home-page {
-  --background: #ffffff !important;
-  --padding-start: 0 !important;
-  --padding-end: 0 !important;
-  --padding-top: 0 !important;
-  --padding-bottom: 0 !important;
+/* ─── Fondo y content ─── */
+.home-content {
+  --background: #f8fafb !important;
+  background: #f8fafb !important;
 }
 
-.home-page::part(scroll) {
-  background: #ffffff !important;
-}
-
-/* Header personalizado */
-.custom-toolbar {
-  --background: #07B7E0;
-  --color: white;
-  --border-width: 0;
-  position: relative;
-  z-index: 10;
-}
-
-.page-title {
-  color: white;
-  font-weight: 600;
-  font-size: 1.2rem;
-}
-
-.home-page ion-buttons ion-button {
-  --color: white;
-}
-
-/* Container principal */
-.dashboard-container {
-  padding: 20px;
-  min-height: 100vh;
-  background: #ffffff;
-  color: #333333;
-}
-
-/* Card de Bienvenida */
-.welcome-card {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 25px;
-  margin-bottom: 25px;
-  border: 1px solid rgba(0, 183, 224, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 183, 224, 0.1);
-}
-
-.welcome-content {
+/* ─── Header ─── */
+.home-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 32px rgba(25, 28, 29, 0.06);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
-.welcome-text h2 {
-  color: #333333;
-  font-size: 1.8rem;
-  font-weight: 700;
-  margin: 0 0 5px 0;
-  text-shadow: none;
+.home-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.welcome-text p {
-  color: #666666;
-  font-size: 1rem;
-  font-weight: 500;
-  margin: 0;
-}
-
-.profile-avatar {
-  position: relative;
-}
-
-.avatar-circle {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
+.home-avatar-wrap {
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(25, 28, 29, 0.1);
+  cursor: pointer;
+  flex-shrink: 0;
+  background: #cde6f4;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 3px solid rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  overflow: hidden; /* Para que la imagen se recorte en círculo */
-  cursor: pointer; /* Indicar que es clickeable */
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.3);
+  transition: transform 0.2s ease;
 }
 
-.avatar-circle:hover {
-  background: linear-gradient(135deg, #0097A7 0%, #00BCD4 100%);
-  border-color: rgba(255, 255, 255, 1);
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(0, 188, 212, 0.4);
+.home-avatar-wrap:hover {
+  transform: scale(1.06);
 }
 
-/* Estilos para la imagen de avatar */
-.avatar-image {
+.home-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
 }
 
-/* Estilos para el icono cuando no hay foto */
-.avatar-icon {
-  font-size: 28px;
-  color: rgba(255, 255, 255, 0.8);
+.home-avatar-fallback {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #006876;
 }
 
-/* Row de estadísticas */
-.stats-row {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
+.home-logo {
+  font-size: 1.25rem;
+  font-weight: 900;
+  font-style: italic;
+  color: #0e7490;
+  letter-spacing: -0.05em;
+  font-family: var(--app-font-brand);
 }
 
-.stat-card {
-  flex: 1;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  backdrop-filter: blur(20px);
-  border-radius: 16px;
-  padding: 20px 15px;
-  text-align: center;
-  border: 2px solid rgba(0, 183, 224, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 183, 224, 0.08);
-  transition: all 0.3s ease;
+.home-logout-btn {
+  background: transparent;
+  border: none;
   cursor: pointer;
+  color: #6d797c;
+  display: flex;
+  align-items: center;
+  padding: 0.3rem;
+  border-radius: 0.5rem;
+  transition: opacity 0.15s, transform 0.1s;
 }
 
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 183, 224, 0.15);
-  background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
-  border-color: rgba(0, 183, 224, 0.3);
-}
-
-/* Card de días restantes - Estados dinámicos */
-.record-card .stat-number {
-  color: #333333;
-  font-size: 2.2rem;
-  font-weight: 800;
-  margin-bottom: 5px;
-  text-shadow: none;
-  transition: all 0.3s ease;
-}
-
-/* Estado de carga */
-.record-card.loading-state {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.record-card.loading-state .stat-number {
+.home-logout-btn:hover {
   opacity: 0.7;
-  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.home-logout-btn:active {
+  transform: scale(0.94);
+}
+
+/* ─── Container ─── */
+.home-container {
+  padding: 1.75rem 1.25rem 6rem;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ─── Welcome ─── */
+.home-welcome {
+  margin-bottom: 1.75rem;
+}
+
+.home-welcome-name {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #191c1d;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.25rem;
+  font-family: var(--app-font-brand);
+}
+
+.home-welcome-sub {
+  font-size: 0.875rem;
+  color: #3d494b;
+  margin: 0;
+  font-weight: 400;
+  font-family: var(--app-font-family);
+}
+
+/* ─── Bento grid ─── */
+.home-bento {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+}
+
+/* ─── Membresía hero ─── */
+.bento-membership {
+  grid-column: span 1;
+  background: #ffffff;
+  border-radius: 1.125rem;
+  padding: 1.5rem 1.25rem;
+  box-shadow: 0 8px 24px rgba(25, 28, 29, 0.06);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.5s ease both;
+  border: 1px solid rgba(188, 201, 204, 0.25);
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.membership-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(0, 172, 193, 0.12);
+  color: #006876;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.membership-days-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.membership-days {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #006876;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-family: var(--app-font-brand);
+}
+
+.membership-days-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #3d494b;
+  line-height: 1.2;
+  font-family: var(--app-font-family);
+}
+
+.membership-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: #eceeef;
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: auto;
+}
+
+.membership-bar-fill {
+  height: 100%;
+  background: #006876;
+  border-radius: 9999px;
+  transition: width 0.8s ease;
+  box-shadow: 0 0 8px rgba(0, 104, 118, 0.25);
+}
+
+.membership-glow {
+  position: absolute;
+  right: -2rem;
+  bottom: -2rem;
+  width: 8rem;
+  height: 8rem;
+  background: rgba(0, 104, 118, 0.04);
+  border-radius: 50%;
+  filter: blur(24px);
+  pointer-events: none;
 }
 
 /* Estado sin membresía */
-.record-card.no-membership {
-  background: rgba(255, 193, 7, 0.15);
-  border: 1px solid rgba(255, 193, 7, 0.3);
+.state-none .membership-days {
+  color: #ffa000;
 }
 
-.record-card.no-membership .stat-number {
-  color: #ffc107;
+.state-none .membership-bar-fill {
+  background: #ffa000;
 }
 
-/* Estado crítico (1-3 días) */
-.record-card.critical-state {
-  background: rgba(244, 67, 54, 0.15);
-  border: 1px solid rgba(244, 67, 54, 0.3);
+/* Estado crítico */
+.state-critical .membership-days {
+  color: #ba1a1a;
 }
 
-.record-card.critical-state .stat-number {
-  color: #ff5722;
+.state-critical .membership-bar-fill {
+  background: #ba1a1a;
+}
+
+.state-critical .membership-days {
   animation: urgentPulse 1s ease-in-out infinite;
 }
 
-/* Estado de advertencia (4-7 días) */
-.record-card.warning-state {
-  background: rgba(255, 152, 0, 0.15);
-  border: 1px solid rgba(255, 152, 0, 0.3);
+/* Estado advertencia */
+.state-warning .membership-days {
+  color: #e65100;
 }
 
-.record-card.warning-state .stat-number {
-  color: #ff9800;
+.state-warning .membership-bar-fill {
+  background: #e65100;
 }
 
-/* Estado activo (más de 7 días) */
-.record-card.active-state {
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.record-card.active-state .stat-number {
-  color: #333333;
-}
-
-.stat-label {
-  color: #666666;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-/* Íconos de las cards */
-.stat-icon {
-  margin-bottom: 8px;
-}
-
-.stat-icon ion-icon {
-  font-size: 32px;
-  color: #07B7E0;
-  filter: none;
-}
-
-/* Sección de entrenamiento */
-.training-section {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 25px;
-  border: 2px solid rgba(0, 183, 224, 0.15);
-  box-shadow: 0 8px 32px rgba(0, 183, 224, 0.08);
-}
-
-.section-header {
+/* ─── QR Card ─── */
+.bento-qr {
+  grid-column: span 1;
+  background: #006876;
+  border-radius: 1.125rem;
+  padding: 1.5rem 1rem;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 25px;
+  justify-content: center;
+  gap: 0.75rem;
+  border: none;
+  cursor: pointer;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 104, 118, 0.2);
+  transition: opacity 0.15s, transform 0.1s;
+  animation: fadeInUp 0.55s 0.1s ease both;
+  text-align: center;
 }
 
-.section-header h3 {
-  color: #333333;
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin: 0;
-  text-shadow: none;
+.bento-qr:active {
+  transform: scale(0.96);
+  opacity: 0.9;
 }
 
-.info-btn {
-  --color: rgba(255, 255, 255, 0.8);
-  margin: 0;
-  --padding-start: 8px;
-  --padding-end: 8px;
+.bento-qr:hover {
+  box-shadow: 0 12px 32px rgba(0, 104, 118, 0.28);
 }
 
-.info-btn ion-icon {
-  font-size: 20px;
-}
-
-/* Container del gráfico */
-.chart-container {
-  height: 200px;
+.bento-qr-icon {
+  width: 4.5rem;
+  height: 4.5rem;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 0.875rem;
   display: flex;
-  align-items: end;
-  padding: 0 10px;
+  align-items: center;
+  justify-content: center;
 }
 
-.chart-bars {
+.bento-qr-icon svg {
+  opacity: 0.95;
+}
+
+.bento-qr-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.bento-qr-sub {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* ─── Chart ─── */
+.bento-chart {
+  grid-column: span 2;
+  background: #f2f4f5;
+  border-radius: 1.125rem;
+  padding: 1.5rem;
+  animation: fadeInUp 0.6s 0.15s ease both;
+}
+
+.bento-chart-header {
   display: flex;
   justify-content: space-between;
-  align-items: end;
-  width: 100%;
-  height: 100%;
-  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
 }
 
-.bar-item {
+.bento-chart-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #191c1d;
+  margin: 0 0 0.2rem;
+  letter-spacing: -0.01em;
+}
+
+.bento-chart-sub {
+  font-size: 0.8rem;
+  color: #3d494b;
+  margin: 0;
+}
+
+.bento-chart-total {
+  text-align: right;
+}
+
+.bento-chart-total-num {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #006876;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.bento-chart-total-label {
+  display: block;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3d494b;
+  opacity: 0.7;
+  margin-top: 0.2rem;
+}
+
+.bento-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.4rem;
+  height: 170px;
+}
+
+.chart-col {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
   height: 100%;
-  justify-content: end;
 }
 
-.bar {
+.chart-bar {
   width: 100%;
-  border-radius: 6px 6px 2px 2px;
-  transition: all 0.3s ease;
-  margin-bottom: 10px;
-  min-height: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 9999px;
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 14px;
 }
 
-.bar-active {
-  background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
-  box-shadow: 0 4px 12px rgba(0, 188, 212, 0.4);
+.chart-bar-active {
+  background: #00acc1;
+  box-shadow: 0 0 16px rgba(0, 172, 193, 0.35);
 }
 
-.bar-inactive {
-  background: linear-gradient(135deg, #B0BEC5 0%, #90A4AE 100%);
-  box-shadow: 0 2px 8px rgba(176, 190, 197, 0.3);
+.chart-bar-inactive {
+  background: #b1cad7;
 }
 
-.bar-label {
-  color: #666666;
-  font-size: 0.85rem;
+.chart-day {
+  font-size: 0.65rem;
   font-weight: 600;
-  text-align: center;
+  color: #3d494b;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-/* Animaciones */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.7;
-  }
-  50% {
-    opacity: 1;
-  }
+.chart-day-active {
+  font-weight: 900;
+  color: #006876;
+  opacity: 1;
 }
 
-@keyframes urgentPulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.8;
-  }
+/* ─── Action cards ─── */
+.bento-action-card {
+  grid-column: span 1;
+  background: #ffffff;
+  border-radius: 1.125rem;
+  padding: 1.25rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  box-shadow: 0 4px 16px rgba(25, 28, 29, 0.05);
+  border: 1px solid rgba(188, 201, 204, 0.2);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  animation: fadeInUp 0.6s 0.2s ease both;
 }
 
+.bento-action-card:active {
+  transform: scale(0.97);
+}
+
+.bento-action-card:hover {
+  box-shadow: 0 8px 24px rgba(25, 28, 29, 0.09);
+  transform: translateY(-2px);
+}
+
+.bento-action-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bento-action-icon-teal {
+  background: #cde6f4;
+  color: #006876;
+}
+
+.bento-action-icon-teal svg {
+  stroke: #006876;
+}
+
+.bento-action-icon-amber {
+  background: rgba(218, 138, 54, 0.12);
+  color: #8d4f00;
+}
+
+.bento-action-icon-amber svg {
+  stroke: #8d4f00;
+}
+
+.bento-action-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #191c1d;
+  margin: 0 0 0.15rem;
+  letter-spacing: -0.01em;
+}
+
+.bento-action-sub {
+  font-size: 0.75rem;
+  color: #3d494b;
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* ─── Animaciones ─── */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
 
   to {
@@ -339,55 +479,33 @@
   }
 }
 
-.welcome-card,
-.stat-card,
-.training-section {
-  animation: fadeInUp 0.6s ease-out forwards;
+@keyframes urgentPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
 }
 
-.stat-card:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.stat-card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.stat-card:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-.training-section {
-  animation-delay: 0.4s;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  .dashboard-container {
-    padding: 15px;
+/* ─── Responsive ─── */
+@media (max-width: 380px) {
+  .home-container {
+    padding: 1.25rem 1rem 6rem;
   }
 
-  .stats-row {
-    gap: 10px;
+  .home-bento {
+    gap: 0.625rem;
   }
 
-  .stat-card {
-    padding: 15px 10px;
+  .membership-days {
+    font-size: 2.4rem;
   }
 
-  .record-card .stat-number {
-    font-size: 1.8rem;
-  }
-
-  .stat-icon ion-icon {
-    font-size: 28px;
-  }
-
-  .welcome-text h2 {
-    font-size: 1.5rem;
-  }
-
-  .chart-bars {
-    gap: 6px;
+  .bento-action-card {
+    padding: 1rem 0.875rem;
   }
 }

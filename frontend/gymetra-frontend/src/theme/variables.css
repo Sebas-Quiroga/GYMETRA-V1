@@ -21,7 +21,12 @@ http://ionicframework.com/docs/theming/ */
   --input-min-height: 48px;
   --input-border: none;
   --input-border-focus: 2px solid #07B7E0;
-  --input-font-family: 'Nunito', sans-serif;
+  
+  /* Typography Branding */
+  --app-font-family: 'Inter', sans-serif;
+  --app-font-brand: 'Outfit', sans-serif;
+  --ion-font-family: var(--app-font-family);
+  --input-font-family: var(--app-font-brand);
 }
 
 /* DISEÑO LIMPIO PARA INPUTS DE LOGIN COMO EN LA IMAGEN */
@@ -59,10 +64,10 @@ http://ionicframework.com/docs/theming/ */
   border: none !important;
 }
 
-/* Input y placeholder: gris oscuro, bold, Nunito */
+/* Input y placeholder: gris oscuro, bold, Outfit */
 .input-card ion-input,
 .input-card ion-input::part(native) {
-  font-family: 'Nunito', sans-serif !important;
+  font-family: var(--app-font-brand) !important;
   font-size: 1.1rem !important;
   font-weight: 700 !important;
   color: #8c8686 !important;
@@ -80,7 +85,7 @@ http://ionicframework.com/docs/theming/ */
   color: #8c8686 !important;
   opacity: 1;
   font-weight: 700;
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--app-font-brand);
 }
 
 /* Icono azul a la izquierda */
@@ -119,7 +124,7 @@ http://ionicframework.com/docs/theming/ */
   --border-radius: 28px !important;
   --color: #fff !important;
   --box-shadow: none !important;
-  font-family: 'Nunito', sans-serif !important;
+  font-family: var(--app-font-brand) !important;
   font-weight: 700 !important;
   font-size: 1.1rem !important;
   letter-spacing: 1px;
