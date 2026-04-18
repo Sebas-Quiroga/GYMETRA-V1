@@ -29,7 +29,15 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false)
+    /**
+     * Cognito sub claim — stable unique identifier for the Cognito user.
+     * Used to link the local record to Cognito without depending on email,
+     * which may change.  Nullable to support existing rows before migration.
+     */
+    @Column(name = "cognito_sub", unique = true)
+    private String cognitoSub;
+
+    @Column(name = "password_hash")
     private String passwordHash;
 
     @Column

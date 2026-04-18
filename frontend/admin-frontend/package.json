@@ -17,6 +17,7 @@
   "dependencies": {
     "@ionic/vue": "^7.0.0",
     "@ionic/vue-router": "^7.0.0",
+    "aws-amplify": "^6.16.4",
     "axios": "^1.13.1",
     "ionicons": "^7.0.0",
     "jspdf": "^3.0.3",

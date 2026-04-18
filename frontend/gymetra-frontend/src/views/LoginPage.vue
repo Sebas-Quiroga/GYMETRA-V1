@@ -642,7 +642,7 @@ const resetPassword = async () => {
   
   forgotLoading.value = true;
   try {
-    const msg = await resetPasswordService(forgotToken.value, forgotNewPassword.value);
+    const msg = await resetPasswordService(forgotEmail.value, forgotToken.value, forgotNewPassword.value);
     
     // ⭐ Primero cerrar el modal
     closeForgotModal();

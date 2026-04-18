@@ -1,29 +1,28 @@
 import { HOST_URL } from"../services/hots";
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 // Configuración base de la API
-export const MAIN_API_URL = `${HOST_URL}:8080/api/auth`;
+// Hemos movido la base a /api para dar soporte a /api/me y /api/auth/*
+export const MAIN_API_URL = `${HOST_URL}:8080/api`;
 
 // Configuración para diferentes endpoints
 export const API_ENDPOINTS = {
   AUTH: {
-    REGISTER: `${MAIN_API_URL}/register`,
-    LOGIN: `${MAIN_API_URL}/login`,
-    LOGOUT: `${MAIN_API_URL}/logout`,
-    REFRESH: `${MAIN_API_URL}/refresh`,
-    VERIFY_EMAIL: `${MAIN_API_URL}/verify-email`,
+    // Nota: El login/register ahora ocurren en Cognito (Frontend)
+    USERS: `${MAIN_API_URL}/auth/users`,
+    ME: `${MAIN_API_URL}/me`,
   }
 };
 
 // Configuración general
 export const API_CONFIG = {
-  TIMEOUT: 10000, // 10 segundos
+  TIMEOUT: 15000, 
   HEADERS: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   }
 };
 
-// Tipos para respuestas de la API
 export interface ApiResponse<T = any> {
   success: boolean;
   message: string;
@@ -31,7 +30,9 @@ export interface ApiResponse<T = any> {
   errors?: { [key: string]: string };
 }
 
-// Función helper para hacer peticiones HTTP
+/**
+ * Petición base usando fetch.
+ */
 export const apiRequest = async <T = any>(
   url: string,
   options: RequestInit = {}
@@ -40,12 +41,6 @@ export const apiRequest = async <T = any>(
   const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
 
   try {
-    console.log('🌐 API Request:', {
-      url,
-      method: options.method || 'GET',
-      headers: options.headers
-    });
-
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -57,129 +52,72 @@ export const apiRequest = async <T = any>(
 
     clearTimeout(timeoutId);
 
-    console.log('📡 API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok
-    });
-
-    // Intentar parsear la respuesta JSON
-    let responseData: ApiResponse<T>;
     const contentType = response.headers.get('content-type');
+    let responseData: any;
     
     if (contentType && contentType.includes('application/json')) {
       responseData = await response.json();
     } else {
-      // Si no es JSON, crear respuesta basada en status
       responseData = {
         success: response.ok,
-        message: response.ok ? 'Operación exitosa' : `Error ${response.status}: ${response.statusText}`
+        message: response.ok ? 'Operación exitosa' : `Error ${response.status}`
       };
     }
 
-    // Normalización: asegurar que siempre devolvemos ApiResponse<T>
-    if (!('success' in responseData)) {
-      responseData = {
-        success: response.ok,
-        message: (responseData as any)?.message || (response.ok ? 'Operación exitosa' : 'Error'),
-        data: responseData as any
+    // Normalizar respuesta
+    if (response.ok) {
+      return {
+        success: true,
+        message: responseData.message || 'OK',
+        data: responseData.data || responseData
+      };
+    } else {
+      return {
+        success: false,
+        message: responseData.message || responseData.error || `Error ${response.status}`,
+        errors: responseData.errors
       };
     }
-
-    if (!response.ok) {
-      const errorMessage = responseData.message || `Error ${response.status}: ${response.statusText}`;
-      console.error('❌ API Error:', responseData);
-      throw new Error(errorMessage);
-    }
-
-    console.log('✅ API Success:', responseData);
-    return responseData;
 
   } catch (err: any) {
     clearTimeout(timeoutId);
-    console.error('💥 API Request Failed:', err);
-
-    if (err.name === 'AbortError') {
-      throw new Error('Tiempo de espera agotado. Verifica tu conexión e intenta nuevamente.');
-    }
-
-    if (err instanceof TypeError && err.message.includes('fetch')) {
-      throw new Error('Error de conexión con el servidor. Verifica que el backend esté funcionando.');
-    }
-
+    if (err.name === 'AbortError') throw new Error('Tiempo de espera agotado');
     throw err;
   }
 };
 
-// Función específica para peticiones POST
-export const apiPost = async <T = any>(
-  url: string,
-  data: any,
-  headers?: Record<string, string>
-): Promise<ApiResponse<T>> => {
-  return apiRequest<T>(url, {
-    method: 'POST',
-    body: JSON.stringify(data),
-    headers
-  });
-};
-
-// Función específica para peticiones GET
-export const apiGet = async <T = any>(
-  url: string,
-  headers?: Record<string, string>
-): Promise<ApiResponse<T>> => {
-  return apiRequest<T>(url, {
-    method: 'GET',
-    headers
-  });
-};
-
-// Función para manejar autenticación con token
+/**
+ * Petición autenticada. 
+ * Obtiene automáticamente el token fresco de Cognito si no se provee uno.
+ */
 export const apiAuthRequest = async <T = any>(
   url: string,
   options: RequestInit = {},
   token?: string
 ): Promise<ApiResponse<T>> => {
-  const authHeaders: Record<string, string> = {};
-  
-  if (token) {
-    authHeaders['Authorization'] = `Bearer ${token}`;
+  let authToken = token;
+
+  // Si no hay token, intentamos obtenerlo de Amplify
+  if (!authToken) {
+    try {
+      const session = await fetchAuthSession();
+      authToken = session.tokens?.idToken?.toString();
+    } catch (err) {
+      console.warn('⚠️ No se pudo obtener sesión de Cognito para la petición');
+    }
+  }
+
+  const headers: Record<string, string> = { ...((options.headers as any) || {}) };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
   }
 
   return apiRequest<T>(url, {
     ...options,
-    headers: {
-      ...options.headers,
-      ...authHeaders
-    }
+    headers
   });
 };
 
-// Helper para obtener token almacenado (si usas localStorage)
-export const getStoredToken = (): string | null => {
-  // Si no estás usando localStorage, puedes usar otra forma de almacenamiento
-  try {
-    return localStorage.getItem('authToken');
-  } catch {
-    return null;
-  }
-};
-
-// Helper para guardar token (si usas localStorage)
-export const setStoredToken = (token: string): void => {
-  try {
-    localStorage.setItem('authToken', token);
-  } catch (error) {
-    console.warn('No se pudo guardar el token:', error);
-  }
-};
-
-// Helper para limpiar token
-export const clearStoredToken = (): void => {
-  try {
-    localStorage.removeItem('authToken');
-  } catch (error) {
-    console.warn('No se pudo limpiar el token:', error);
-  }
-};
+export const apiGet = (url: string, headers?: any) => apiRequest(url, { method: 'GET', headers });
+export const apiPost = (url: string, data: any, headers?: any) => 
+  apiRequest(url, { method: 'POST', body: JSON.stringify(data), headers });

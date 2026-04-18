@@ -1,0 +1,99 @@
+# ==================================================
+# GYMETRA — Spring Boot Configuration
+# Auth: AWS Cognito (OAuth2 Resource Server)
+# ==================================================
+
+spring:
+  application:
+    name: gymetraSystem
+
+  # -----------------------------------------------
+  # Base de Datos
+  # -----------------------------------------------
+  datasource:
+    url: jdbc:postgresql://localhost:5000/gymdb_dev
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  # -----------------------------------------------
+  # JPA / Hibernate
+  # -----------------------------------------------
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # -----------------------------------------------
+  # AWS Cognito — OAuth2 Resource Server
+  # Pool ID : us-east-2_ckSy7zPAt
+  # Client ID: 3gnvfec5v6tfp32u634mq645ll
+  # -----------------------------------------------
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt
+          # Explicit JWKS URI avoids cold-start DNS/cache issues
+          jwk-set-uri: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt/.well-known/jwks.json
+
+  # -----------------------------------------------
+  # Correo electrónico (SMTP)
+  # -----------------------------------------------
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: jsnq2001@gmail.com
+    password: sbxdtyjwezpusonw
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  # -----------------------------------------------
+  # Multipart
+  # -----------------------------------------------
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# -----------------------------------------------
+# Servidor
+# -----------------------------------------------
+server:
+  port: 8080
+  address: 0.0.0.0
+
+# -----------------------------------------------
+# Logging
+# -----------------------------------------------
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+
+# -----------------------------------------------
+# Swagger / OpenAPI
+# -----------------------------------------------
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true

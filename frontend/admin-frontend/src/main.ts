@@ -6,6 +6,10 @@ import { IonicVue } from '@ionic/vue'
 import App from './App.vue'
 import routes from './router'
 import { isAuthenticated } from './services/authService'
+import { configureAmplify } from './config/cognito'
+
+// Configurar AWS Cognito para Admin
+configureAmplify();
 
 /* Core CSS required for Ionic components to work properly */
 

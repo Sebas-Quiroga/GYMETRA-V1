@@ -20,6 +20,7 @@
     "@ionic/vue": "^8.0.0",
     "@ionic/vue-router": "^8.0.0",
     "@stripe/stripe-js": "^8.0.0",
+    "aws-amplify": "^6.16.4",
     "axios": "^1.12.2",
     "chart.js": "^4.5.0",
     "ionicons": "^7.0.0",

@@ -1,10 +1,110 @@
 // src/services/authService.ts
-import axios from "axios";
-import { MAIN_API_URL } from "../services/apiService";
+import { 
+  signIn, 
+  signOut as amplifySignOut, 
+  fetchAuthSession, 
+  getCurrentUser,
+  fetchUserAttributes
+} from 'aws-amplify/auth';
 
-// ===============================
-// Decodificar JWT
-// ===============================
+/**
+ * Inicia sesión usando AWS Cognito a través de Amplify.
+ * @param email Correo electrónico del usuario.
+ * @param password Contraseña plana.
+ * @returns Un objeto con el token y los datos del usuario.
+ */
+export async function login(email: string, password: string) {
+  try {
+    const { isSignedIn, nextStep } = await signIn({
+      username: email,
+      password: password
+    });
+
+    if (isSignedIn) {
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+      const userAttributes = await fetchUserAttributes();
+      
+      // Mapear atributos de Cognito al formato esperado por el frontend
+      const userData = {
+        email: userAttributes.email,
+        firstName: userAttributes.given_name || '',
+        lastName: userAttributes.family_name || '',
+        sub: userAttributes.sub
+      };
+
+      console.log('✅ Login exitoso con Cognito:', userData);
+      return { token: idToken, decoded: userData };
+    } else {
+      throw new Error(`Paso adicional requerido: ${nextStep.signInStep}`);
+    }
+  } catch (err: any) {
+    if (err.name === 'UserAlreadyAuthenticatedException') {
+      console.log('ℹ️ El usuario ya está autenticado. Recuperando sesión actual...');
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+      const userAttributes = await fetchUserAttributes();
+      
+      const userData = {
+        email: userAttributes.email,
+        firstName: userAttributes.given_name || '',
+        lastName: userAttributes.family_name || '',
+        sub: userAttributes.sub
+      };
+      return { token: idToken, decoded: userData };
+    }
+    console.error('❌ Error en login Cognito:', err);
+    throw err;
+  }
+}
+
+/**
+ * Cierra la sesión en Amplify y redirige al login.
+ */
+export async function logout() {
+  try {
+    await amplifySignOut();
+    localStorage.removeItem("jwt"); // Limpieza adicional
+    window.location.href = "/login";
+  } catch (err) {
+    console.error('Error al cerrar sesión:', err);
+    window.location.href = "/login";
+  }
+}
+
+/**
+ * Obtiene el ID Token actual de la sesión de Cognito.
+ * Cognito maneja la renovación automática de tokens.
+ */
+export async function getToken(): Promise<string | undefined> {
+  try {
+    const session = await fetchAuthSession();
+    return session.tokens?.idToken?.toString();
+  } catch (err) {
+    return undefined;
+  }
+}
+
+/**
+ * Verifica si hay una sesión activa en Cognito.
+ */
+export async function isAuthenticated(): Promise<boolean> {
+  try {
+    await getCurrentUser();
+    const session = await fetchAuthSession();
+    const idToken = session.tokens?.idToken;
+    
+    // Opcional: validar expiración (Amplify suele manejar esto)
+    return !!idToken;
+  } catch (err) {
+    return false;
+  }
+}
+
+/**
+ * Función legacy para decodificar JWT si es necesario,
+ * aunque con Amplify v6 es mejor usar fetchUserAttributes().
+ */
 export function decodeJWT(token: string) {
   try {
     const payloadBase64 = token.split(".")[1];
@@ -14,70 +114,4 @@ export function decodeJWT(token: string) {
     console.error("❌ Error al decodificar token:", err.message);
     return null;
   }
-}
-
-// ===============================
-// Iniciar sesión
-// ===============================
-export async function login(email: string, password: string) {
-  try {
-    const response = await axios.post(`${MAIN_API_URL}/login`, { email, password });
-
-    if (!response.data.token) {
-      throw new Error("No se recibió token del servidor");
-    }
-
-    const token = response.data.token;
-
-    // Guardar token en localStorage
-    localStorage.setItem("jwt", token);
-
-    // Decodificar token para obtener información del usuario
-    const decoded = decodeJWT(token);
-
-    // Mostrar usuario autenticado en consola (opcional)
-    console.log("Usuario autenticado:", decoded);
-
-    // Devolver token y usuario decodificado
-    return { token, decoded };
-  } catch (err: any) {
-    // Lanzar error con mensaje específico si existe
-    throw err.response?.data || { message: "Error en login" };
-  }
-}
-
-// ===============================
-// Cerrar sesión
-// ===============================
-export function logout() {
-  localStorage.removeItem("jwt");
-  window.location.href = "/login"; // Redirige al login
-}
-
-// ===============================
-// Obtener token actual
-// ===============================
-export function getToken(): string | null {
-  return localStorage.getItem("jwt");
-}
-
-// ===============================
-// Verificar si el usuario está autenticado
-// ===============================
-export function isAuthenticated(): boolean {
-  const token = getToken();
-  if (!token) return false;
-
-  // Intentar decodificar el token para validar que sea correcto
-  const decoded = decodeJWT(token);
-  if (!decoded) return false;
-
-  // Opcional: validar fecha de expiración
-  if (decoded.exp && Date.now() >= decoded.exp * 1000) {
-    // Token expirado
-    localStorage.removeItem("jwt");
-    return false;
-  }
-
-  return true;
 }

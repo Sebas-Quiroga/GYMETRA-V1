@@ -4,6 +4,10 @@ import { createPinia } from 'pinia';
 import App from './App.vue'
 import router from './router';
 import { useAuthStore } from '@/stores/auth';
+import { configureAmplify } from '@/config/cognito';
+
+// Configurar AWS Cognito
+configureAmplify();
 
 import { IonicVue } from '@ionic/vue';
 
@@ -72,7 +76,7 @@ app.component('ion-spinner', IonSpinner);
 // Registrar QRCode globalmente
 app.component('qrcode-vue', QrcodeVue);
 
-useAuthStore().initializeToken(); // <-- Sincroniza el token al iniciar
+useAuthStore().initialize(); // <-- Sincroniza el token al iniciar
 
 router.isReady().then(() => {
   app.mount('#app');

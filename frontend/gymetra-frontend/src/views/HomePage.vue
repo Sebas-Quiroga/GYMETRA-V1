@@ -120,8 +120,8 @@ const router = useRouter()
 const userMemberships = ref<any[]>([])
 const loadingMemberships = ref(false)
 
-const logout = () => {
-  auth.clearToken();
+const logout = async () => {
+  await auth.logout();
   router.push("/login");
 };
 
