@@ -1,6 +1,6 @@
 <template>
   <!-- Sidebar Overlay for Mobile -->
-  <div v-if="(isMobile && showSidebar) || (!isMobile && !uiStore.isSidebarCollapsed)" class="sidebar-overlay" @click="closeSidebarAction"></div>
+  <div v-if="isMobile && showSidebar" class="sidebar-overlay" @click="closeSidebarAction"></div>
 
   <!-- Sidebar -->
   <div 
@@ -108,7 +108,6 @@ import {
   personCircleOutline,
   documentTextOutline,
   cardOutline,
-  menuOutline,
   closeOutline,
   shieldCheckmarkOutline,
   chevronBackOutline,
@@ -238,11 +237,38 @@ const handleLogout = () => {
   border-color: var(--admin-accent);
 }
 
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-sidebar) - 1);
+  background: rgba(15, 23, 42, 0.32);
+  backdrop-filter: blur(2px);
+}
+
+.close-sidebar-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: var(--admin-bg-subtle);
+  color: var(--brand-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--admin-transition);
+}
+
+.close-sidebar-btn:hover {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+}
+
 /* Sidebar Core */
 .sidebar {
   width: var(--admin-sidebar-width);
-  background-color: #0c0e12;
-  color: #fff;
+  background: var(--admin-bg-card);
+  color: var(--admin-text-main);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -251,8 +277,8 @@ const handleLogout = () => {
   height: 100vh;
   z-index: var(--z-sidebar);
   transition: var(--admin-transition);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 20px 0 60px rgba(0, 0, 0, 0.15);
+  border-right: 1px solid var(--admin-border);
+  box-shadow: 12px 0 28px rgba(38, 50, 56, 0.08);
 }
 
 .sidebar-collapsed {
@@ -281,17 +307,17 @@ const handleLogout = () => {
 
 /* Header & Brand */
 .sidebar-header {
-  padding: 40px 24px;
+  padding: 30px 22px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 122px;
+  min-height: 104px;
 }
 
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
   cursor: pointer;
   transition: var(--admin-transition);
 }
@@ -301,9 +327,13 @@ const handleLogout = () => {
 }
 
 .brand-logo {
-  height: 42px;
+  height: 24px;
   width: auto;
-  filter: drop-shadow(0 0 8px rgba(4, 184, 229, 0.4));
+  object-fit: contain;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  filter: drop-shadow(0 8px 18px rgba(0, 172, 193, 0.24));
 }
 
 .brand-text {
@@ -314,47 +344,49 @@ const handleLogout = () => {
 .brand-name {
   font-family: var(--app-font-brand);
   font-weight: 900;
-  font-size: 1.3rem;
-  letter-spacing: -0.5px;
+  font-size: 1.18rem;
+  letter-spacing: 0;
   line-height: 1;
-  color: #fff;
+  color: var(--admin-text-main);
 }
 
 .brand-badge {
-  font-size: 0.6rem;
+  font-size: 0.56rem;
   font-weight: 800;
   color: var(--admin-accent);
-  letter-spacing: 2px;
+  letter-spacing: 1.4px;
   margin-top: 4px;
   opacity: 0.8;
 }
 
 /* Profile Section */
 .user-profile {
-  padding: 0 24px 32px;
+  margin: 0 16px 24px;
+  padding: 12px;
   display: flex;
   align-items: center;
   gap: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  margin-bottom: 24px;
+  background: var(--admin-bg-subtle);
+  border: 1px solid var(--admin-border);
+  border-radius: 18px;
   transition: var(--admin-transition);
 }
 
 .profile-collapsed {
-  padding: 0;
+  padding: 10px;
   justify-content: center;
 }
 
 .avatar-wrapper {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-  border-radius: 16px;
+  width: 40px;
+  height: 40px;
+  background: var(--brand-primary-fade);
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--admin-border);
 }
 
 .user-avatar-img {
@@ -365,21 +397,21 @@ const handleLogout = () => {
 }
 
 .user-avatar {
-  font-size: 36px;
-  color: #555;
+  font-size: 28px;
+  color: var(--brand-primary);
 }
 
 .user-name {
   font-weight: 800;
-  font-size: 0.95rem;
-  color: #fff;
+  font-size: 0.88rem;
+  color: var(--admin-text-main);
   margin: 0;
   font-family: var(--app-font-brand);
 }
 
 .user-role {
-  font-size: 0.75rem;
-  color: #8892b0;
+  font-size: 0.7rem;
+  color: var(--admin-text-sub);
   margin: 2px 0 0;
   font-weight: 600;
 }
@@ -387,7 +419,7 @@ const handleLogout = () => {
 /* Navigation */
 .sidebar-nav {
   flex: 1;
-  padding: 0 16px;
+  padding: 0 14px;
   overflow-y: auto;
 }
 
@@ -396,50 +428,69 @@ const handleLogout = () => {
 }
 
 .group-label {
-  font-size: 0.7rem;
+  font-size: 0.64rem;
   font-weight: 900;
-  color: #444a5b;
-  letter-spacing: 1.8px;
+  color: var(--admin-text-muted);
+  letter-spacing: 1.2px;
   padding: 0 14px;
-  margin-bottom: 16px;
+  margin: 0 0 12px;
 }
 
 .nav-item {
   position: relative;
-  padding: 4px 0;
-  margin-bottom: 6px;
+  padding: 3px 0;
+  margin-bottom: 5px;
   cursor: pointer;
 }
 
 .item-inner {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 18px;
-  border-radius: 18px;
+  gap: 12px;
+  padding: 9px 11px;
+  border-radius: 12px;
   transition: var(--admin-transition);
-  color: #8892b0;
+  color: var(--admin-text-sub);
+  border: 1px solid transparent;
 }
 
 .nav-item:hover .item-inner {
-  background-color: rgba(255, 255, 255, 0.03);
-  color: #fff;
-  transform: translateX(4px);
+  background-color: var(--admin-accent-soft);
+  border-color: rgba(0, 172, 193, 0.18);
+  color: var(--brand-secondary);
+  transform: translateX(2px);
 }
 
 .nav-item ion-icon {
-  font-size: 22px;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  border-radius: 8px;
+  color: var(--admin-text-sub);
+  background: var(--admin-bg-subtle);
+  transition: var(--admin-transition);
+}
+
+.nav-item:hover ion-icon {
+  color: var(--brand-primary);
 }
 
 .nav-item span {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   font-family: var(--app-font-family);
 }
 
 .nav-item.active .item-inner {
-  background: linear-gradient(135deg, rgba(4, 184, 229, 0.12), rgba(4, 184, 229, 0.02));
-  color: var(--admin-accent);
+  background: rgba(0, 172, 193, 0.14);
+  color: var(--brand-secondary);
+  border-color: rgba(0, 172, 193, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(0, 172, 193, 0.08);
+}
+
+.nav-item.active ion-icon {
+  background: rgba(0, 172, 193, 0.2);
+  color: var(--brand-primary);
 }
 
 .sidebar-collapsed .item-inner {
@@ -450,15 +501,15 @@ const handleLogout = () => {
 
 .active-indicator {
   position: absolute;
-  left: -4px;
+  left: -2px;
   top: 50%;
   transform: translateY(-50%);
   width: 4px;
   height: 0;
-  background: var(--admin-accent);
+  background: var(--brand-primary);
   border-radius: 0 4px 4px 0;
   transition: var(--admin-transition);
-  box-shadow: 0 0 15px var(--admin-accent);
+  box-shadow: 0 0 15px rgba(0, 172, 193, 0.45);
 }
 
 .nav-item.active .active-indicator {
@@ -467,15 +518,15 @@ const handleLogout = () => {
 
 /* Footer & Logout */
 .sidebar-footer {
-  padding: 32px 24px;
+  padding: 24px;
 }
 
 .logout-btn {
   width: 100%;
-  background: rgba(186, 26, 26, 0.05);
-  border: 1px solid rgba(186, 26, 26, 0.1);
-  border-radius: 18px;
-  padding: 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.16);
+  border-radius: 16px;
+  padding: 14px 16px;
   transition: var(--admin-transition);
   cursor: pointer;
 }
@@ -485,15 +536,19 @@ const handleLogout = () => {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: #f13e3e;
+  color: #dc2626;
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-family: var(--app-font-brand);
 }
 
+.logout-content ion-icon {
+  color: currentColor;
+}
+
 .logout-btn:hover {
-  background: #f13e3e;
-  transform: scale(0.98);
+  background: #ef4444;
+  transform: translateY(-1px);
 }
 
 .logout-btn:hover .logout-content {
@@ -501,21 +556,32 @@ const handleLogout = () => {
 }
 
 .sidebar-collapsed .logout-btn {
-  padding: 16px 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sidebar-collapsed .logout-content {
   gap: 0;
 }
 
+.sidebar-collapsed .logout-content ion-icon {
+  width: 24px;
+  height: 24px;
+}
+
 /* Collapse Button */
 .collapse-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  background: var(--admin-bg-subtle);
+  border: none;
+  color: var(--brand-primary);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -524,8 +590,60 @@ const handleLogout = () => {
 }
 
 .collapse-btn:hover {
-  background: var(--admin-accent);
-  border-color: var(--admin-accent);
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar {
+    background:
+      radial-gradient(circle at top left, rgba(0, 172, 193, 0.16), transparent 32%),
+      linear-gradient(180deg, #111827 0%, #0f172a 100%);
+    color: #fff;
+    border-right-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 18px 0 45px rgba(15, 23, 42, 0.16);
+  }
+
+  .brand-name,
+  .user-name {
+    color: #fff;
+  }
+
+  .user-profile,
+  .nav-item ion-icon,
+  .collapse-btn,
+  .close-sidebar-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .user-role,
+  .item-inner {
+    color: #cbd5e1;
+  }
+
+  .group-label {
+    color: #94a3b8;
+  }
+
+  .nav-item:hover .item-inner {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  .nav-item.active .item-inner {
+    color: #fff;
+  }
+
+  .collapse-btn,
+  .close-sidebar-btn {
+    color: #fff;
+  }
+
+  .logout-content {
+    color: #fecaca;
+  }
 }
 
 /* Desktop styles */
@@ -534,4 +652,3 @@ const handleLogout = () => {
   .sidebar { position: fixed; transform: none !important; }
 }
 </style>
->

@@ -1,11 +1,9 @@
-// src/router/index.ts
 import { createRouter, createWebHistory } from '@ionic/vue-router'
 import { RouteRecordRaw } from 'vue-router'
-import HomePage from '../views/HomePage.vue'
-import LoginPage from '../views/LoginPage.vue'
-import RegisterPage from '../views/RegisterPage.vue'
-import { isAuthenticated } from '@/services/authService' // ✅ usamos la función del servicio
-
+import HomePage from '../modules/home/views/HomePage.vue'
+import LoginPage from '../modules/auth/views/LoginPage.vue'
+import RegisterPage from '../modules/auth/views/RegisterPage.vue'
+import { isAuthenticated } from '../modules/auth/services/authService'
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
@@ -20,7 +18,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/Pasarelapago',
     name: 'PasarelaPago',
-    component: () => import('../views/PasarelaPago.vue')
+    component: () => import('../modules/membership/views/PasarelaPago.vue')
   },
   {
     path: '/login',
@@ -35,41 +33,35 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/perfil',
     name: 'Perfil',
-    component: () => import('../views/PerfilPage.vue')
-    // meta: { requiresAuth: true } // Desactivado temporalmente para pruebas visuales
+    component: () => import('../modules/profile/views/PerfilPage.vue')
   },
   {
     path: '/Planes',
     name: 'Planes',
-    component: () => import('../views/PlanesPage.vue')
+    component: () => import('../modules/membership/views/PlanesPage.vue')
   },
   {
     path: '/qr',
     name: 'Qr',
-    component: () => import('../views/QrPage.vue')
+    component: () => import('../modules/qr/views/QrPage.vue')
   },
   {
     path: '/nutrition-plan',
     name: 'NutritionPlan',
-    component: () => import('../views/NutritionPlanView.vue'),
+    component: () => import('../modules/nutrition/views/NutritionPlanView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/rutinas',
     name: 'Rutinas',
-    component: () => import('../views/RutinasView.vue'),
+    component: () => import('../modules/training/views/RutinasView.vue'),
     meta: { requiresAuth: true }
   }
 ]
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
-
-// ===============================
-// Protección de rutas
-// ===============================
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated()) {
     next('/login')
@@ -77,5 +69,4 @@ router.beforeEach((to, from, next) => {
     next()
   }
 })
-
 export default router

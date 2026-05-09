@@ -99,13 +99,14 @@
 /* Actions */
 .actions-cell {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
 }
 
 .edit-btn, .delete-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   border: 1px solid var(--admin-border);
   background: var(--admin-bg-page);
   display: flex;

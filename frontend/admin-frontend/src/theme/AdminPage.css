@@ -186,9 +186,9 @@
 
 /* Action Buttons in Table */
 .action-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
   border: 1px solid var(--admin-border);
   background: var(--admin-bg-subtle);
   color: var(--text-sub);

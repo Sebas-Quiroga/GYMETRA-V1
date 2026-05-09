@@ -1,13 +1,14 @@
-/* Aero Athletic Design System - Admin Unification */
+/* Gymetra Admin Design System */
 :root {
   /* Brand Colors */
   --brand-primary: #00ACC1;       /* Turquesa */
-  --brand-primary-fade: rgba(0, 172, 193, 0.1);
+  --brand-primary-fade: rgba(0, 172, 193, 0.15);
   --brand-secondary: #263238;     /* Dark Slate */
   --brand-accent: #FFB300;        /* Oro */
   
   /* Typography */
-  --app-font-family: 'Inter', sans-serif;
+  --app-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --app-font-brand: 'Outfit', var(--app-font-family);
   --ion-font-family: var(--app-font-family);
 
   /* Semantic Theme Tokens - LIGHT */
@@ -21,9 +22,9 @@
   --admin-accent-soft: var(--brand-primary-fade);
   --admin-border: #E0E4E7;
   
-  --admin-shadow-sm: 0 2px 8px rgba(38, 50, 56, 0.05);
-  --admin-shadow-md: 0 8px 24px rgba(38, 50, 56, 0.08);
-  --admin-shadow-lg: 0 16px 48px rgba(38, 50, 56, 0.12);
+  --admin-shadow-sm: 0 1px 2px rgba(38, 50, 56, 0.05);
+  --admin-shadow-md: 0 10px 24px rgba(38, 50, 56, 0.08);
+  --admin-shadow-lg: 0 18px 50px rgba(38, 50, 56, 0.12);
 
   --admin-radius-sm: 8px;
   --admin-radius-md: 12px;
@@ -33,7 +34,9 @@
   /* Layout */
   --admin-sidebar-width: 280px;
   --admin-sidebar-collapsed-width: 80px;
-  --admin-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --admin-transition: all 0.22s ease;
+  --z-sidebar: 900;
+  --z-modal: 1200;
 
   /* Ionic Overrides */
   --ion-color-primary: var(--brand-primary);
@@ -61,6 +64,117 @@
   --border-color: var(--admin-border);
   --bg-page: var(--admin-bg-page);
   --bg-card: var(--admin-bg-card);
+  --bg-subtle: var(--admin-bg-subtle);
   --text-main: var(--admin-text-main);
   --text-sub: var(--admin-text-sub);
+  --text-muted: var(--admin-text-muted);
+  --radius-xl: var(--admin-radius-xl);
+  --radius-lg: var(--admin-radius-lg);
+  --radius-md: var(--admin-radius-md);
+  --shadow-sm: var(--admin-shadow-sm);
+  --shadow-md: var(--admin-shadow-md);
+  --shadow-lg: var(--admin-shadow-lg);
+  --color-success: #10b981;
+  --color-error: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+  background: var(--admin-bg-page);
+  color: var(--admin-text-main);
+  font-family: var(--app-font-family);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  letter-spacing: 0;
+}
+
+ion-icon {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.dashboard-header h1,
+.header-main h1,
+.table-header h2,
+.memberships-section h3,
+.payments-section h3 {
+  font-family: var(--app-font-brand);
+  letter-spacing: 0;
+}
+
+.action-btn,
+.edit-btn,
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.action-buttons,
+.actions-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn ion-icon,
+.edit-btn ion-icon,
+.delete-btn ion-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.add-user-btn,
+.sync-users-btn,
+.submit-btn,
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: 0;
+}
+
+.add-user-btn {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius-md);
+  background: var(--brand-primary);
+  color: #fff;
+  font-family: var(--app-font-brand);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 20px var(--brand-primary-fade);
+  transition: var(--admin-transition);
+}
+
+.add-user-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px var(--brand-primary-fade);
+}
+
+.add-user-btn ion-icon,
+.sync-users-btn ion-icon,
+.submit-btn ion-icon,
+.back-btn ion-icon {
+  width: 18px;
+  height: 18px;
 }

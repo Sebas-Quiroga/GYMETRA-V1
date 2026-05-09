@@ -1,0 +1,148 @@
+:root {
+  --ion-color-primary: #00ACC1;
+  --ion-color-primary-rgb: 0, 172, 193;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0098aa;
+  --ion-color-primary-tint: #1ab4c7;
+  --ion-color-secondary: #263238;
+  --ion-color-secondary-rgb: 38, 50, 56;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #212c31;
+  --ion-color-secondary-tint: #3c474c;
+  --ion-color-tertiary: #FFB300;
+  --ion-color-tertiary-rgb: 255, 179, 0;
+  --app-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --app-font-brand: 'Outfit', sans-serif;
+  --ion-font-family: var(--app-font-family);
+  --bg-page: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f3f4;
+  --text-main: #1c1c1c;
+  --text-sub: #4b5563;
+  --text-muted: #9ca3af;
+  --brand-primary: #00ACC1;
+  --brand-secondary: #263238;
+  --brand-accent: #FFB300;
+  --border-color: #e5e7eb;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --radius-xl: 1.5rem;
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --brand-primary-fade: rgba(0, 172, 193, 0.15);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #0f172a;
+    --bg-card: #1e293b;
+    --bg-subtle: #111827;
+    --text-main: #f8fafc;
+    --text-sub: #cbd5e1;
+    --text-muted: #64748b;
+    --brand-primary: #22d3ee;
+    --brand-secondary: #38bdf8;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --brand-primary-fade: rgba(34, 211, 238, 0.1);
+  }
+}
+.input-card ion-item,
+.input-card ion-item * {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+.input-card ion-item {
+  --background: #ffffff !important;
+  --border-radius: 16px !important;
+  --padding-start: 18px !important;
+  --padding-end: 18px !important;
+  margin-bottom: 18px;
+  min-height: 48px;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: none !important;
+  position: relative;
+  overflow: hidden;
+  --highlight-background: transparent !important;
+  --highlight-color-focused: transparent !important;
+  --border-width: 0 !important;
+  --inner-border-width: 0 !important;
+}
+.input-card ion-item:focus-within {
+  --background: #dedbdb !important;
+  border: none !important;
+}
+.input-card ion-input,
+.input-card ion-input::part(native) {
+  font-family: var(--app-font-brand) !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: #8c8686 !important;
+  --color: #8c8686 !important;
+  --placeholder-color: #8c8686 !important;
+  background: transparent !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+  box-sizing: border-box !important;
+  border: none !important;
+  outline: none !important;
+}
+.input-card ion-input::part(native)::placeholder {
+  color: #8c8686 !important;
+  opacity: 1;
+  font-weight: 700;
+  font-family: var(--app-font-brand);
+}
+.input-card ion-item ion-icon[slot="start"] {
+  color: #000000 !important;
+  margin-right: 12px;
+  font-size: 20px;
+  min-width: 24px;
+  min-height: 24px;
+  align-self: center;
+}
+.input-card ion-item ion-icon[slot="end"] {
+  color: #000000 !important;
+  font-size: 20px;
+  align-self: center;
+}
+.input-card ion-item::part(native),
+.input-card ion-item .input-bottom,
+.input-card ion-item .sc-ion-input-md-h .input-bottom,
+.input-card ion-item .item-native,
+.input-card ion-item .item-outline,
+.input-card ion-item .item-outline .item-inner,
+.input-card ion-item .native-input {
+  border-bottom: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.login-btn {
+  --background: #111 !important;
+  --border-radius: 28px !important;
+  --color: #fff !important;
+  --box-shadow: none !important;
+  font-family: var(--app-font-brand) !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+  letter-spacing: 1px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  height: 56px;
+  text-transform: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-btn:disabled {
+  opacity: 0.7;
+}
