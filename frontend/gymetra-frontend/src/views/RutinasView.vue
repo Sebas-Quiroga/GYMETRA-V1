@@ -12,7 +12,7 @@
       
       <router-link to="/home" class="logo-link">
         <img src="/logo.png" alt="Logo" class="header-logo-img" />
-        <span class="header-logo-text">{{ APP_NAME }}</span>
+        <span class="brand-name-header">GYMETRA</span>
       </router-link>
 
       <div class="header-right"></div>
@@ -33,14 +33,12 @@
             <ion-select 
               v-model="selectedMuscle" 
               interface="action-sheet" 
-              placeholder="Seleccionar músculo"
+              :placeholder="loadingLists ? 'Cargando categorías...' : 'Seleccionar músculo'"
               @ionChange="handleMuscleChange"
             >
-              <ion-select-option value="chest">Pecho (Chest)</ion-select-option>
-              <ion-select-option value="back">Espalda (Back)</ion-select-option>
-              <ion-select-option value="upper legs">Piernas (Legs)</ion-select-option>
-              <ion-select-option value="shoulders">Hombros (Shoulders)</ion-select-option>
-              <ion-select-option value="upper arms">Brazos (Arms)</ion-select-option>
+              <ion-select-option v-for="muscle in muscleList" :key="muscle" :value="muscle">
+                {{ muscle.charAt(0).toUpperCase() + muscle.slice(1) }}
+              </ion-select-option>
             </ion-select>
           </ion-item>
         </div>
@@ -65,7 +63,7 @@
             class="exercise-card"
           >
             <div class="card-visual">
-              <img :src="exercise.gifUrl" :alt="exercise.name" loading="lazy" />
+              <img :src="getLocalGifUrl(exercise.id)" :alt="exercise.name" loading="lazy" />
               <div class="card-overlay"></div>
               <div class="equipment-tag">{{ exercise.equipment }}</div>
             </div>
@@ -97,12 +95,14 @@ import {
   IonSelectOption, IonSpinner 
 } from '@ionic/vue';
 import { arrowBackOutline, alertCircleOutline } from 'ionicons/icons';
-import { getExercisesByBodyPart, type Exercise } from '@/services/fitnessService';
+import { getExercisesByBodyPart, getLocalGifUrl, getBodyPartList, type Exercise } from '@/services/fitnessService';
 
 const APP_NAME = "GYMETRA";
 const selectedMuscle = ref('chest');
 const exercises = ref<Exercise[]>([]);
+const muscleList = ref<string[]>([]);
 const loading = ref(false);
+const loadingLists = ref(false);
 const error = ref('');
 
 const fetchExercises = async () => {
@@ -123,8 +123,25 @@ const handleMuscleChange = () => {
   fetchExercises();
 };
 
+const initView = async () => {
+  loadingLists.value = true;
+  try {
+    const list = await getBodyPartList();
+    muscleList.value = list;
+    if (list.length > 0) {
+      // Intentar seleccionar 'pecho' por defecto si existe, si no el primero
+      selectedMuscle.value = list.find(m => m.toLowerCase().includes('pech')) || list[0];
+      await fetchExercises();
+    }
+  } catch (err) {
+    console.error('Error inicializando vista:', err);
+  } finally {
+    loadingLists.value = false;
+  }
+};
+
 onMounted(() => {
-  fetchExercises();
+  initView();
 });
 </script>
 
@@ -162,13 +179,13 @@ onMounted(() => {
   .header-logo-img { filter: invert(1) brightness(0.2); }
 }
 
-.header-logo-text {
-  font-family: var(--app-font-brand);
-  font-size: 1.2rem;
+.brand-name-header {
+  font-family: var(--app-font-family);
+  font-size: 1.25rem;
   font-weight: 900;
-  font-style: italic;
-  color: var(--brand-primary);
+  color: var(--brand-secondary);
   text-transform: uppercase;
+  letter-spacing: -0.5px;
 }
 
 /* ─── Content ─── */
@@ -184,15 +201,15 @@ onMounted(() => {
 
 .rutinas-intro { margin-bottom: 2.5rem; text-align: center; }
 .rutinas-title { 
-  font-family: var(--app-font-brand); 
+  font-family: var(--app-font-family); 
   font-size: 2.2rem; 
-  font-weight: 950; 
+  font-weight: 900; 
   color: var(--text-main); 
-  letter-spacing: -0.04em;
+  letter-spacing: -1px;
   margin-bottom: 0.5rem;
 }
 .rutinas-title .accent { color: var(--brand-primary); }
-.rutinas-sub { color: var(--text-sub); font-weight: 500; }
+.rutinas-sub { color: var(--text-sub); font-weight: 500; font-family: var(--app-font-family); }
 
 /* ─── Selector ─── */
 .selector-card {
@@ -218,18 +235,18 @@ onMounted(() => {
 
 .exercise-card {
   background: var(--bg-card);
-  border-radius: 1.5rem;
+  border-radius: var(--radius-xl);
   overflow: hidden;
   border: 1px solid var(--border-color);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.03);
+  box-shadow: var(--shadow-md);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
 }
 
 .exercise-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
   border-color: var(--brand-primary);
 }
 
@@ -272,12 +289,13 @@ onMounted(() => {
 }
 
 .exercise-name {
-  font-family: var(--app-font-brand);
+  font-family: var(--app-font-family);
   font-size: 1.1rem;
   font-weight: 800;
   color: var(--text-main);
   text-transform: capitalize;
   margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
 }
 
 .muscle-tag {

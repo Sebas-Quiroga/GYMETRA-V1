@@ -139,4 +139,18 @@ public class AuthController {
         if (!updated) return ResponseEntity.notFound().build();
         return ResponseEntity.ok("Estado actualizado a: " + status);
     }
+
+    // ---------------------------------------------------------------
+    // Sincronizar todos los usuarios de Cognito
+    // ---------------------------------------------------------------
+    @Operation(
+            summary = "Sincronizar usuarios de Cognito",
+            description = "Escanea el User Pool de Cognito e importa los usuarios que no existan localmente.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PostMapping("/users/sync")
+    public ResponseEntity<String> syncUsers() {
+        int count = userService.syncAllUsersFromCognito();
+        return ResponseEntity.ok("Sincronización completada. Se importaron " + count + " usuarios nuevos.");
+    }
 }

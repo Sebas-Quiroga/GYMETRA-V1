@@ -1,6 +1,6 @@
 package com.Membership.GYMETRA.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -33,7 +33,6 @@ public class UserMembership {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "membership_id", nullable = false)
-    @JsonBackReference // evita ciclos infinitos al serializar JSON
     private Membership membership;
 
     @Column(name = "start_date", nullable = false)
@@ -48,17 +47,9 @@ public class UserMembership {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Status status;
+    private UserMembershipStatus status;
 
     // 🔹 Nuevo campo para controlar la creación de membresías pendientes
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
-    public enum Status {
-        ACTIVE,
-        SUSPENDED,
-        CANCELED,
-        EXPIRED,
-        PENDING
-    }
 }

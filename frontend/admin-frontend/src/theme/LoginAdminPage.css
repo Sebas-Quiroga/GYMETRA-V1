@@ -1,261 +1,169 @@
-/* Importar fuente Nunito */
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700&display=swap');
+/* LoginAdminPage - Aero Athletic Design */
 
-/* Login Admin Page Styles */
 .admin-login-page {
   min-height: 100vh;
-  width: 100vw;
-  background: #00BCD4;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--admin-bg-page);
   padding: 20px;
-  font-family: 'Nunito', sans-serif;
-  position: fixed;
-  top: 0;
-  left: 0;
 }
 
-/* Tarjeta de Login Centrada */
 .login-card {
+  background: var(--admin-bg-card);
   width: 100%;
-  max-width: 450px;
-  background: white;
-  border-radius: 25px;
-  padding: 50px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* Logo/Ícono */
-.logo-section {
-  margin-bottom: 40px;
+  max-width: 440px;
+  padding: 40px;
+  border-radius: var(--admin-radius-xl);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-lg);
+  animation: slideIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
   text-align: center;
 }
 
-.logo-icon {
-  font-size: 80px;
-  color: #00BCD4;
-  margin-bottom: 16px;
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.logo-section h1 {
-  font-size: 28px;
-  color: #333;
+/* Logo Section */
+.logo-section {
+  margin-bottom: 2rem;
+}
+
+.logo-kinetic {
+  width: 80px;
+  height: auto;
+  margin-bottom: 1rem;
+}
+
+.brand-name-card {
+  font-family: var(--app-font-family);
+  font-size: 2.25rem;
+  font-weight: 900;
+  color: var(--brand-secondary);
+  text-transform: uppercase;
+  letter-spacing: -1px;
   margin: 0;
+}
+
+.brand-tagline {
+  font-size: 0.75rem;
+  color: var(--text-muted);
   font-weight: 700;
-  font-family: 'Nunito', sans-serif;
+  letter-spacing: 0.1em;
 }
 
-/* Campos del Formulario */
+.admin-badge {
+  display: inline-block;
+  background: var(--admin-bg-subtle);
+  color: var(--brand-primary);
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 1rem;
+  border: 1px solid var(--admin-border);
+}
+
+/* Form Styling */
+.login-form {
+  text-align: left;
+}
+
 .form-group {
-  width: 100%;
-  margin-bottom: 20px;
-}
-
-.form-group:nth-child(2) {
-  margin-top: 20px;
+  margin-bottom: 1.5rem;
 }
 
 .form-label {
   display: block;
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
-  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.7rem;
+  color: var(--admin-text-sub);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
 }
 
-.input-group {
+.input-wrapper-kinetic {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.input-icon {
+.input-wrapper-kinetic ion-icon {
   position: absolute;
-  left: 16px;
-  font-size: 20px;
-  color: #666;
-  z-index: 1;
+  left: 1rem;
+  font-size: 1.25rem;
+  color: var(--admin-text-muted);
+  pointer-events: none;
 }
 
 .form-input {
   width: 100%;
-  padding: 16px 16px 16px 48px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 0.3s, box-shadow 0.3s;
-  background: white;
-  color: #333;
-  font-family: 'Nunito', sans-serif;
+  padding: 1rem 1rem 1rem 3rem;
+  background: var(--admin-bg-subtle);
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius-md);
+  color: var(--admin-text-main);
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #00BCD4;
-  box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
-  color: #333;
+  border-color: var(--brand-primary);
+  background: var(--admin-bg-card);
+  box-shadow: 0 0 0 4px var(--brand-primary-fade);
 }
 
-.form-input.error {
-  border-color: #dc3545;
-  color: #333;
-}
-
-.validation-error {
-  color: #dc3545;
-  font-size: 12px;
-  margin-top: 4px;
-  font-family: 'Nunito', sans-serif;
-}
-
-/* Enlace "¿Olvidaste tu contraseña?" */
-.forgot-link {
-  width: 100%;
-  text-align: left;
-  margin-top: 10px;
-  margin-bottom: 25px;
-}
-
-.forgot-password-link {
-  color: #00BCD4;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  font-family: 'Nunito', sans-serif;
-}
-
-.forgot-password-link:hover {
-  text-decoration: underline;
-}
-
-/* Botón Ingresar */
-.login-btn-container {
-  width: 100%;
-  margin-top: 25px;
-  margin-bottom: 30px;
-  display: flex;
-  justify-content: center;
-}
-
+/* Button */
 .login-btn {
-  width: 200px;
-  padding: 16px 32px;
-  background: black;
-  color: white;
+  width: 100%;
+  padding: 1rem;
+  background: var(--brand-primary);
+  color: #fff;
   border: none;
-  border-radius: 30px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: var(--admin-radius-md);
+  font-weight: 800;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-family: 'Nunito', sans-serif;
+  box-shadow: 0 8px 16px var(--brand-primary-fade);
 }
 
-.login-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+/* Links & Footer */
+.forgot-password-link {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--brand-primary);
+  text-decoration: none;
 }
 
-.login-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.loading-spinner {
-  display: flex;
-  align-items: center;
-}
-
-.spinner-icon {
-  font-size: 20px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Footer del login */
 .login-footer {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.login-footer p {
-  color: #666;
-  font-size: 14px;
-  margin: 0 0 8px 0;
-  font-family: 'Nunito', sans-serif;
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  color: var(--admin-text-sub);
 }
 
 .contact-link {
-  color: #00BCD4;
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 14px;
-  font-family: 'Nunito', sans-serif;
+  color: var(--brand-primary);
 }
 
-.contact-link:hover {
-  text-decoration: underline;
-}
-
-/* Enlace de regreso */
 .back-link {
-  width: 100%;
-  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--admin-border);
 }
 
 .back-btn {
   background: none;
   border: none;
-  color: #666;
-  font-size: 14px;
-  cursor: pointer;
+  color: var(--admin-text-muted);
+  font-weight: 700;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: color 0.3s;
-  font-family: 'Nunito', sans-serif;
-}
-
-.back-btn:hover {
-  color: #00BCD4;
-}
-
-.back-btn ion-icon {
-  font-size: 16px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .admin-login-page {
-    padding: 10px;
-  }
-
-  .login-card {
-    padding: 30px 20px;
-    max-width: 100%;
-  }
-
-  .logo-icon {
-    font-size: 70px;
-  }
-
-  .login-btn {
-    width: 180px;
-    padding: 14px 28px;
-  }
+  gap: 0.5rem;
+  margin: 0 auto;
+  cursor: pointer;
 }

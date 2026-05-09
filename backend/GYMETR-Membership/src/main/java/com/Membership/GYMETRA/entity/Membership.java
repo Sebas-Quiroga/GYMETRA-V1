@@ -1,7 +1,7 @@
 package com.Membership.GYMETRA.entity;
 
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -42,8 +42,16 @@ public class Membership {
     @Column(columnDefinition = "TEXT")
     private String description; // descripción
 
+    @Column
+    @Builder.Default
+    private Boolean training = false; // permiso entrenamiento
+
+    @Column
+    @Builder.Default
+    private Boolean nutrition = false; // permiso nutrición
+
     // Relación con UserMembership (uno a muchos)
     @OneToMany(mappedBy = "membership")
-    @JsonManagedReference
+    @com.fasterxml.jackson.annotation.JsonIgnore // Evita ciclos infinitos al serializar
     private List<UserMembership> userMemberships;
 }

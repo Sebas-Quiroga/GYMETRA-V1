@@ -3,42 +3,46 @@
     <!-- Sidebar Component -->
     <AdminSidebar
       :active-section="activeSection"
-      @navigate-to-users="navigateToUsers"
-      @navigate-to-reports="navigateToReports"
-      @navigate-to-charts="navigateToCharts"
-      @navigate-to-payments="navigateToPayments"
       @logout="logout"
     />
 
     <!-- Main Content -->
     <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
-      <!-- Loading State -->
-      <div v-if="loading" class="loading-container">
-        <div class="spinner"></div>
-        <p>Cargando reportes del dashboard...</p>
-      </div>
+      <KineticLoading 
+        v-if="loading" 
+        title="Reportes de Auditoría" 
+        message="Compilando auditorías y exportaciones masivas de datos..." 
+      />
 
       <!-- Error State -->
-      <div v-else-if="error" class="error-container">
-        <p class="error-message">{{ error }}</p>
-        <button class="retry-btn" @click="loadReports">Reintentar</button>
+      <div v-else-if="error" class="error-container" style="text-align: center; padding: 100px;">
+        <ion-icon :icon="banOutline" style="font-size: 60px; color: #ba1a1a;"></ion-icon>
+        <p class="error-message" style="margin: 20px 0; font-weight: 700;">{{ error }}</p>
+        <button class="add-user-btn" @click="loadReports" style="margin: 0 auto;">Reintentar Sincronización</button>
       </div>
 
       <!-- Dashboard Content -->
       <div v-else class="dashboard-content">
-        <!-- Header con fecha y título -->
+        <!-- Header -->
         <div class="dashboard-header">
-          <h1>Centro de Reportes</h1>
-          <p class="last-update">Última actualización: {{ formatDate(new Date()) }}</p>
+          <div class="header-main">
+            <h1>Reportes de Auditoría</h1>
+            <p class="last-update">Exportación masiva de datos → {{ formatDate(new Date()) }}</p>
+          </div>
+          <div class="header-actions" style="display: flex; gap: 10px;">
+             <!-- Future filters could go here -->
+          </div>
         </div>
-
 
         <!-- Tablas de Datos -->
         <div class="reports-tables-section">
           <!-- Tabla de Usuarios -->
           <div class="chart-card">
             <div class="chart-header">
-              <h3>Usuarios Registrados</h3>
+              <h3>
+                <ion-icon :icon="peopleOutline" style="color: var(--admin-accent); vertical-align: middle; margin-right: 8px;"></ion-icon>
+                Explorador de Usuarios
+              </h3>
               <ReportesButtons
                 type="users"
                 :users="users"
@@ -46,51 +50,43 @@
                 :loading="loading"
               />
             </div>
-            <div class="payments-history">
-              <table class="payments-history-table">
-                <thead>
-                  <tr>
-                    <th>ID Usuario</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Correo</th>
-                    <th>Teléfono</th>
-                    <th>Identificación</th>
-                    <th>Estado</th>
-                    <th>Fecha de Creación</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="user in paginatedUsers" :key="user.id || user.nombre">
-                    <td>{{ user.id }}</td>
-                    <td style="font-weight: 500;">{{ user.nombre }}</td>
-                    <td style="font-weight: 500;">{{ user.apellido }}</td>
-                    <td style="word-break: break-all;">{{ user.correo }}</td>
-                    <td>{{ user.telefono || 'N/A' }}</td>
-                    <td>{{ user.identificacion }}</td>
-                    <td>
-                      <span :class="getStatusClass(user.estado)" class="status-badge">{{ user.estado }}</span>
-                    </td>
-                    <td>{{ formatDate(user.fechaCreacion) }}</td>
-                  </tr>
-                  <!-- Mostrar mensaje si no hay datos -->
-                  <tr v-if="users.length === 0 && !loading">
-                    <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
-                      <ion-icon :icon="peopleOutline" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></ion-icon>
-                      <div>No hay usuarios registrados</div>
-                    </td>
-                  </tr>
-                  <!-- Loading state -->
-                  <tr v-if="loading" class="loading-row">
-                    <td colspan="8" style="text-align: center; padding: 40px;">
-                      <div class="loading-spinner"></div>
-                      <div style="margin-top: 10px; color: #666;">Cargando usuarios...</div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            
+            <table class="payments-history-table">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">ID</th>
+                  <th>Usuario</th>
+                  <th>Contacto</th>
+                  <th>Identificación</th>
+                  <th>Estado</th>
+                  <th>Registro</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in paginatedUsers" :key="user.id || user.correo">
+                  <td style="font-family: monospace; opacity: 0.6;">#{{ user.id }}</td>
+                  <td>
+                    <div style="font-weight: 800; font-family: var(--app-font-brand);">{{ user.nombre }} {{ user.apellido }}</div>
+                    <div style="font-size: 0.75rem; color: var(--admin-text-sub);">{{ user.correo }}</div>
+                  </td>
+                  <td style="font-size: 0.85rem;">{{ user.telefono || 'N/A' }}</td>
+                  <td style="font-family: monospace; font-weight: 700;">{{ user.identificacion }}</td>
+                  <td>
+                    <span :class="getStatusClass(user.estado)" class="status-badge">{{ user.estado }}</span>
+                  </td>
+                  <td style="font-size: 0.8rem; color: var(--admin-text-sub);">{{ formatDate(user.fechaCreacion) }}</td>
+                </tr>
+                
+                <tr v-if="users.length === 0">
+                  <td colspan="6" style="text-align: center; padding: 60px;">
+                    <ion-icon :icon="peopleOutline" style="font-size: 48px; color: var(--admin-accent-soft);"></ion-icon>
+                    <div style="margin-top: 15px; font-weight: 700; color: var(--admin-text-sub);">No hay registros de usuarios exportables</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-              <!-- Pagination for Users Table -->
+            <div style="padding: 20px 35px;">
               <Pagination
                 :total-items="users.length"
                 :current-page="usersCurrentPage"
@@ -106,7 +102,10 @@
           <!-- Historial de Pagos -->
           <div class="chart-card">
             <div class="chart-header">
-              <h3>Historial de Pagos</h3>
+              <h3>
+                <ion-icon :icon="cashOutline" style="color: var(--admin-accent); vertical-align: middle; margin-right: 8px;"></ion-icon>
+                Historial de Transacciones
+              </h3>
               <ReportesButtons
                 type="payments"
                 :users="users"
@@ -114,38 +113,45 @@
                 :loading="loading"
               />
             </div>
-            <div class="payments-history">
-              <table class="payments-history-table">
-                <thead>
-                  <tr>
-                    <th>ID Pago</th>
-                    <th>Usuario</th>
-                    <th>Fecha de Pago</th>
-                    <th>Monto</th>
-                    <th>Plan</th>
-                    <th>Método</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="payment in paginatedPayments" :key="payment.id">
-                    <td>{{ payment.idPago }}</td>
-                    <td>{{ payment.identificacion }}</td>
-                    <td>{{ formatDate(payment.fechaPago) }}</td>
-                    <td>${{ payment.costo.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') }}</td>
-                    <td>{{ payment.plan }}</td>
-                    <td>{{ payment.metodoPago === 'GATEWAY' ? 'TARJETA' : (payment.metodoPago || 'GATEWAY') }}</td>
-                    <td>
-                      <span :class="getStatusClass(payment.estado)" class="status-badge">{{ payment.estado }}</span>
-                    </td>
-                  </tr>
-                  <tr v-if="payments.length === 0">
-                    <td colspan="7" class="no-data">No hay pagos registrados</td>
-                  </tr>
-                </tbody>
-              </table>
+            
+            <table class="payments-history-table">
+              <thead>
+                <tr>
+                  <th>Referencia</th>
+                  <th>Titular</th>
+                  <th>Inversión</th>
+                  <th>Plan</th>
+                  <th>Vía</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="payment in paginatedPayments" :key="payment.id">
+                  <td style="font-family: monospace; opacity: 0.6;">{{ payment.idPago }}</td>
+                  <td>
+                    <div style="font-weight: 700;">{{ payment.identificacion }}</div>
+                  </td>
+                  <td style="font-weight: 900; color: var(--admin-text-main);">${{ payment.costo.toLocaleString() }}</td>
+                  <td style="font-size: 0.8rem; font-weight: 800; color: var(--admin-accent);">{{ payment.plan }}</td>
+                  <td>
+                    <span style="font-size: 0.75rem; font-weight: 800;">{{ payment.metodoPago === 'GATEWAY' ? 'TARJETA' : 'EFECTIVO' }}</span>
+                  </td>
+                  <td style="font-size: 0.8rem;">{{ formatDate(payment.fechaPago) }}</td>
+                  <td>
+                    <span :class="getStatusClass(payment.estado)" class="status-badge">{{ payment.estado }}</span>
+                  </td>
+                </tr>
+                <tr v-if="payments.length === 0">
+                  <td colspan="7" style="text-align: center; padding: 60px;">
+                    <ion-icon :icon="cardOutline" style="font-size: 48px; color: var(--admin-accent-soft);"></ion-icon>
+                    <div style="margin-top: 15px; font-weight: 700; color: var(--admin-text-sub);">No hay transacciones procesadas aún</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
-              <!-- Pagination for Payments Table -->
+            <div style="padding: 20px 35px;">
               <Pagination
                 :total-items="payments.length"
                 :current-page="paymentsCurrentPage"
@@ -158,7 +164,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -171,6 +176,7 @@ import { logout as authLogout } from '@/services/authService'
 import AdminSidebar from '@/components/AdminSidebar.vue'
 import ReportesButtons from '@/components/ReportesButtons.vue'
 import Pagination from '@/components/Pagination.vue'
+import KineticLoading from '@/components/KineticLoading.vue'
 import { formatNumber, formatCurrency } from '@/services/metricsService'
 import { reportsService, type Report, type ReportFilters, type ReportStats, type ReportTypeStats } from '@/services/reportsService'
 import { userService, type User as ApiUser } from '@/services/userService'

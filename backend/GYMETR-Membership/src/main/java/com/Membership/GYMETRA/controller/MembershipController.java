@@ -19,6 +19,35 @@ public class MembershipController {
 
     private final MembershipService membershipService;
 
+    // =====================================
+    // CONFIGURACIÓN DINÁMICA DE PERMISOS
+    // =====================================
+
+    @Operation(summary = "Obtener configuración de membresías", description = "Obtiene la configuración de permisos para todas las membresías")
+    @GetMapping("/membership-config")
+    public ResponseEntity<List<Membership>> getMembershipConfig() {
+        return ResponseEntity.ok(membershipService.getAllMemberships());
+    }
+
+    @Operation(summary = "Actualizar configuración de membresías", description = "Actualiza los permisos de las membresías de forma masiva")
+    @PutMapping("/membership-config")
+    public ResponseEntity<List<Membership>> updateMembershipConfig(@RequestBody List<Membership> configs) {
+        for (Membership config : configs) {
+            if (config.getMembershipId() != null) {
+                membershipService.getMembershipById(config.getMembershipId()).ifPresent(existing -> {
+                    existing.setTraining(config.getTraining());
+                    existing.setNutrition(config.getNutrition());
+                    membershipService.saveMembership(existing);
+                });
+            }
+        }
+        return ResponseEntity.ok(membershipService.getAllMemberships());
+    }
+
+    // =====================================
+    // ENDPOINTS EXISTENTES
+    // =====================================
+
     // Listar todas las membresías
     @Operation(summary = "Listar membresías", description = "Obtiene una lista de todas las membresías disponibles")
     @GetMapping("/memberships")

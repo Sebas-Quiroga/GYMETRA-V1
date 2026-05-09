@@ -13,7 +13,7 @@
 
       <router-link to="/home" class="header-logo-link" aria-label="Ir al inicio">
         <img src="/logo.png" alt="Logo" class="header-logo-img" />
-        <span class="header-logo-text">{{ APP_NAME }}</span>
+        <span class="brand-name-header">GYMETRA</span>
       </router-link>
 
       <div class="header-side header-right">
@@ -69,12 +69,10 @@
       </div>
 
       <div class="register-container">
-        <div class="register-card">
-        
-        <!-- Header de la tarjeta -->
         <div class="card-header">
-          <h2>¡Únete a nosotros!</h2>
-          <p>Crea tu cuenta en pocos pasos</p>
+          <img src="/logo.png" alt="Logo" class="card-logo" />
+          <h1 class="brand-name-card">GYMETRA</h1>
+          <p class="brand-tagline">Únete a la revolución fitness</p>
         </div>
 
         <!-- Formulario -->
@@ -329,7 +327,6 @@
             <a @click="goToLogin" class="login-link">Inicia sesión aquí</a>
           </p>
         </div>
-      </div>
       </div>
 
 

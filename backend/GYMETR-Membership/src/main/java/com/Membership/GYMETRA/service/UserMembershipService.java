@@ -1,6 +1,7 @@
 package com.Membership.GYMETRA.service;
 
 import com.Membership.GYMETRA.entity.UserMembership;
+import com.Membership.GYMETRA.entity.UserMembershipStatus;
 import com.Membership.GYMETRA.repository.UserMembershipRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +36,7 @@ public class UserMembershipService {
         }
 
         // 1️⃣ Verificar si hay membresía PENDING
-        if (repository.existsByUserIdAndStatus(userId, UserMembership.Status.PENDING)) {
+        if (repository.existsByUserIdAndStatus(userId, UserMembershipStatus.PENDING)) {
             throw new IllegalStateException("El usuario ya tiene una membresía pendiente.");
         }
 
@@ -44,10 +45,10 @@ public class UserMembershipService {
         LocalDate today = LocalDate.now();
         if (!memberships.isEmpty()) {
             UserMembership last = memberships.get(0);
-            // Si la última membresía está ACTIVA o su endDate es en el futuro, sumamos los días
-            if ((last.getStatus() == UserMembership.Status.ACTIVE ||
-                 (last.getEndDate() != null && last.getEndDate().isAfter(today)))
-                ) {
+            // Si la última membresía está ACTIVA o su endDate es en el futuro, sumamos los
+            // días
+            if ((last.getStatus() == UserMembershipStatus.ACTIVE ||
+                    (last.getEndDate() != null && last.getEndDate().isAfter(today)))) {
                 LocalDate nuevaFechaFin = last.getEndDate().isAfter(today)
                         ? last.getEndDate().plusDays(newMembership.getMembership().getDurationDays())
                         : today.plusDays(newMembership.getMembership().getDurationDays());
@@ -56,9 +57,10 @@ public class UserMembershipService {
             }
         }
 
-        // 3️⃣ Si no hay membresías anteriores ACTIVA/vigente, se mantiene la lógica original
+        // 3️⃣ Si no hay membresías anteriores ACTIVA/vigente, se mantiene la lógica
+        // original
         if (newMembership.getStatus() == null) {
-            newMembership.setStatus(UserMembership.Status.PENDING);
+            newMembership.setStatus(UserMembershipStatus.PENDING);
         }
         newMembership.setCreatedAt(LocalDateTime.now());
 
@@ -82,7 +84,7 @@ public class UserMembershipService {
     // 2️⃣ Verificar si el usuario tiene pendiente
     // =====================================
     public boolean hasPendingMembership(Integer userId) {
-        return repository.existsByUserIdAndStatus(userId, UserMembership.Status.PENDING);
+        return repository.existsByUserIdAndStatus(userId, UserMembershipStatus.PENDING);
     }
 
     // =====================================
@@ -90,15 +92,16 @@ public class UserMembershipService {
     // =====================================
     public void deletePendingOlderThanMinutes(long minutes) {
         LocalDateTime threshold = LocalDateTime.now().minusMinutes(minutes);
-        List<UserMembership> oldPending = repository.findByStatusAndCreatedAtBefore(UserMembership.Status.PENDING, threshold);
+        List<UserMembership> oldPending = repository.findByStatusAndCreatedAtBefore(UserMembershipStatus.PENDING,
+                threshold);
         repository.deleteAll(oldPending);
     }
 
     // =====================================
-    // 4️⃣ Listar todas las membresías
+    // 4️⃣ Listar todas las membresías (Excluyendo eliminados lógicamente)
     // =====================================
     public List<UserMembership> getAllUserMemberships() {
-        return repository.findAll();
+        return repository.findAllByStatusNot(UserMembershipStatus.DELETED);
     }
 
     // =====================================
@@ -116,22 +119,24 @@ public class UserMembershipService {
     }
 
     // =====================================
-    // 7️⃣ Eliminar membresía
+    // 7️⃣ Borrado Lógico de membresía
     // =====================================
+    @Transactional
     public boolean deleteUserMembership(Integer id) {
-        if (!repository.existsById(id)) {
-            return false;
-        }
-        repository.deleteById(id);
-        return true;
+        return repository.findById(id).map(membership -> {
+            membership.setStatus(UserMembershipStatus.DELETED);
+            repository.save(membership);
+            return true;
+        }).orElse(false);
     }
+    // =====================================
 
     // =====================================
     // 8️⃣ Obtener última membresía activa
     // =====================================
     public Optional<UserMembership> getLatestActiveMembership(Integer userId) {
         return getUserMembershipsByUserId(userId).stream()
-                .filter(m -> m.getStatus() == UserMembership.Status.ACTIVE)
+                .filter(m -> m.getStatus() == UserMembershipStatus.ACTIVE)
                 .max(Comparator.comparing(UserMembership::getEndDate));
     }
 
@@ -142,5 +147,24 @@ public class UserMembershipService {
         LocalDate today = LocalDate.now();
         LocalDate endDate = membership.getEndDate();
         return ChronoUnit.DAYS.between(today, endDate);
+    }
+
+    // =====================================
+    // 🔟 Verificar si el usuario tiene permiso específico (training/nutrition)
+    // =====================================
+    public boolean userHasPermission(Integer userId, String permission) {
+        return getLatestActiveMembership(userId)
+                .map(m -> {
+                    if (m.getMembership() == null)
+                        return false;
+                    if ("training".equalsIgnoreCase(permission)) {
+                        return m.getMembership().getTraining() != null && m.getMembership().getTraining();
+                    }
+                    if ("nutrition".equalsIgnoreCase(permission)) {
+                        return m.getMembership().getNutrition() != null && m.getMembership().getNutrition();
+                    }
+                    return false;
+                })
+                .orElse(false);
     }
 }

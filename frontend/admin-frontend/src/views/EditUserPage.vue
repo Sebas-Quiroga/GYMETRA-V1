@@ -13,203 +13,161 @@
 
     <!-- Main Content -->
     <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
-      <!-- Edit User Form -->
       <div class="add-user-container">
-        <div class="form-header">
-          <button @click="goBack" class="back-btn">
-            <ion-icon :icon="arrowBackOutline"></ion-icon>
-            Volver
-          </button>
-          <h2>
-            <ion-icon :icon="createOutline" style="font-size: 28px; color: #00BCD4;"></ion-icon>
-            Editar Usuario
-          </h2>
-        </div>
-
-        <form @submit.prevent="handleSubmit" class="add-user-form" v-if="!loading">
-          <div class="form-grid">
-            <!-- Nombre -->
-            <div class="form-group">
-              <label for="firstName" class="form-label">Nombre *</label>
-              <div class="input-group">
-                <ion-icon :icon="personOutline" class="input-icon"></ion-icon>
-                <input
-                  id="firstName"
-                  v-model="form.firstName"
-                  type="text"
-                  class="form-input"
-                  placeholder="Ingrese el nombre"
-                  required
-                  :class="{ 'error': errors.firstName }"
-                  @input="validateName"
-                  @blur="validateName"
-                />
-              </div>
-              <span v-if="errors.firstName" class="error-message">{{ errors.firstName }}</span>
-            </div>
-
-            <!-- Apellido -->
-            <div class="form-group">
-              <label for="lastName" class="form-label">Apellido *</label>
-              <div class="input-group">
-                <ion-icon :icon="personOutline" class="input-icon"></ion-icon>
-                <input
-                  id="lastName"
-                  v-model="form.lastName"
-                  type="text"
-                  class="form-input"
-                  placeholder="Ingrese el apellido"
-                  required
-                  :class="{ 'error': errors.lastName }"
-                  @input="validateLastName"
-                  @blur="validateLastName"
-                />
-              </div>
-              <span v-if="errors.lastName" class="error-message">{{ errors.lastName }}</span>
-            </div>
-
-            <!-- Correo -->
-            <div class="form-group">
-              <label for="email" class="form-label">Correo Electrónico *</label>
-              <div class="input-group">
-                <ion-icon :icon="mailOutline" class="input-icon"></ion-icon>
-                <input
-                  id="email"
-                  v-model="form.email"
-                  type="email"
-                  class="form-input"
-                  placeholder="usuario@ejemplo.com"
-                  required
-                  :class="{ 'error': errors.email }"
-                  @input="handleEmailInput"
-                  @keydown="handleEmailKeydown"
-                  @blur="handleEmailBlur"
-                />
-                <div v-if="showSuggestions && emailSuggestions.length > 0" class="email-suggestions-dropdown">
-                  <div
-                    v-for="(suggestion, index) in emailSuggestions"
-                    :key="suggestion"
-                    class="email-suggestion-item"
-                    :class="{ 'selected': index === selectedSuggestionIndex }"
-                    @click="selectEmailSuggestion(suggestion)"
-                  >
-                    {{ suggestion }}
-                  </div>
-                </div>
-              </div>
-              <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
-            </div>
-
-            <!-- Teléfono -->
-            <div class="form-group">
-              <label for="phone" class="form-label">Teléfono</label>
-              <div class="input-group">
-                <ion-icon :icon="callOutline" class="input-icon"></ion-icon>
-                <input
-                  id="phone"
-                  v-model="form.phone"
-                  type="tel"
-                  class="form-input"
-                  placeholder="3001234567"
-                  :class="{ 'error': errors.phone }"
-                  @input="validatePhone"
-                  @blur="validatePhone"
-                />
-              </div>
-              <span v-if="errors.phone" class="error-message">{{ errors.phone }}</span>
-            </div>
-
-            <!-- Identificación -->
-            <div class="form-group">
-              <label for="identification" class="form-label">Número de Identificación *</label>
-              <div class="input-group">
-                <ion-icon :icon="cardOutline" class="input-icon"></ion-icon>
-                <input
-                  id="identification"
-                  v-model="form.identification"
-                  type="number"
-                  class="form-input"
-                  placeholder="1234567890"
-                  required
-                  :class="{ 'error': errors.identification }"
-                  @input="validateIdentification"
-                  @blur="validateIdentification"
-                />
-              </div>
-              <span v-if="errors.identification" class="error-message">{{ errors.identification }}</span>
-            </div>
-
-            <!-- Rol -->
-            <div class="form-group">
-              <label for="role" class="form-label">Rol *</label>
-              <div class="input-group">
-                <ion-icon :icon="shieldCheckmarkOutline" class="input-icon"></ion-icon>
-                <select
-                  id="role"
-                  v-model="form.role"
-                  class="form-input"
-                  required
-                  :class="{ 'error': errors.role }"
-                  @change="validateRole"
-                  @blur="validateRole"
-                >
-                  <option value="" disabled>Seleccione un rol</option>
-                  <option
-                    v-for="role in roles"
-                    :key="role.roleId"
-                    :value="role.roleName"
-                  >
-                    {{ role.roleName }}
-                  </option>
-                </select>
-              </div>
-              <span v-if="errors.role" class="error-message">{{ errors.role }}</span>
-            </div>
-
-            <!-- Contraseña (opcional para editar) -->
-            <div class="form-group">
-              <label for="password" class="form-label">Nueva Contraseña <span class="optional">(opcional)</span></label>
-              <div class="input-group">
-                <ion-icon :icon="lockClosedOutline" class="input-icon"></ion-icon>
-                <input
-                  id="password"
-                  v-model="form.password"
-                  type="password"
-                  class="form-input"
-                  placeholder="•••••••• (dejar vacío para mantener actual)"
-                  :class="{ 'error': errors.password }"
-                  @input="validatePassword"
-                  @blur="validatePassword"
-                />
-              </div>
-              <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
-            </div>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="form-actions">
-            <button type="submit" class="submit-btn" :disabled="submitting">
-              <span v-if="submitting" class="loading-spinner">
-                <ion-icon :icon="refreshOutline" class="spinner-icon"></ion-icon>
-              </span>
-              <span v-else>
-                <ion-icon :icon="checkmarkOutline"></ion-icon>
-                Actualizar Usuario
-              </span>
+        <div class="kinetic-card">
+          <div class="form-header">
+            <h2>
+              <ion-icon :icon="createOutline"></ion-icon>
+              Editar Perfil Kinetic
+            </h2>
+            <button @click="goBack" class="back-btn">
+              <ion-icon :icon="arrowBackOutline"></ion-icon>
+              <span>Volver</span>
             </button>
           </div>
-        </form>
 
-        <!-- Loading State -->
-        <div v-else class="loading-state">
-          <ion-icon :icon="refreshOutline" class="loading-icon"></ion-icon>
-          <p>Cargando datos del usuario...</p>
-        </div>
+          <!-- Membership Status Banner -->
+          <div v-if="activeMembership" class="membership-status-banner" :class="activeMembership.status.toLowerCase()">
+            <div class="status-info">
+              <ion-icon :icon="checkmarkCircleOutline" class="status-icon"></ion-icon>
+              <div>
+                <span class="status-label">Membresía {{ activeMembership.status }}</span>
+                <p class="status-detail">Vencimiento: {{ new Date(activeMembership.endDate).toLocaleDateString() }}</p>
+              </div>
+            </div>
+            <div class="membership-badge">
+              KIN-{{ activeMembership.id }}
+            </div>
+          </div>
+          <div v-else-if="!loading && !membershipLoading" class="membership-status-banner inactive">
+            <div class="status-info">
+              <ion-icon :icon="refreshOutline" class="status-icon"></ion-icon>
+              <div>
+                <span class="status-label">Sin Membresía Activa</span>
+                <p class="status-detail">Este usuario no cuenta con una suscripción vigente.</p>
+              </div>
+            </div>
+          </div>
 
-        <!-- Success Message -->
-        <div v-if="successMessage" class="success-message">
-          <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-          {{ successMessage }}
+          <form @submit.prevent="handleSubmit" class="add-user-form" v-if="!loading">
+            <div class="form-grid">
+              <!-- Nombre -->
+              <div class="form-group">
+                <label class="form-label">Nombre</label>
+                <div class="input-wrapper-kinetic">
+                  <ion-icon :icon="personOutline" class="input-icon"></ion-icon>
+                  <input
+                    v-model="form.firstName"
+                    type="text"
+                    class="form-input"
+                    placeholder="Ingrese el nombre"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Apellido -->
+              <div class="form-group">
+                <label class="form-label">Apellido</label>
+                <div class="input-wrapper-kinetic">
+                  <ion-icon :icon="personOutline" class="input-icon"></ion-icon>
+                  <input
+                    v-model="form.lastName"
+                    type="text"
+                    class="form-input"
+                    placeholder="Ingrese el apellido"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Correo -->
+              <div class="form-group">
+                <label class="form-label">Correo Electrónico</label>
+                <div class="input-wrapper-kinetic">
+                  <ion-icon :icon="mailOutline" class="input-icon"></ion-icon>
+                  <input
+                    v-model="form.email"
+                    type="email"
+                    class="form-input"
+                    placeholder="usuario@ejemplo.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Teléfono -->
+              <div class="form-group">
+                <label class="form-label">Teléfono</label>
+                <div class="input-wrapper-kinetic">
+                  <ion-icon :icon="callOutline" class="input-icon"></ion-icon>
+                  <input
+                    v-model="form.phone"
+                    type="tel"
+                    class="form-input"
+                    placeholder="300 000 0000"
+                  />
+                </div>
+              </div>
+
+              <!-- Identificación -->
+              <div class="form-group">
+                <label class="form-label">Número de Identificación</label>
+                <div class="input-wrapper-kinetic">
+                  <ion-icon :icon="cardOutline" class="input-icon"></ion-icon>
+                  <input
+                    v-model="form.identification"
+                    type="number"
+                    class="form-input"
+                    placeholder="1234567890"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Rol -->
+              <div class="form-group">
+                <label class="form-label">Rol Asignado</label>
+                <div class="input-wrapper-kinetic" style="padding-left: 52px;">
+                  <ion-icon :icon="shieldCheckmarkOutline" class="input-icon"></ion-icon>
+                  <select v-model="form.role" class="form-input" style="padding-left: 0;" required>
+                    <option value="" disabled>Seleccione un rol</option>
+                    <option v-for="role in roles" :key="role.roleId" :value="role.roleName">
+                      {{ role.roleName }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Contraseña -->
+              <div class="form-group" style="grid-column: span 2;">
+                <label class="form-label">Nueva Contraseña <span style="font-size: 0.8rem; font-weight: 500; opacity: 0.6;">(Opcional)</span></label>
+                <div class="input-wrapper-kinetic">
+                  <ion-icon :icon="lockClosedOutline" class="input-icon"></ion-icon>
+                  <input
+                    v-model="form.password"
+                    type="password"
+                    class="form-input"
+                    placeholder="••••••••••••"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="submit-btn" :disabled="submitting">
+                <ion-icon :icon="submitting ? refreshOutline : checkmarkOutline" :class="{ 'spin-kinetic': submitting }" style="margin-right: 10px;"></ion-icon>
+                {{ submitting ? 'Guardando...' : 'Actualizar Perfil' }}
+              </button>
+            </div>
+          </form>
+
+          <!-- Loading State -->
+          <KineticLoading 
+            v-else
+            title="Sincronización de Perfil"
+            message="Actualizando los registros del sistema..."
+          />
         </div>
       </div>
     </div>
@@ -220,7 +178,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import AdminSidebar from '@/components/AdminSidebar.vue'
+import KineticLoading from '@/components/KineticLoading.vue'
 import { userService, Role } from '@/services/userService'
+import { membershipService, UserMembership } from '@/services/membershipService'
 import {
   personOutline,
   mailOutline,
@@ -235,13 +195,8 @@ import {
   shieldCheckmarkOutline
 } from 'ionicons/icons'
 
-// Mobile responsive state
 const isMobile = ref(false)
-
-// Check if mobile on mount
-const checkMobile = () => {
-  isMobile.value = window.innerWidth <= 768
-}
+const checkMobile = () => { isMobile.value = window.innerWidth <= 768 }
 
 onMounted(() => {
   checkMobile()
@@ -253,31 +208,12 @@ const route = useRoute()
 const activeSection = ref('users')
 const loading = ref(true)
 const submitting = ref(false)
-const successMessage = ref('')
 const roles = ref<Role[]>([])
+const activeMembership = ref<UserMembership | null>(null)
+const membershipLoading = ref(false)
 
-// Get user ID from route params
 const userId = route.params.userId as string
 
-// Email suggestions
-const emailSuggestions = ref<string[]>([])
-const showSuggestions = ref(false)
-const selectedSuggestionIndex = ref(-1)
-
-// Email domains
-const commonEmailDomains = [
-  'gmail.com',
-  'hotmail.com',
-  'outlook.com',
-  'yahoo.com',
-  'icloud.com',
-  'live.com',
-  'me.com',
-  'aol.com',
-  'protonmail.com'
-]
-
-// Form state
 const form = reactive({
   firstName: '',
   lastName: '',
@@ -288,7 +224,6 @@ const form = reactive({
   password: ''
 })
 
-// Original user data for comparison
 const originalUser = reactive({
   firstName: '',
   lastName: '',
@@ -300,33 +235,18 @@ const originalUser = reactive({
   password: ''
 })
 
-// Error state
-const errors = reactive({
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  identification: '',
-  role: '',
-  password: ''
-})
-
-// Load user data on mount
 onMounted(async () => {
   await loadRoles()
   await loadUserData()
+  await loadUserMembership()
   setUserRole()
 })
 
-// Load user data from API
 const loadUserData = async () => {
   try {
     loading.value = true
-
-    // Get all users and find the specific user
     const users = await userService.getAllUsers()
     const user = users.find(u => u.userId === parseInt(userId))
-
     if (user) {
       form.firstName = user.firstName
       form.lastName = user.lastName
@@ -334,418 +254,205 @@ const loadUserData = async () => {
       form.phone = user.phone || ''
       form.identification = user.identification.toString()
       form.role = user.role || 'user'
-      form.password = '' // Don't load password
-
-      // Store original values for comparison
       originalUser.firstName = user.firstName
       originalUser.lastName = user.lastName
       originalUser.email = user.email
       originalUser.phone = user.phone || ''
       originalUser.identification = user.identification.toString()
       originalUser.role = user.role || 'user'
-      // Find and store original roleId
       const originalRole = roles.value.find(r => r.roleName === (user.role || 'user'))
       originalUser.roleId = originalRole ? originalRole.roleId : 0
-      originalUser.password = ''
-    } else {
-      throw new Error('Usuario no encontrado')
     }
   } catch (error) {
-    console.error('Error loading user data:', error)
-    // Redirect back if user not found
+    console.error(error)
     router.push('/adminpanel')
   } finally {
     loading.value = false
   }
 }
 
-// Load roles from API
-const loadRoles = async () => {
+const loadUserMembership = async () => {
   try {
-    roles.value = await userService.getRoles()
+    membershipLoading.value = true
+    const allUserMemberships = await membershipService.getAllUserMemberships()
+    // Encontrar la membresía activa más reciente para este usuario
+    const userMemberships = allUserMemberships
+      .filter(m => m.userId === parseInt(userId))
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+    
+    activeMembership.value = userMemberships.find(m => m.status === 'ACTIVE') || userMemberships[0] || null
   } catch (error) {
-    console.error('Error loading roles:', error)
+    console.error('Error al cargar membresía:', error)
+  } finally {
+    membershipLoading.value = false
   }
 }
 
-// Set user role after roles are loaded
+const loadRoles = async () => {
+  try { roles.value = await userService.getRoles() } catch (error) {}
+}
+
 const setUserRole = () => {
   if (roles.value.length > 0 && originalUser.role) {
-    // Find the role that matches the user's current role
     const userRole = roles.value.find(r => r.roleName === originalUser.role)
-    if (userRole) {
-      form.role = userRole.roleName
-    } else {
-      // If no match found, set to first available role or default
-      form.role = roles.value[0]?.roleName || ''
-    }
+    if (userRole) form.role = userRole.roleName
   }
 }
 
-// Email handling functions
-const handleEmailInput = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const value = target.value
-
-  // Reset suggestions
-  emailSuggestions.value = []
-  showSuggestions.value = false
-  selectedSuggestionIndex.value = -1
-
-  // Generate suggestions when user types @
-  if (value.includes('@')) {
-    const [localPart, domainPart] = value.split('@')
-
-    if (localPart && domainPart === '') {
-      // Show all common domains
-      emailSuggestions.value = commonEmailDomains.map(domain => `${localPart}@${domain}`)
-      showSuggestions.value = true
-    } else if (localPart && domainPart) {
-      // Filter domains based on what user is typing
-      const filteredDomains = commonEmailDomains.filter(domain =>
-        domain.toLowerCase().startsWith(domainPart.toLowerCase())
-      )
-      emailSuggestions.value = filteredDomains.map(domain => `${localPart}@${domain}`)
-      showSuggestions.value = emailSuggestions.value.length > 0
-    }
-  }
-
-  // Clear error when user starts typing
-  if (errors.email) {
-    errors.email = ''
-  }
-}
-
-const handleEmailKeydown = (event: KeyboardEvent) => {
-  if (!showSuggestions.value || emailSuggestions.value.length === 0) return
-
-  switch (event.key) {
-    case 'ArrowDown':
-      event.preventDefault()
-      selectedSuggestionIndex.value = Math.min(
-        selectedSuggestionIndex.value + 1,
-        emailSuggestions.value.length - 1
-      )
-      break
-    case 'ArrowUp':
-      event.preventDefault()
-      selectedSuggestionIndex.value = Math.max(selectedSuggestionIndex.value - 1, -1)
-      break
-    case 'Enter':
-      event.preventDefault()
-      if (selectedSuggestionIndex.value >= 0) {
-        selectEmailSuggestion(emailSuggestions.value[selectedSuggestionIndex.value])
-      }
-      break
-    case 'Escape':
-      showSuggestions.value = false
-      selectedSuggestionIndex.value = -1
-      break
-  }
-}
-
-const handleEmailBlur = () => {
-  // Delay hiding suggestions to allow click events
-  setTimeout(() => {
-    showSuggestions.value = false
-    selectedSuggestionIndex.value = -1
-  }, 150)
-
-  validateEmail()
-}
-
-const selectEmailSuggestion = (suggestion: string) => {
-  form.email = suggestion
-  showSuggestions.value = false
-  selectedSuggestionIndex.value = -1
-  validateEmail()
-}
-
-// Validation functions
-const validateName = () => {
-  const name = form.firstName.trim()
-
-  if (!name) {
-    errors.firstName = 'El nombre es requerido'
-    return false
-  }
-
-  if (name.length < 2) {
-    errors.firstName = 'El nombre debe tener al menos 2 caracteres'
-    return false
-  }
-
-  if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name)) {
-    errors.firstName = 'El nombre solo puede contener letras y espacios'
-    return false
-  }
-
-  errors.firstName = ''
-  return true
-}
-
-const validateLastName = () => {
-  const lastName = form.lastName.trim()
-
-  if (!lastName) {
-    errors.lastName = 'El apellido es requerido'
-    return false
-  }
-
-  if (lastName.length < 2) {
-    errors.lastName = 'El apellido debe tener al menos 2 caracteres'
-    return false
-  }
-
-  if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(lastName)) {
-    errors.lastName = 'El apellido solo puede contener letras y espacios'
-    return false
-  }
-
-  errors.lastName = ''
-  return true
-}
-
-const validateEmail = () => {
-  const email = form.email.trim()
-
-  if (!email) {
-    errors.email = 'El correo electrónico es requerido'
-    return false
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(email)) {
-    errors.email = 'Ingresa un correo electrónico válido'
-    return false
-  }
-
-  errors.email = ''
-  return true
-}
-
-const validatePhone = () => {
-  const phone = form.phone.trim()
-
-  if (phone && !/^3\d{9}$/.test(phone)) {
-    errors.phone = 'El teléfono debe comenzar con 3 y tener 10 dígitos'
-    return false
-  }
-
-  errors.phone = ''
-  return true
-}
-
-const validatePassword = () => {
-  const password = form.password
-
-  if (password && password.length < 6) {
-    errors.password = 'La contraseña debe tener al menos 6 caracteres'
-    return false
-  }
-
-  errors.password = ''
-  return true
-}
-
-const validateRole = () => {
-  const role = form.role
-
-  if (!role) {
-    errors.role = 'El rol es requerido'
-    return false
-  }
-
-  // Check if the selected role exists in the loaded roles
-  const roleExists = roles.value.some(r => r.roleName === role)
-  if (!roleExists) {
-    errors.role = 'Selecciona un rol válido'
-    return false
-  }
-
-  errors.role = ''
-  return true
-}
-
-const validateIdentification = () => {
-  const identification = form.identification
-
-  if (!identification) {
-    errors.identification = 'El número de identificación es requerido'
-    return false
-  }
-
-  const idStr = identification.toString()
-  if (idStr.length < 6 || idStr.length > 12) {
-    errors.identification = 'La identificación debe tener entre 6 y 12 dígitos'
-    return false
-  }
-
-  errors.identification = ''
-  return true
-}
-
-// Handle form submission
 const handleSubmit = async () => {
-  // Reset errors and success message
-  Object.keys(errors).forEach(key => {
-    errors[key] = ''
-  })
-  successMessage.value = ''
-
-  // Validation
-  if (!validateName()) return
-  if (!validateLastName()) return
-  if (!validateEmail()) return
-  if (!validateIdentification()) return
-  if (!validatePhone()) return
-  if (!validateRole()) return
-  if (!validatePassword()) return
-
   try {
     submitting.value = true
-
-    // Prepare data for API - only include changed fields
     const updateData: any = {}
-
-    if (form.firstName.trim() !== originalUser.firstName) {
-      updateData.firstName = form.firstName.trim()
-    }
-    if (form.lastName.trim() !== originalUser.lastName) {
-      updateData.lastName = form.lastName.trim()
-    }
-    if (form.email.trim().toLowerCase() !== originalUser.email.toLowerCase()) {
-      updateData.email = form.email.trim().toLowerCase()
-    }
-    if (form.phone.trim() !== originalUser.phone) {
-      updateData.phone = form.phone.trim() || null
-    }
-    if (form.identification !== originalUser.identification) {
-      updateData.identification = parseInt(form.identification)
-    }
-
-    // Find roleId from selected role name
+    if (form.firstName !== originalUser.firstName) updateData.firstName = form.firstName.trim()
+    if (form.lastName !== originalUser.lastName) updateData.lastName = form.lastName.trim()
+    if (form.email !== originalUser.email) updateData.email = form.email.trim().toLowerCase()
+    if (form.phone !== originalUser.phone) updateData.phone = form.phone.trim() || null
+    if (form.identification !== originalUser.identification) updateData.identification = parseInt(form.identification)
     const selectedRole = roles.value.find(r => r.roleName === form.role)
-    if (selectedRole && selectedRole.roleId !== originalUser.roleId) {
-      updateData.roleId = selectedRole.roleId
-    }
+    if (selectedRole && selectedRole.roleId !== originalUser.roleId) updateData.roleId = selectedRole.roleId
+    if (form.password) updateData.password = form.password
 
-    // Only include password if it's provided
-    if (form.password) {
-      updateData.password = form.password
-    }
-
-    // Call API to update user
     const response = await fetch(`/api/auth/users/${userId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updateData)
     })
-
-    const result = await response.json()
-
-    if (response.ok && result.success) {
-      successMessage.value = 'Usuario actualizado exitosamente'
-
-      // Reset password field
-      form.password = ''
-
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        router.push('/adminpanel')
-      }, 2000)
-    } else {
-      // Handle API errors
-      if (result.message?.includes('email')) {
-        errors.email = 'El correo electrónico ya está registrado'
-      } else if (result.message?.includes('identificación')) {
-        errors.identification = 'El número de identificación ya está registrado'
-      } else {
-        errors.email = result.message || 'Error al actualizar el usuario'
-      }
-    }
-
+    if (response.ok) router.push('/adminpanel')
   } catch (error) {
-    console.error('Error updating user:', error)
-    errors.email = 'Error de conexión. Inténtalo de nuevo.'
+    console.error(error)
   } finally {
     submitting.value = false
   }
 }
 
-// Navigation functions
-const goBack = () => {
-  router.push('/adminpanel')
-}
+const goBack = () => router.push('/adminpanel')
+const logout = () => router.push('/loginadmin')
+const navigateToUsers = () => router.push('/adminpanel')
+const navigateToReports = () => router.push('/adminreportes')
+const navigateToCharts = () => router.push('/adminmetricas')
+const navigateToPayments = () => router.push('/adminpagos')
+const navigateToRoles = () => router.push('/admin/roles')
 
-const logout = () => {
-  router.push('/loginadmin')
-}
-
-const navigateToUsers = () => {
-  activeSection.value = 'users'
-  router.push('/adminpanel')
-}
-
-const navigateToReports = () => {
-  activeSection.value = 'reports'
-  console.log('Navegando a reportes')
-}
-
-const navigateToCharts = () => {
-  activeSection.value = 'charts'
-  router.push('/adminmetricas')
-}
-
-const navigateToPayments = () => {
-  activeSection.value = 'payments'
-  router.push('/adminpagos')
-}
-
-const navigateToRoles = () => {
-  activeSection.value = 'roles'
-  router.push('/admin/roles')
-}
+const handleEmailInput = (e: any) => {}
+const handleEmailKeydown = (e: any) => {}
+const handleEmailBlur = () => {}
 </script>
 
 <style>
 @import '../theme/AddUserPage.css';
 
-/* Override some styles for edit mode */
-.add-user-container h2 ion-icon {
-  color: #FF9800; /* Orange color for edit */
+.membership-status-banner {
+  margin: 0 40px;
+  padding: 20px 30px;
+  border-radius: var(--admin-radius-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--admin-transition);
+  border-left: 6px solid transparent;
 }
 
-.submit-btn {
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+.membership-status-banner.active {
+  background: rgba(39, 174, 96, 0.1);
+  border-left-color: #27ae60;
 }
 
-.submit-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #F57C00 0%, #EF6C00 100%);
+.membership-status-banner.pending {
+  background: rgba(255, 152, 0, 0.1);
+  border-left-color: #ff9800;
 }
 
-.optional {
-  font-weight: normal;
-  color: #6c757d;
-  font-size: 12px;
+.membership-status-banner.inactive, .membership-status-banner.expired {
+  background: rgba(186, 26, 26, 0.1);
+  border-left-color: #ba1a1a;
+  margin-bottom: 20px;
 }
 
-.loading-state {
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.status-icon {
+  font-size: 2rem;
+  color: inherit;
+}
+
+.status-label {
+  display: block;
+  font-family: var(--app-font-brand);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--admin-text-main);
+  text-transform: uppercase;
+}
+
+.status-detail {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--admin-text-sub);
+  font-weight: 600;
+}
+
+.membership-badge {
+  background: var(--admin-bg-card);
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-sub);
+}
+
+.back-btn {
+  background: var(--admin-bg-subtle) !important;
+  color: var(--admin-text-sub) !important;
+}
+
+.back-btn:hover {
+  background: var(--admin-accent) !important;
+  color: white !important;
+}
+
+.input-wrapper-kinetic {
+  background: var(--admin-bg-subtle) !important;
+}
+
+.form-input {
+  color: var(--admin-text-main) !important;
+}
+
+.form-label {
+  color: var(--admin-text-sub) !important;
+}
+
+.optional-text {
+  color: var(--admin-text-sub);
+  opacity: 0.6;
+}
+
+/* Kinetic Loading Fixes */
+.loading-state-kinetic {
   text-align: center;
-  padding: 60px 20px;
-  color: #6c757d;
+  padding: 80px;
+  color: var(--admin-text-sub);
 }
 
-.loading-icon {
-  font-size: 48px;
-  color: #00BCD4;
-  animation: spin 2s linear infinite;
+.spin-kinetic {
+  animation: spin 1s linear infinite;
+  font-size: 2.2rem;
+  color: var(--admin-accent);
 }
 
-.loading-state p {
-  margin-top: 20px;
-  font-size: 16px;
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 768px) {
+  .membership-status-banner {
+    margin: 0 20px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
 }
 </style>

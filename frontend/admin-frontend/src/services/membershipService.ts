@@ -8,6 +8,8 @@ export interface Membership {
   durationDays: number;
   description?: string;
   status: string;
+  training: boolean;
+  nutrition: boolean;
   userMemberships?: UserMembership[];
 }
 

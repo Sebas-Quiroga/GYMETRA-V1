@@ -12,173 +12,157 @@
 
     <!-- Main Content -->
     <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
-      <!-- Add User Form -->
       <div class="add-user-container">
-        <div class="form-header">
-          <button @click="goBack" class="back-btn">
-            <ion-icon :icon="arrowBackOutline"></ion-icon>
-            Volver
-          </button>
-          <h2>
-            <ion-icon :icon="personAddOutline" style="font-size: 28px; color: #00BCD4;"></ion-icon>
-            Agregar Nuevo Usuario
-          </h2>
-        </div>
-
-        <form @submit.prevent="handleSubmit" class="add-user-form">
-          <div class="form-grid">
-            <!-- Nombre -->
-            <div class="form-group">
-              <label for="firstName" class="form-label">Nombre *</label>
-              <div class="input-group">
-                <ion-icon :icon="personOutline" class="input-icon"></ion-icon>
-                <input
-                  id="firstName"
-                  v-model="form.firstName"
-                  type="text"
-                  class="form-input"
-                  placeholder="Ingrese el nombre"
-                  required
-                  :class="{ 'error': errors.firstName }"
-                  @input="validateName"
-                  @blur="validateName"
-                />
-              </div>
-              <span v-if="errors.firstName" class="error-message">{{ errors.firstName }}</span>
-            </div>
-
-            <!-- Apellido -->
-            <div class="form-group">
-              <label for="lastName" class="form-label">Apellido *</label>
-              <div class="input-group">
-                <ion-icon :icon="personOutline" class="input-icon"></ion-icon>
-                <input
-                  id="lastName"
-                  v-model="form.lastName"
-                  type="text"
-                  class="form-input"
-                  placeholder="Ingrese el apellido"
-                  required
-                  :class="{ 'error': errors.lastName }"
-                  @input="validateLastName"
-                  @blur="validateLastName"
-                />
-              </div>
-              <span v-if="errors.lastName" class="error-message">{{ errors.lastName }}</span>
-            </div>
-
-            <!-- Correo -->
-            <div class="form-group">
-              <label for="email" class="form-label">Correo Electrónico *</label>
-              <div class="input-group">
-                <ion-icon :icon="mailOutline" class="input-icon"></ion-icon>
-                <input
-                  id="email"
-                  v-model="form.email"
-                  type="email"
-                  class="form-input"
-                  placeholder="usuario@ejemplo.com"
-                  required
-                  :class="{ 'error': errors.email }"
-                  @input="handleEmailInput"
-                  @keydown="handleEmailKeydown"
-                  @blur="handleEmailBlur"
-                />
-                <div v-if="showSuggestions && emailSuggestions.length > 0" class="email-suggestions-dropdown">
-                  <div
-                    v-for="(suggestion, index) in emailSuggestions"
-                    :key="suggestion"
-                    class="email-suggestion-item"
-                    :class="{ 'selected': index === selectedSuggestionIndex }"
-                    @click="selectEmailSuggestion(suggestion)"
-                  >
-                    {{ suggestion }}
-                  </div>
-                </div>
-              </div>
-              <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
-            </div>
-
-            <!-- Teléfono -->
-            <div class="form-group">
-              <label for="phone" class="form-label">Teléfono</label>
-              <div class="input-group">
-                <ion-icon :icon="callOutline" class="input-icon"></ion-icon>
-                <input
-                  id="phone"
-                  v-model="form.phone"
-                  type="tel"
-                  class="form-input"
-                  placeholder="3001234567"
-                  :class="{ 'error': errors.phone }"
-                  @input="validatePhone"
-                  @blur="validatePhone"
-                />
-              </div>
-              <span v-if="errors.phone" class="error-message">{{ errors.phone }}</span>
-            </div>
-
-            <!-- Identificación -->
-            <div class="form-group">
-              <label for="identification" class="form-label">Número de Identificación *</label>
-              <div class="input-group">
-                <ion-icon :icon="cardOutline" class="input-icon"></ion-icon>
-                <input
-                  id="identification"
-                  v-model="form.identification"
-                  type="number"
-                  class="form-input"
-                  placeholder="1234567890"
-                  required
-                  :class="{ 'error': errors.identification }"
-                  @input="validateIdentification"
-                  @blur="validateIdentification"
-                />
-              </div>
-              <span v-if="errors.identification" class="error-message">{{ errors.identification }}</span>
-            </div>
-
-            <!-- Contraseña -->
-            <div class="form-group">
-              <label for="password" class="form-label">Contraseña *</label>
-              <div class="input-group">
-                <ion-icon :icon="lockClosedOutline" class="input-icon"></ion-icon>
-                <input
-                  id="password"
-                  v-model="form.password"
-                  type="password"
-                  class="form-input"
-                  placeholder="••••••••"
-                  required
-                  :class="{ 'error': errors.password }"
-                  @input="validatePassword"
-                  @blur="validatePassword"
-                />
-              </div>
-              <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
-            </div>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="form-actions">
-            <button type="submit" class="submit-btn" :disabled="loading">
-              <span v-if="loading" class="loading-spinner">
-                <ion-icon :icon="refreshOutline" class="spinner-icon"></ion-icon>
-              </span>
-              <span v-else>
-                <ion-icon :icon="checkmarkOutline"></ion-icon>
-                Crear Usuario
-              </span>
+        <div class="kinetic-card">
+          <div class="form-header">
+            <h2>
+              <ion-icon :icon="personAddOutline"></ion-icon>
+              Registrar Nuevo Usuario
+            </h2>
+            <button @click="goBack" class="back-btn">
+              <ion-icon :icon="arrowBackOutline"></ion-icon>
+              <span>Volver</span>
             </button>
           </div>
-        </form>
 
-        <!-- Success Message -->
-        <div v-if="successMessage" class="success-message">
-          <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-          {{ successMessage }}
+          <form @submit.prevent="handleSubmit" class="add-user-form">
+            <div class="form-grid">
+              <!-- Nombre -->
+              <div class="form-group">
+                <label for="firstName" class="form-label">Nombre</label>
+                <div class="input-wrapper-kinetic" :class="{ 'error': errors.firstName }">
+                  <ion-icon :icon="personOutline" class="input-icon"></ion-icon>
+                  <input
+                    id="firstName"
+                    v-model="form.firstName"
+                    type="text"
+                    class="form-input"
+                    placeholder="Ej. Juan"
+                    required
+                    @input="validateName"
+                  />
+                </div>
+                <span v-if="errors.firstName" class="error-message">{{ errors.firstName }}</span>
+              </div>
+
+              <!-- Apellido -->
+              <div class="form-group">
+                <label for="lastName" class="form-label">Apellido</label>
+                <div class="input-wrapper-kinetic" :class="{ 'error': errors.lastName }">
+                  <ion-icon :icon="personOutline" class="input-icon"></ion-icon>
+                  <input
+                    id="lastName"
+                    v-model="form.lastName"
+                    type="text"
+                    class="form-input"
+                    placeholder="Ej. Pérez"
+                    required
+                    @input="validateLastName"
+                  />
+                </div>
+                <span v-if="errors.lastName" class="error-message">{{ errors.lastName }}</span>
+              </div>
+
+              <!-- Correo -->
+              <div class="form-group">
+                <label for="email" class="form-label">Email Corporativo</label>
+                <div class="input-wrapper-kinetic" :class="{ 'error': errors.email }">
+                  <ion-icon :icon="mailOutline" class="input-icon"></ion-icon>
+                  <input
+                    id="email"
+                    v-model="form.email"
+                    type="email"
+                    class="form-input"
+                    placeholder="juan@gymetra.com"
+                    required
+                    @input="handleEmailInput"
+                    @keydown="handleEmailKeydown"
+                    @blur="handleEmailBlur"
+                  />
+                  <div v-if="showSuggestions && emailSuggestions.length > 0" class="email-suggestions-dropdown">
+                    <div
+                      v-for="(suggestion, index) in emailSuggestions"
+                      :key="suggestion"
+                      class="email-suggestion-item"
+                      :class="{ 'selected': index === selectedSuggestionIndex }"
+                      @click="selectEmailSuggestion(suggestion)"
+                    >
+                      {{ suggestion }}
+                    </div>
+                  </div>
+                </div>
+                <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
+              </div>
+
+              <!-- Identificación -->
+              <div class="form-group">
+                <label for="identification" class="form-label">ID / Cédula</label>
+                <div class="input-wrapper-kinetic" :class="{ 'error': errors.identification }">
+                  <ion-icon :icon="cardOutline" class="input-icon"></ion-icon>
+                  <input
+                    id="identification"
+                    v-model="form.identification"
+                    type="number"
+                    class="form-input"
+                    placeholder="Número de documento"
+                    required
+                    @input="validateIdentification"
+                  />
+                </div>
+                <span v-if="errors.identification" class="error-message">{{ errors.identification }}</span>
+              </div>
+
+              <!-- Teléfono -->
+              <div class="form-group">
+                <label for="phone" class="form-label">Teléfono</label>
+                <div class="input-wrapper-kinetic" :class="{ 'error': errors.phone }">
+                  <ion-icon :icon="callOutline" class="input-icon"></ion-icon>
+                  <input
+                    id="phone"
+                    v-model="form.phone"
+                    type="tel"
+                    class="form-input"
+                    placeholder="300..."
+                    @input="validatePhone"
+                  />
+                </div>
+                <span v-if="errors.phone" class="error-message">{{ errors.phone }}</span>
+              </div>
+
+              <!-- Contraseña -->
+              <div class="form-group">
+                <label for="password" class="form-label">Contraseña Temporal</label>
+                <div class="input-wrapper-kinetic" :class="{ 'error': errors.password }">
+                  <ion-icon :icon="lockClosedOutline" class="input-icon"></ion-icon>
+                  <input
+                    id="password"
+                    v-model="form.password"
+                    type="password"
+                    class="form-input"
+                    placeholder="••••••••"
+                    required
+                    @input="validatePassword"
+                  />
+                </div>
+                <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="submit-btn" :disabled="loading">
+                <span v-if="loading">Registrando...</span>
+                <span v-else>Confirmar Registro</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div v-if="successMessage" class="success-bubble">
+          <ion-icon :icon="checkmarkCircleOutline" style="font-size: 24px;"></ion-icon>
+          <span>{{ successMessage }}</span>
         </div>
       </div>
+    </div>
     </div>
   </div>
 </template>

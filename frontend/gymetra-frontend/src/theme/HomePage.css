@@ -1,9 +1,7 @@
-/* HomePage.css — KINETIC Design System */
+/* HomePage.css — Aero Athletic Modern Dashboard */
 
-/* ─── Fondo y content ─── */
 .home-content {
   --background: var(--bg-page) !important;
-  background: var(--bg-page) !important;
 }
 
 /* ─── Header ─── */
@@ -11,11 +9,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 1rem;
   background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 12px 32px rgba(25, 28, 29, 0.04);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -26,599 +21,238 @@
 .home-header-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  width: 80px; /* Ancho fijo para equilibrar el centro */
+  width: 60px;
 }
 
-.home-header-right {
-  justify-content: flex-end;
+.home-header-right { justify-content: flex-end; }
+
+.brand-name-header {
+  font-family: var(--app-font-family);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--brand-secondary);
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
 }
 
 .home-avatar-wrap {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(25, 28, 29, 0.1);
-  cursor: pointer;
-  flex-shrink: 0;
-  background: #cde6f4;
+  background: var(--bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
-}
-
-.home-avatar-wrap:hover {
-  transform: scale(1.06);
-}
-
-.home-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.home-avatar-fallback {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #006876;
+  border: 2px solid var(--border-color);
 }
 
 .home-logo-link {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   text-decoration: none;
-  transition: transform 0.2s ease;
-}
-
-.home-logo-link:active {
-  transform: scale(0.95);
 }
 
 .header-logo-img {
-  height: 28px;
+  height: 24px;
   width: auto;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-  transition: filter 0.3s ease;
-}
-
-/* En modo claro (donde el logo blanco es invisible), lo invertimos */
-@media (prefers-color-scheme: light) {
-  .header-logo-img {
-    filter: invert(1) brightness(0.2) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-  }
-}
-
-.header-logo-text {
-  font-family: var(--app-font-brand);
-  font-size: 1.2rem;
-  font-weight: 900;
-  font-style: italic;
-  color: var(--brand-primary);
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-}
-
-.home-logout-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #6d797c;
-  display: flex;
-  align-items: center;
-  padding: 0.3rem;
-  border-radius: 0.5rem;
-  transition: opacity 0.15s, transform 0.1s;
-}
-
-.home-logout-btn:hover {
-  opacity: 0.7;
-}
-
-.home-logout-btn:active {
-  transform: scale(0.94);
 }
 
 /* ─── Container ─── */
 .home-container {
-  padding: 1.75rem 1.25rem 6rem;
-  max-width: 520px;
+  padding: 1.5rem 1rem 6rem;
+  max-width: 500px;
   margin: 0 auto;
 }
 
 /* ─── Welcome ─── */
-.home-welcome {
-  margin-bottom: 1.75rem;
-}
-
 .home-welcome-name {
-  font-size: 1.9rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 900;
   color: var(--text-main);
-  letter-spacing: -0.03em;
   margin: 0 0 0.25rem;
-  font-family: var(--app-font-brand);
+  letter-spacing: -0.5px;
 }
 
 .home-welcome-sub {
   font-size: 0.875rem;
-  color: #3d494b;
+  color: var(--text-sub);
   margin: 0;
-  font-weight: 400;
-  font-family: var(--app-font-family);
 }
 
 /* ─── Bento grid ─── */
 .home-bento {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.875rem;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
-/* ─── Membresía hero ─── */
+/* ─── Membresía card ─── */
 .bento-membership {
   grid-column: span 1;
   background: var(--bg-card);
-  border-radius: 1.125rem;
-  padding: 1.5rem 1.25rem;
-  box-shadow: 0 8px 24px rgba(25, 28, 29, 0.04);
-  position: relative;
-  overflow: hidden;
-  animation: fadeInUp 0.5s ease both;
+  border-radius: var(--radius-xl);
+  padding: 1.5rem 1rem;
+  box-shadow: var(--shadow-md);
   border: 1px solid var(--border-color);
-  min-height: 180px;
+  min-height: 160px;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  justify-content: space-between;
 }
 
 .membership-badge {
-  display: inline-block;
   font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: rgba(0, 172, 193, 0.12);
-  color: #006876;
-  padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
+  color: var(--brand-primary);
+  background: var(--brand-primary-fade);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
   width: fit-content;
 }
 
-.membership-days-row {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
 .membership-days {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 900;
-  color: #006876;
-  letter-spacing: -0.04em;
+  color: var(--brand-secondary);
   line-height: 1;
-  font-family: var(--app-font-brand);
 }
 
 .membership-days-label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #3d494b;
-  line-height: 1.2;
-  font-family: var(--app-font-family);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .membership-bar-bg {
-  width: 100%;
   height: 6px;
-  background: #eceeef;
-  border-radius: 9999px;
-  overflow: hidden;
-  margin-top: auto;
+  background: var(--bg-subtle);
+  border-radius: 3px;
 }
 
 .membership-bar-fill {
   height: 100%;
-  background: #006876;
-  border-radius: 9999px;
-  transition: width 0.8s ease;
-  box-shadow: 0 0 8px rgba(0, 104, 118, 0.25);
-}
-
-.membership-glow {
-  position: absolute;
-  right: -2rem;
-  bottom: -2rem;
-  width: 8rem;
-  height: 8rem;
-  background: rgba(0, 104, 118, 0.04);
-  border-radius: 50%;
-  filter: blur(24px);
-  pointer-events: none;
-}
-
-/* Estado sin membresía */
-.state-none .membership-days {
-  color: #ffa000;
-}
-
-.state-none .membership-bar-fill {
-  background: #ffa000;
-}
-
-/* Estado crítico */
-.state-critical .membership-days {
-  color: #ba1a1a;
-}
-
-.state-critical .membership-bar-fill {
-  background: #ba1a1a;
-}
-
-.state-critical .membership-days {
-  animation: urgentPulse 1s ease-in-out infinite;
-}
-
-/* Estado advertencia */
-.state-warning .membership-days {
-  color: #e65100;
-}
-
-.state-warning .membership-bar-fill {
-  background: #e65100;
+  background: var(--brand-primary);
+  border-radius: 3px;
 }
 
 /* ─── QR Card ─── */
 .bento-qr {
   grid-column: span 1;
-  background: #006876;
-  border-radius: 1.125rem;
+  background: var(--brand-secondary);
+  border-radius: var(--radius-xl);
   padding: 1.5rem 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  color: #fff;
   border: none;
-  cursor: pointer;
-  color: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 104, 118, 0.2);
-  transition: opacity 0.15s, transform 0.1s;
-  animation: fadeInUp 0.55s 0.1s ease both;
-  text-align: center;
-}
-
-.bento-qr:active {
-  transform: scale(0.96);
-  opacity: 0.9;
-}
-
-.bento-qr:hover {
-  box-shadow: 0 12px 32px rgba(0, 104, 118, 0.28);
 }
 
 .bento-qr-icon {
-  width: 4.5rem;
-  height: 4.5rem;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 0.875rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  background: rgba(255,255,255,0.1);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.bento-qr-icon svg {
-  opacity: 0.95;
+  margin-bottom: 0.75rem;
 }
 
 .bento-qr-label {
   font-size: 1rem;
-  font-weight: 700;
-  color: #ffffff;
-  line-height: 1.2;
+  font-weight: 800;
 }
 
 .bento-qr-sub {
-  font-size: 0.6rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-size: 0.65rem;
+  opacity: 0.7;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.65);
 }
 
 /* ─── CTA Banner ─── */
 .bento-cta {
   grid-column: span 2;
-  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
-  border-radius: 1.25rem;
-  padding: 1.75rem 1.5rem;
+  background: var(--brand-primary);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  cursor: pointer;
-  box-shadow: 0 12px 32px rgba(0, 172, 193, 0.3);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-  animation: fadeInUp 0.58s 0.12s ease both;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.bento-cta:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 16px 48px rgba(0, 172, 193, 0.45);
-}
-
-.bento-cta:active {
-  transform: scale(0.98);
-}
-
-.cta-content {
-  flex: 1;
-  position: relative;
-  z-index: 2;
-}
-
-.cta-eyebrow {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 0.4rem;
+  color: #fff;
 }
 
 .cta-title {
-  font-family: var(--app-font-brand);
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 950;
-  font-style: italic;
-  color: #ffffff;
-  margin: 0 0 0.35rem;
-  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  margin: 0;
   line-height: 1;
 }
 
-.cta-accent {
-  color: #fff; /* Opcional: un color que resalte aún más */
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
-}
-
 .cta-sub {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-}
-
-.cta-action {
-  width: 3.5rem;
-  height: 3.5rem;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  flex-shrink: 0;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  transition: transform 0.2s ease;
-}
-
-.bento-cta:hover .cta-action {
-  transform: translateX(4px) rotate(-10deg);
-  background: rgba(255, 255, 255, 0.3);
+  font-size: 0.8rem;
+  opacity: 0.9;
 }
 
 /* ─── Chart ─── */
 .bento-chart {
   grid-column: span 2;
-  background: #f2f4f5;
-  border-radius: 1.125rem;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
   padding: 1.5rem;
-  animation: fadeInUp 0.6s 0.15s ease both;
-}
-
-.bento-chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1.25rem;
-}
-
-.bento-chart-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #191c1d;
-  margin: 0 0 0.2rem;
-  letter-spacing: -0.01em;
-}
-
-.bento-chart-sub {
-  font-size: 0.8rem;
-  color: #3d494b;
-  margin: 0;
-}
-
-.bento-chart-total {
-  text-align: right;
 }
 
 .bento-chart-total-num {
-  display: block;
-  font-size: 1.6rem;
-  font-weight: 900;
-  color: #006876;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-
-.bento-chart-total-label {
-  display: block;
-  font-size: 0.55rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #3d494b;
-  opacity: 0.7;
-  margin-top: 0.2rem;
-}
-
-.bento-chart-bars {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.4rem;
-  height: 170px;
-}
-
-.chart-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  height: 100%;
-}
-
-.chart-bar {
-  width: 100%;
-  border-radius: 9999px;
-  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  min-height: 14px;
+  color: var(--brand-primary);
+  font-size: 1.25rem;
+  font-weight: 800;
 }
 
 .chart-bar-active {
-  background: #00acc1;
-  box-shadow: 0 0 16px rgba(0, 172, 193, 0.35);
+  background: var(--brand-primary);
 }
 
 .chart-bar-inactive {
-  background: #b1cad7;
+  background: var(--bg-subtle);
 }
 
-.chart-day {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: #3d494b;
-  opacity: 0.7;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.chart-day-active {
-  font-weight: 900;
-  color: #006876;
-  opacity: 1;
-}
-
-/* ─── Action cards ─── */
+/* ─── Action Cards ─── */
 .bento-action-card {
   grid-column: span 1;
   background: var(--bg-card);
-  border-radius: 1.125rem;
-  padding: 1.25rem 1rem;
+  border-radius: var(--radius-lg);
+  padding: 1rem;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  box-shadow: 0 4px 16px rgba(25, 28, 29, 0.04);
+  gap: 0.75rem;
   border: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-  animation: fadeInUp 0.6s 0.2s ease both;
-}
-
-.bento-action-card:active {
-  transform: scale(0.97);
-}
-
-.bento-action-card:hover {
-  box-shadow: 0 8px 24px rgba(25, 28, 29, 0.09);
-  transform: translateY(-2px);
 }
 
 .bento-action-icon {
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
-.bento-action-icon-teal {
-  background: #cde6f4;
-  color: #006876;
-}
-
-.bento-action-icon-teal svg {
-  stroke: #006876;
-}
-
-.bento-action-icon-amber {
-  background: rgba(218, 138, 54, 0.12);
-  color: #8d4f00;
-}
-
-.bento-action-icon-amber svg {
-  stroke: #8d4f00;
-}
+.bento-action-icon-teal { background: var(--brand-primary-fade); color: var(--brand-primary); }
+.bento-action-icon-amber { background: rgba(255, 179, 0, 0.1); color: var(--brand-accent); }
 
 .bento-action-title {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #191c1d;
-  margin: 0 0 0.15rem;
-  letter-spacing: -0.01em;
+  color: var(--text-main);
 }
-
-.bento-action-sub {
-  font-size: 0.75rem;
-  color: #3d494b;
-  margin: 0;
-  opacity: 0.8;
-}
-
-/* ─── Animaciones ─── */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes urgentPulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.06);
-  }
-}
-
 /* ─── Responsive ─── */
-@media (max-width: 380px) {
-  .home-container {
-    padding: 1.25rem 1rem 6rem;
-  }
-
+@media (max-width: 480px) {
   .home-bento {
     gap: 0.625rem;
   }

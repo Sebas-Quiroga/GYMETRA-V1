@@ -72,6 +72,9 @@ app:
     cognito:
       issuer: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt
       client-id: 3gnvfec5v6tfp32u634mq645ll
+      # Credenciales para sincronización (Utilizar variables de entorno en producción)
+      access-key: ${AWS_ACCESS_KEY_ID:AKIA_YOUR_KEY}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:YOUR_SECRET}
 
 # -----------------------------------------------
 # Servidor

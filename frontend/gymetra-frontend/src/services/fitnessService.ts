@@ -1,27 +1,37 @@
 import axios from 'axios';
 
 /**
- * ExerciseDB API Service — RapidAPI
+ * GYMETRA Fitness Service — Backend Proxy
  * 
- * Este servicio gestiona la comunicación con la base de datos de ejercicios.
- * Requiere el host y la clave de API configurados en los headers.
+ * Este servicio consume los ejercicios desde nuestro propio backend (Puerto 8090).
+ * Esto elimina la dependencia directa de RapidAPI y permite servir GIFs locales.
  */
 
-const EXERCISE_DB_HOST = 'exercisedb.p.rapidapi.com';
-const BASE_URL = `https://${EXERCISE_DB_HOST}`;
+// Usamos la URL del microservicio QR donde centralizamos la lógica de ejercicios
+const BASE_URL = import.meta.env.VITE_API_URL_QR || "http://localhost:8090/api";
+const EXERCISES_API = `${BASE_URL}/exercises`;
+
+import { useAuthStore } from '@/stores/auth';
 
 const apiClient = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    'x-rapidapi-host': EXERCISE_DB_HOST,
-    'x-rapidapi-key': import.meta.env.VITE_RAPIDAPI_KEY,
-  },
+  baseURL: EXERCISES_API
+});
+
+// Interceptor para inyectar X-User-Id automáticamente en todas las peticiones
+apiClient.interceptors.request.use(async (config) => {
+  const auth = useAuthStore();
+  if (auth.user?.userId) {
+    config.headers['X-User-Id'] = auth.user.userId.toString();
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 export interface Exercise {
   id: string;
   name: string;
-  gifUrl: string;
+  gifUrl: string; // URL original (referencia)
   target: string;
   equipment: string;
   bodyPart: string;
@@ -29,13 +39,11 @@ export interface Exercise {
 
 /**
  * Obtiene ejercicios filtrados por la parte del cuerpo (body part).
- * Ideal para términos generales como 'chest', 'back', etc.
+ * Las imágenes se cargarán desde nuestro propio endpoint de GIFs del backend.
  */
 export const getExercisesByBodyPart = async (bodyPart: string): Promise<Exercise[]> => {
   try {
-    const response = await apiClient.get(`/exercises/bodyPart/${bodyPart.toLowerCase()}`, {
-      params: { limit: 20 }
-    });
+    const response = await apiClient.get(`/bodyPart/${bodyPart.toLowerCase()}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching exercises for body part ${bodyPart}:`, error);
@@ -44,14 +52,19 @@ export const getExercisesByBodyPart = async (bodyPart: string): Promise<Exercise
 };
 
 /**
+ * Helper para obtener la URL local del GIF servido por nuestro backend.
+ * Devuelve la URL binaria servida por el microservicio QR.
+ */
+export const getLocalGifUrl = (exerciseId: string): string => {
+  return `${EXERCISES_API}/${exerciseId}/gif`;
+};
+
+/**
  * Obtiene ejercicios filtrados por el músculo objetivo (target).
- * Requiere nombres técnicos como 'abs', 'biceps', etc.
  */
 export const getExercisesByMuscle = async (muscle: string): Promise<Exercise[]> => {
   try {
-    const response = await apiClient.get(`/exercises/target/${muscle.toLowerCase()}`, {
-      params: { limit: 20 }
-    });
+    const response = await apiClient.get(`/target/${muscle.toLowerCase()}`);
     return response.data;
   } catch (error) {
     console.error(`Error fetching exercises for muscle ${muscle}:`, error);
@@ -60,20 +73,35 @@ export const getExercisesByMuscle = async (muscle: string): Promise<Exercise[]> 
 };
 
 /**
- * Obtiene la lista completa de ejercicios disponibles.
+ * Obtiene la lista única de partes del cuerpo disponibles.
  */
-export const getAllExercises = async (): Promise<Exercise[]> => {
+export const getBodyPartList = async (): Promise<string[]> => {
   try {
-    const response = await apiClient.get('/exercises?limit=100');
+    const response = await axios.get(`${EXERCISES_API}/bodyPartList`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching all exercises:', error);
-    throw error;
+    console.error('Error fetching body part list:', error);
+    return [];
+  }
+};
+
+/**
+ * Obtiene la lista única de músculos objetivo disponibles.
+ */
+export const getTargetList = async (): Promise<string[]> => {
+  try {
+    const response = await axios.get(`${EXERCISES_API}/targetList`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching target list:', error);
+    return [];
   }
 };
 
 export default {
   getExercisesByBodyPart,
   getExercisesByMuscle,
-  getAllExercises,
+  getLocalGifUrl,
+  getBodyPartList,
+  getTargetList
 };

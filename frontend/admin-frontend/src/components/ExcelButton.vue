@@ -490,15 +490,13 @@ const exportPaymentsToExcel = async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #28a745;
-  color: white;
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+  border: 1px solid rgba(39, 174, 96, 0.2);
+  border-radius: 99px;
+  font-family: var(--app-font-brand);
+  font-weight: 850;
+  padding: 10px 20px;
 }
 
 .generate-excel-btn:hover:not(:disabled) {

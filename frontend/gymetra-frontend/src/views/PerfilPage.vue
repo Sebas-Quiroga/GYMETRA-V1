@@ -13,7 +13,7 @@
 
       <router-link to="/home" class="header-logo-link" aria-label="Ir al inicio">
         <img src="/logo.png" alt="Logo" class="header-logo-img" />
-        <span class="header-logo-text">{{ APP_NAME }}</span>
+        <span class="brand-name-header">GYMETRA</span>
       </router-link>
 
       <div class="header-side header-right">

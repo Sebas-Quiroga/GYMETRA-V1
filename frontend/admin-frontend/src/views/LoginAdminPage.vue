@@ -2,15 +2,17 @@
   <div class="admin-login-page">
     <div class="login-card">
       <div class="logo-section">
-        <ion-icon :icon="fitnessOutline" class="logo-icon"></ion-icon>
-        <h1>GYMETRA</h1>
+        <img src="/logo.png" alt="GYMETRA Logo" class="logo-kinetic" />
+        <h1 class="brand-name-card">GYMETRA</h1>
+        <p class="brand-tagline">AERO ATHLETIC EXPERIENCE</p>
+        <div class="admin-badge">Gestión Administrativa</div>
       </div>
 
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
-          <label for="email" class="form-label">Correo Electrónico</label>
-          <div class="input-group">
-            <ion-icon :icon="mailOutline" class="input-icon"></ion-icon>
+          <label for="email" class="form-label">Identidad Administrativa</label>
+          <div class="input-wrapper-kinetic">
+            <ion-icon :icon="mailOutline"></ion-icon>
             <input
               id="email"
               v-model="form.email"
@@ -25,9 +27,9 @@
         </div>
 
         <div class="form-group">
-          <label for="password" class="form-label">Contraseña</label>
-          <div class="input-group">
-            <ion-icon :icon="lockClosedOutline" class="input-icon"></ion-icon>
+          <label for="password" class="form-label">Llave de Acceso</label>
+          <div class="input-wrapper-kinetic">
+            <ion-icon :icon="lockClosedOutline"></ion-icon>
             <input
               id="password"
               v-model="form.password"
@@ -43,14 +45,14 @@
 
         <div class="forgot-link">
           <a href="#" class="forgot-password-link" @click.prevent="handleForgotPassword">
-            ¿Olvidaste tu contraseña?
+            ¿Restablecer credenciales?
           </a>
         </div>
 
         <div class="login-btn-container">
           <button type="submit" class="login-btn" :disabled="loading">
-            <span v-if="loading" class="loading-spinner">
-              <ion-icon :icon="refreshOutline" class="spinner-icon"></ion-icon>
+            <span v-if="loading" class="spin-kinetic">
+              <ion-icon :icon="refreshOutline"></ion-icon>
             </span>
             <span v-else>Iniciar Sesión</span>
           </button>
@@ -58,14 +60,13 @@
       </form>
 
       <div class="login-footer">
-        <p>¿No tienes cuenta de administrador?</p>
-        <a href="#" class="contact-link" @click.prevent="handleContactSupport">Contactar soporte</a>
+        <p>¿Problemas técnicos? <a href="#" class="contact-link" @click.prevent="handleContactSupport">Soporte Técnico</a></p>
       </div>
 
       <div class="back-link">
         <button class="back-btn" @click="goToUserLogin">
           <ion-icon :icon="arrowBackOutline"></ion-icon>
-          Volver al login de usuario
+          Volver al Portal de Usuarios
         </button>
       </div>
     </div>

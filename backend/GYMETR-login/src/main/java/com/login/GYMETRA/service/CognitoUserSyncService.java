@@ -8,12 +8,20 @@ import com.login.GYMETRA.repository.UserRepository;
 import com.login.GYMETRA.repository.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClientBuilder;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
 
 import java.time.OffsetDateTime;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -35,11 +43,20 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CognitoUserSyncService {
 
-    private static final String DEFAULT_ROLE = "Client";
+    private static final String DEFAULT_ROLE = "User";
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
+
+    @Value("${app.security.cognito.issuer}")
+    private String issuerUri;
+
+    @Value("${app.security.cognito.access-key:}")
+    private String accessKey;
+
+    @Value("${app.security.cognito.secret-key:}")
+    private String secretKey;
 
     // ---------------------------------------------------------------
     // Public API
@@ -55,11 +72,168 @@ public class CognitoUserSyncService {
     @Transactional
     public User syncUser(Jwt jwt) {
         String sub = jwt.getSubject();
-        log.debug("Syncing user for sub: {}", sub);
+        String email = jwt.getClaimAsString("email");
+        Long identification = extractIdentification(jwt);
 
+        log.debug("Syncing user for sub: {}, ident: {}, email: {}", sub, identification, email);
+
+        // 1. Try finding by sub
         return userRepository.findByCognitoSub(sub)
-                .map(existingUser -> updateExistingUser(existingUser, jwt))
-                .orElseGet(() -> createNewUser(jwt));
+                .map(user -> updateExistingUser(user, jwt))
+                .orElseGet(() -> {
+                    // 2. Try finding by identification (if present)
+                    if (identification != null && identification > 0) {
+                        return userRepository.findByIdentification(identification)
+                                .map(user -> linkAndSyncUser(user, sub, jwt))
+                                .orElseGet(() -> tryFindByEmailAndSync(email, sub, jwt));
+                    }
+                    return tryFindByEmailAndSync(email, sub, jwt);
+                });
+    }
+
+    private User tryFindByEmailAndSync(String email, String sub, Jwt jwt) {
+        if (email != null) {
+            return userRepository.findByEmail(email)
+                    .map(user -> linkAndSyncUser(user, sub, jwt))
+                    .orElseGet(() -> createNewUser(jwt));
+        }
+        return createNewUser(jwt);
+    }
+
+    private User linkAndSyncUser(User user, String sub, Jwt jwt) {
+        log.info("Linking existing user (email={}) with new Cognito sub: {}", user.getEmail(), sub);
+        user.setCognitoSub(sub);
+        return updateExistingUser(user, jwt);
+    }
+
+    /**
+     * Scans the entire Cognito User Pool and imports missing users into local DB.
+     * @return number of new users imported
+     */
+    @Transactional
+    public int syncAllUsers() {
+        String userPoolId = issuerUri.substring(issuerUri.lastIndexOf("/") + 1);
+        // Region extraction: https://cognito-idp.us-east-2.amazonaws.com/... -> us-east-2
+        String regionStr = issuerUri.split("\\.")[1];
+        Region region = Region.of(regionStr);
+
+        log.info("Starting full Cognito sync for Pool: {} in Region: {}", userPoolId, region);
+
+        int importedCount = 0;
+        try (CognitoIdentityProviderClient cognitoClient = createCognitoClient(region)) {
+
+            ListUsersRequest listUsersRequest = ListUsersRequest.builder()
+                    .userPoolId(userPoolId)
+                    .build();
+
+            ListUsersResponse response = cognitoClient.listUsers(listUsersRequest);
+            
+            for (UserType cognitoUser : response.users()) {
+                UserAttributes attrs = extractAttributes(cognitoUser);
+                
+                if (attrs.sub == null) continue;
+
+                // 1. Search by sub
+                Optional<User> existing = userRepository.findByCognitoSub(attrs.sub);
+                
+                // 2. If not found, search by identification
+                if (existing.isEmpty() && attrs.identification != null && attrs.identification > 0) {
+                    existing = userRepository.findByIdentification(attrs.identification);
+                    if (existing.isPresent()) {
+                        log.info("Merging existing user by identification={} with Cognito sub={}", attrs.identification, attrs.sub);
+                    }
+                }
+
+                // 3. If still not found, search by email
+                if (existing.isEmpty() && attrs.email != null) {
+                    existing = userRepository.findByEmail(attrs.email);
+                    if (existing.isPresent()) {
+                        log.info("Merging existing user by email={} with Cognito sub={}", attrs.email, attrs.sub);
+                    }
+                }
+
+                if (existing.isPresent()) {
+                    // Update existing
+                    User user = existing.get();
+                    user.setCognitoSub(attrs.sub); // Ensure sub is linked
+                    updateUserFromAttributes(user, attrs);
+                    userRepository.save(user); // Transactional handles saving, but good to be explicit
+                } else {
+                    // New import
+                    importCognitoUser(attrs);
+                    importedCount++;
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to perform Cognito sync: {}", e.getMessage());
+            throw new RuntimeException("Error sincronizando usuarios con Cognito: " + e.getMessage());
+        }
+
+        log.info("Full sync completed. {} new users imported.", importedCount);
+        return importedCount;
+    }
+
+    private void importCognitoUser(UserAttributes attrs) {
+        User newUser = User.builder()
+                .cognitoSub(attrs.sub)
+                .email(attrs.email != null ? attrs.email : attrs.sub + "@cognito.local")
+                .firstName(attrs.firstName != null ? attrs.firstName : "Nuevo")
+                .lastName(attrs.lastName != null ? attrs.lastName : "Usuario")
+                .phone(attrs.phone)
+                .photoUrl(attrs.photo)
+                .identification(attrs.identification != null ? attrs.identification : 0L)
+                .status("active")
+                .createdAt(OffsetDateTime.now())
+                .lastLogin(OffsetDateTime.now())
+                .build();
+
+        saveUserWithDefaultRole(newUser);
+    }
+
+    private void updateUserFromAttributes(User user, UserAttributes attrs) {
+        if (attrs.email != null) user.setEmail(attrs.email);
+        if (attrs.firstName != null) user.setFirstName(attrs.firstName);
+        if (attrs.lastName != null) user.setLastName(attrs.lastName);
+        if (attrs.phone != null) user.setPhone(attrs.phone);
+        if (attrs.photo != null) user.setPhotoUrl(attrs.photo);
+        if (attrs.identification != null && attrs.identification > 0) user.setIdentification(attrs.identification);
+        user.setLastLogin(OffsetDateTime.now());
+    }
+
+    private UserAttributes extractAttributes(UserType cognitoUser) {
+        UserAttributes attrs = new UserAttributes();
+        for (AttributeType attr : cognitoUser.attributes()) {
+            switch (attr.name()) {
+                case "sub" -> attrs.sub = attr.value();
+                case "email" -> attrs.email = attr.value();
+                case "given_name" -> attrs.firstName = attr.value();
+                case "family_name" -> attrs.lastName = attr.value();
+                case "phone_number" -> attrs.phone = attr.value();
+                case "picture" -> attrs.photo = attr.value();
+                case "custom:identification", "preferred_username" -> {
+                    try {
+                        attrs.identification = Long.parseLong(attr.value().replaceAll("[^0-9]", ""));
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+        return attrs;
+    }
+
+    private Long extractIdentification(Jwt jwt) {
+        String identStr = jwt.getClaimAsString("custom:identification");
+        if (identStr == null) identStr = jwt.getClaimAsString("preferred_username");
+        try {
+            return identStr != null ? Long.parseLong(identStr.replaceAll("[^0-9]", "")) : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static class UserAttributes {
+        String sub, email, firstName, lastName, phone, photo;
+        Long identification = 0L;
     }
 
     private User updateExistingUser(User user, Jwt jwt) {
@@ -122,13 +296,7 @@ public class CognitoUserSyncService {
 
         log.info("Creating local profile for new Cognito user email={}", email);
 
-        Role clientRole = roleRepository.findByRoleName(DEFAULT_ROLE)
-                .orElseGet(() -> roleRepository.save(
-                        Role.builder()
-                                .roleName(DEFAULT_ROLE)
-                                .description("Cliente del gimnasio")
-                                .build()
-                ));
+        Role userRole = getOrCreateRoleWithPriority(DEFAULT_ROLE);
 
         User user = User.builder()
                 .cognitoSub(sub)
@@ -145,16 +313,63 @@ public class CognitoUserSyncService {
 
         User saved = userRepository.save(user);
 
-        UserRole userRole = UserRole.builder()
+        UserRole userRoleRel = UserRole.builder()
                 .user(saved)
-                .role(clientRole)
+                .role(userRole)
                 .build();
-        userRoleRepository.save(userRole);
+        userRoleRepository.save(userRoleRel);
 
         Set<UserRole> roles = new HashSet<>();
-        roles.add(userRole);
+        roles.add(userRoleRel);
         saved.setUserRoles(roles);
 
         return saved;
+    }
+
+    private void saveUserWithDefaultRole(User user) {
+        Role userRole = getOrCreateRoleWithPriority(DEFAULT_ROLE);
+
+        User saved = userRepository.save(user);
+
+        UserRole userRoleRel = UserRole.builder()
+                .user(saved)
+                .role(userRole)
+                .build();
+        userRoleRepository.save(userRoleRel);
+
+        Set<UserRole> roles = new HashSet<>();
+        roles.add(userRoleRel);
+        saved.setUserRoles(roles);
+    }
+
+    private CognitoIdentityProviderClient createCognitoClient(Region region) {
+        CognitoIdentityProviderClientBuilder builder = CognitoIdentityProviderClient.builder()
+                .region(region);
+
+        if (accessKey != null && !accessKey.isBlank() && secretKey != null && !secretKey.isBlank()) {
+            log.info("Configuring Cognito client with static credentials from application properties.");
+            builder.credentialsProvider(StaticCredentialsProvider.create(
+                    AwsBasicCredentials.create(accessKey, secretKey)
+            ));
+        } else {
+            log.info("Using default AWS credentials provider chain for Cognito client.");
+        }
+
+        return builder.build();
+    }
+
+    private Role getOrCreateRoleWithPriority(String roleName) {
+        return roleRepository.findByRoleName(roleName)
+                .orElseGet(() -> {
+                    int priority = roleName.equalsIgnoreCase("Admin") ? 1 : 10;
+                    String description = roleName.equalsIgnoreCase("Admin") ? "Administrador del sistema" : "Usuario estándar";
+                    return roleRepository.save(
+                            Role.builder()
+                                    .roleName(roleName)
+                                    .description(description)
+                                    .priority(priority)
+                                    .build()
+                    );
+                });
     }
 }

@@ -1,6 +1,7 @@
 package com.Membership.GYMETRA.controller;
 
 import com.Membership.GYMETRA.entity.UserMembership;
+import com.Membership.GYMETRA.entity.UserMembershipStatus;
 import com.Membership.GYMETRA.service.UserMembershipService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,7 +42,7 @@ public class UserMembershipController {
     @Operation(summary = "Activar membresía", description = "Activa una membresía de usuario por su ID")
     @PutMapping("/{id}/activate")
     public ResponseEntity<UserMembership> activateMembership(@PathVariable Integer id) {
-        return updateMembershipStatus(id, UserMembership.Status.ACTIVE);
+        return updateMembershipStatus(id, UserMembershipStatus.ACTIVE);
     }
 
     // =====================================
@@ -50,7 +51,7 @@ public class UserMembershipController {
     @Operation(summary = "Suspender membresía", description = "Suspende una membresía de usuario por su ID")
     @PutMapping("/{id}/suspend")
     public ResponseEntity<UserMembership> suspendMembership(@PathVariable Integer id) {
-        return updateMembershipStatus(id, UserMembership.Status.SUSPENDED);
+        return updateMembershipStatus(id, UserMembershipStatus.SUSPENDED);
     }
 
     // =====================================
@@ -59,13 +60,13 @@ public class UserMembershipController {
     @Operation(summary = "Cancelar membresía", description = "Cancela una membresía de usuario por su ID")
     @PutMapping("/{id}/cancel")
     public ResponseEntity<UserMembership> cancelMembership(@PathVariable Integer id) {
-        return updateMembershipStatus(id, UserMembership.Status.CANCELED);
+        return updateMembershipStatus(id, UserMembershipStatus.CANCELED);
     }
 
     // =====================================
     // Método interno para actualizar status
     // =====================================
-    private ResponseEntity<UserMembership> updateMembershipStatus(Integer id, UserMembership.Status status) {
+    private ResponseEntity<UserMembership> updateMembershipStatus(Integer id, UserMembershipStatus status) {
         return userMembershipService.getUserMembershipById(id)
                 .map(membership -> {
                     membership.setStatus(status);
@@ -97,7 +98,16 @@ public class UserMembershipController {
     }
 
     // =====================================
-    // 7️⃣ Tarea programada para eliminar pendientes > 5 minutos
+    // 7️⃣ Verificar permiso específico
+    // =====================================
+    @Operation(summary = "Verificar permiso", description = "Verifica si el usuario tiene permiso para un módulo específico (training/nutrition)")
+    @GetMapping("/user/{userId}/permission/{permission}")
+    public ResponseEntity<Boolean> checkPermission(@PathVariable Integer userId, @PathVariable String permission) {
+        return ResponseEntity.ok(userMembershipService.userHasPermission(userId, permission));
+    }
+
+    // =====================================
+    // 8️⃣ Tarea programada para eliminar pendientes > 5 minutos
     // =====================================
     @Scheduled(fixedRate = 60000) // Cada 1 minuto
     public void cleanupPendingMemberships() {

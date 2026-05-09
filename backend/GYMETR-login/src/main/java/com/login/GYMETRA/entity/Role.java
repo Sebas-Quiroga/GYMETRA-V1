@@ -24,6 +24,9 @@ public class Role {
     @Column
     private String description;
 
+    @Column
+    private Integer priority;
+
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserRole> userRoles;
 

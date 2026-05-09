@@ -606,15 +606,13 @@ const exportPaymentsToPDF = async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #dc3545;
-  color: white;
+  background: rgba(186, 26, 26, 0.1);
+  color: #ba1a1a;
+  border: 1px solid rgba(186, 26, 26, 0.2);
+  border-radius: 99px;
+  font-family: var(--app-font-brand);
+  font-weight: 850;
+  padding: 10px 20px;
 }
 
 .generate-pdf-btn:hover:not(:disabled) {

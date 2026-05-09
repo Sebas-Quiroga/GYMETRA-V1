@@ -109,5 +109,15 @@ export const userService = {
       console.error('Error updating user status:', error);
       throw error;
     }
+  },
+
+  async syncUsersFromCognito(): Promise<string> {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/users/sync`);
+      return response.data;
+    } catch (error) {
+      console.error('Error syncing users from Cognito:', error);
+      throw error;
+    }
   }
-};
+};

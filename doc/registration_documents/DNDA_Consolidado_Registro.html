@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro DNDA - GYMETRA Backend</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: auto; padding: 20px; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; page-break-before: always; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        h3 { color: #16a085; }
+        code { background-color: #f4f4f4; border: 1px solid #ddd; border-left: 3px solid #f36d33; color: #666; page-break-inside: avoid; font-family: monospace; display: block; padding: 10px; margin: 10px 0; white-space: pre-wrap; }
+        .metadata { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 40px 0; }
+        @media print { h1 { page-break-before: always; } }
+    </style>
+</head>
+<body>
+
+    <div class="metadata">
+        <h1>REGISTRO DE SOPORTE LÓGICO - GYMETRA BACKEND</h1>
+        <p><strong>PROYECTO:</strong> GYMETRA (Core Microservices)</p>
+        <p><strong>FECHA DE GENERACIÓN:</strong> 9 de mayo de 2026</p>
+        <p><strong>FORMATO:</strong> Documentación Técnica para DNDA Colombia</p>
+    </div>
+
+    <!-- DOCUMENTO 1 -->
+    <h1>1. DESCRIPCIÓN DEL PROGRAMA</h1>
+    <h3>Resumen Ejecutivo</h3>
+    <p>GYMETRA Backend es el núcleo lógico de una plataforma integral de gestión para centros de acondicionamiento físico. El sistema ha sido desarrollado bajo una arquitectura de microservicios distribuida, utilizando el framework Spring Boot (Java 17) y garantizando la persistencia mediante PostgreSQL.</p>
+    
+    <h3>Arquitectura del Sistema</h3>
+    <p>El soporte lógico se divide en tres microservicios principales desacoplados:</p>
+    <ul>
+        <li><strong>Login:</strong> Autenticación y sincronización vía AWS Cognito.</li>
+        <li><strong>Membresías:</strong> Lógica de planes y pagos (Stripe).</li>
+        <li><strong>QR:</strong> Motor de acceso dinámico.</li>
+    </ul>
+
+    <h3>Algoritmos de Lógica Original</h3>
+    <h4>Sincronización Cognito (Find-or-Create)</h4>
+    <p>Algoritmo que mantiene la identidad local sincronizada con el JWT de Cognito, permitiendo actualizaciones atómicas de perfil sin duplicidad de registros.</p>
+    
+    <h4>Extensión Dinámica de Vigencia</h4>
+    <p>Algoritmo que calcula la nueva fecha de fin sumando la duración del plan a la fecha de vencimiento previa si aún es vigente, evitando traslapes.</p>
+
+    <!-- DOCUMENTO 2 -->
+    <h1>2. MANUAL DE OPERACIÓN TÉCNICA</h1>
+    <h3>Flujo de Seguridad</h3>
+    <p>El backend opera como un Resource Server OAuth2. El frontend debe obtener un JWT de Cognito y enviarlo en la cabecera <code>Authorization: Bearer [TOKEN]</code>.</p>
+    
+    <h3>Endpoints Principales</h3>
+    <ul>
+        <li><strong>Auth:</strong> <code>/api/auth/users</code></li>
+        <li><strong>Membership:</strong> <code>/api/user-memberships</code></li>
+        <li><strong>QR Access:</strong> <code>/api/qr-access/me</code></li>
+    </ul>
+
+    <!-- DOCUMENTO 3 -->
+    <h1>3. ESTRUCTURA DE CÓDIGO Y MUESTRAS</h1>
+    <h3>Índice de Paquetes</h3>
+    <code>
+com.login.GYMETRA -> Auth & Sync Service
+com.membership.GYMETRA -> Plans & Payments Service
+com.GYMETRA.GYMETRA.qr -> QR Access Engine
+    </code>
+
+    <h3>Muestra de Código: Cálculo de Renovación</h3>
+    <code>
+@Transactional
+public UserMembership createOrUpdateMembership(UserMembership newMembership) {
+    // Lógica de cálculo de fechas y estado
+    LocalDate nuevaFechaFin = last.getEndDate().plusDays(newMembership.getMembership().getDurationDays());
+    newMembership.setEndDate(nuevaFechaFin);
+    return repository.save(newMembership);
+}
+    </code>
+
+    <p style="text-align: center; margin-top: 100px; color: #7f8c8d;">
+        <em>Este documento ha sido generado automáticamente para fines de registro de Propiedad Intelectual.</em>
+    </p>
+
+</body>
+</html>

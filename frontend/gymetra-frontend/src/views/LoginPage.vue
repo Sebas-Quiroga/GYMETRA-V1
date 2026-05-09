@@ -23,7 +23,8 @@
         <!-- Logo Principal -->
         <div class="logo-container">
           <img src="/logo.png" alt="Logo de la aplicación" class="logo" loading="eager" />
-          <h1 class="logo-text">{{ APP_NAME }}</h1>
+          <h1 class="brand-name">GYMETRA</h1>
+          <p class="brand-tagline">Tu transformación comienza aquí</p>
         </div>
 
         <div class="input-card">

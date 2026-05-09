@@ -3,10 +3,6 @@
     <!-- Sidebar Component -->
     <AdminSidebar
       :active-section="activeSection"
-      @navigate-to-users="navigateToUsers"
-      @navigate-to-reports="navigateToReports"
-      @navigate-to-charts="navigateToCharts"
-      @navigate-to-payments="navigateToPayments"
       @logout="logout"
     />
 
@@ -15,20 +11,21 @@
       <!-- Loading State -->
       <div v-if="loading" class="loading-container">
         <div class="spinner"></div>
-        <p>Cargando métricas del dashboard...</p>
+        <p style="margin-top: 20px; font-weight: 800; color: var(--admin-text-sub);">Sincronizando Analítica Kinetic...</p>
       </div>
 
       <!-- Error State -->
-      <div v-else-if="error" class="error-container">
-        <p class="error-message">{{ error }}</p>
-        <button class="retry-btn" @click="loadMetrics">Reintentar</button>
+      <div v-else-if="error" class="error-container" style="text-align: center; padding: 100px;">
+        <ion-icon :icon="banOutline" style="font-size: 60px; color: #ba1a1a;"></ion-icon>
+        <p class="error-message" style="margin: 20px 0; font-weight: 700;">{{ error }}</p>
+        <button class="add-user-btn" @click="loadMetrics" style="margin: 0 auto;">Reintentar Sincronización</button>
       </div>
 
       <!-- Dashboard Content -->
       <div v-else class="dashboard-content">
-        <!-- Header con fecha y título -->
+        <!-- Header -->
         <div class="dashboard-header">
-          <h1>Dashboard de Métricas</h1>
+          <h1>Análisis de Rendimiento</h1>
           <p class="last-update">Última actualización: {{ formatDate(new Date()) }}</p>
         </div>
 
@@ -40,7 +37,7 @@
             </div>
             <div class="kpi-content">
               <div class="kpi-value">{{ formatNumber(metrics.totalUsers) }}</div>
-              <div class="kpi-label">Usuarios Registrados</div>
+              <div class="kpi-label">Usuarios Totales</div>
               <div class="kpi-trend">
                 <span class="trend-positive">+{{ metrics.newUsersThisWeek }}</span> esta semana
               </div>
@@ -48,12 +45,12 @@
           </div>
 
           <div class="kpi-card">
-            <div class="kpi-icon">
+            <div class="kpi-icon" style="background: rgba(39, 174, 96, 0.1); color: #27ae60;">
               <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
             </div>
             <div class="kpi-content">
               <div class="kpi-value">{{ formatNumber(metrics.activeUsers) }}</div>
-              <div class="kpi-label">Usuarios Activos</div>
+              <div class="kpi-label">Cuentas Activas</div>
               <div class="kpi-trend">
                 <span class="trend-info">{{ formatNumber(metrics.suspendedUsers) }}</span> suspendidos
               </div>
@@ -61,12 +58,12 @@
           </div>
 
           <div class="kpi-card">
-            <div class="kpi-icon">
-              <ion-icon :icon="banOutline"></ion-icon>
+            <div class="kpi-icon" style="background: rgba(4, 184, 229, 0.1); color: var(--admin-accent);">
+              <ion-icon :icon="trendingUpOutline"></ion-icon>
             </div>
             <div class="kpi-content">
-              <div class="kpi-value">{{ formatNumber(metrics.suspendedUsers) }}</div>
-              <div class="kpi-label">Cuentas Suspendidas</div>
+              <div class="kpi-value">{{ formatNumber(metrics.totalMemberships) }}</div>
+              <div class="kpi-label">Suscripciones</div>
               <div class="kpi-trend">
                 <span class="trend-neutral">{{ formatNumber(metrics.newUsersToday) }}</span> nuevos hoy
               </div>
@@ -74,14 +71,14 @@
           </div>
 
           <div class="kpi-card">
-            <div class="kpi-icon">
+            <div class="kpi-icon" style="background: rgba(39, 174, 96, 0.1); color: #27ae60;">
               <ion-icon :icon="cashOutline"></ion-icon>
             </div>
             <div class="kpi-content">
               <div class="kpi-value">{{ formatCurrency(metrics.monthlyRevenue) }}</div>
-              <div class="kpi-label">Ingresos del Mes</div>
+              <div class="kpi-label">Ingresos Mensuales</div>
               <div class="kpi-trend">
-                <span class="trend-positive">{{ formatCurrency(metrics.totalRevenue) }}</span> totales
+                <span class="trend-positive">Facturación Real</span>
               </div>
             </div>
           </div>
@@ -92,18 +89,21 @@
           <!-- Estado de Membresías -->
           <div class="chart-card">
             <div class="chart-header">
-              <h3>Estado de Membresías</h3>
+              <h3>
+                <ion-icon :icon="analyticsOutline" style="color: var(--admin-accent);"></ion-icon>
+                Estado de Membresías
+              </h3>
             </div>
             <div class="membership-status-chart">
               <div class="status-pie-container">
                 <svg class="status-pie-chart" viewBox="0 0 200 200">
-                  <circle cx="100" cy="100" r="80" fill="#f5f5f5" />
+                  <circle cx="100" cy="100" r="80" fill="var(--admin-bg-subtle)" />
                   <circle
                     cx="100" cy="100" r="80"
                     :stroke-dasharray="getUserStatusCircleDashArray('total')"
                     :stroke-dashoffset="getUserStatusCircleDashOffset('total')"
-                    stroke="#2196f3"
-                    stroke-width="20"
+                    stroke="var(--admin-accent)"
+                    stroke-width="15"
                     fill="none"
                     transform="rotate(-90 100 100)"
                     v-if="metrics.totalUsers > 0"
@@ -112,8 +112,8 @@
                     cx="100" cy="100" r="80"
                     :stroke-dasharray="getUserStatusCircleDashArray('active')"
                     :stroke-dashoffset="getUserStatusCircleDashOffset('active')"
-                    stroke="#4caf50"
-                    stroke-width="20"
+                    stroke="#27ae60"
+                    stroke-width="15"
                     fill="none"
                     transform="rotate(-90 100 100)"
                     v-if="metrics.activeUsers > 0"
@@ -122,44 +122,40 @@
                     cx="100" cy="100" r="80"
                     :stroke-dasharray="getUserStatusCircleDashArray('suspended')"
                     :stroke-dashoffset="getUserStatusCircleDashOffset('suspended')"
-                    stroke="#ff9800"
-                    stroke-width="20"
+                    stroke="#ba1a1a"
+                    stroke-width="15"
                     fill="none"
                     transform="rotate(-90 100 100)"
                     v-if="metrics.suspendedUsers > 0"
                   />
-                  <circle cx="100" cy="100" r="60" fill="white" />
-                  <text x="100" y="95" text-anchor="middle" class="pie-center-text">
+                  <circle cx="100" cy="100" r="65" fill="var(--admin-bg-card)" />
+                  <text x="100" y="100" text-anchor="middle" class="pie-center-text">
                     {{ formatNumber(metrics.totalMemberships) }}
                   </text>
-                  <text x="100" y="110" text-anchor="middle" class="pie-center-label">
+                  <text x="100" y="125" text-anchor="middle" class="pie-center-label">
                     Total
-                  </text>
-                  <!-- Debug info -->
-                  <text x="100" y="130" text-anchor="middle" class="pie-center-label" style="font-size: 8px; fill: #666;">
-                    T:{{ metrics.totalUsers }} A:{{ metrics.activeUsers }} S:{{ metrics.suspendedUsers }}
                   </text>
                 </svg>
               </div>
               <div class="status-legend">
                 <div class="legend-item">
-                  <div class="legend-color" style="background: #2196f3;"></div>
+                  <div class="legend-color" style="background: var(--admin-accent);"></div>
                   <div class="legend-text">
-                    <span class="legend-label">Total Registrados</span>
+                    <span class="legend-label">Registrados</span>
                     <span class="legend-value">{{ formatNumber(metrics.totalUsers) }}</span>
                   </div>
                 </div>
                 <div class="legend-item">
-                  <div class="legend-color" style="background: #4caf50;"></div>
+                  <div class="legend-color" style="background: #27ae60;"></div>
                   <div class="legend-text">
-                    <span class="legend-label">Usuarios Activos</span>
+                    <span class="legend-label">Activos</span>
                     <span class="legend-value">{{ formatNumber(metrics.activeUsers) }}</span>
                   </div>
                 </div>
                 <div class="legend-item">
-                  <div class="legend-color" style="background: #ff9800;"></div>
+                  <div class="legend-color" style="background: #ba1a1a;"></div>
                   <div class="legend-text">
-                    <span class="legend-label">Cuentas Suspendidas</span>
+                    <span class="legend-label">Suspendidos</span>
                     <span class="legend-value">{{ formatNumber(metrics.suspendedUsers) }}</span>
                   </div>
                 </div>
@@ -170,72 +166,56 @@
           <!-- Ingresos Mensuales - Gráfico de Línea -->
           <div class="chart-card">
             <div class="chart-header">
-              <h3>Ingresos por Mes</h3>
+              <h3>
+                <ion-icon :icon="barChartOutline" style="color: var(--admin-accent);"></ion-icon>
+                Tendencia de Ingresos
+              </h3>
             </div>
             <div class="revenue-line-chart">
               <svg class="line-chart-svg" viewBox="0 0 600 200">
-                <!-- Ejes -->
-                <line x1="50" y1="20" x2="50" y2="180" stroke="#ddd" stroke-width="1"/>
-                <line x1="50" y1="180" x2="580" y2="180" stroke="#ddd" stroke-width="1"/>
-
-                <!-- Etiquetas del eje Y dinámicas basadas en datos reales -->
-                <text x="35" y="30" text-anchor="end" class="axis-label">{{ formatCurrency(getYAxisMaxValue() * 0.8) }}</text>
-                <text x="35" y="80" text-anchor="end" class="axis-label">{{ formatCurrency(getYAxisMaxValue() * 0.4) }}</text>
-                <text x="35" y="130" text-anchor="end" class="axis-label">$0</text>
-
-                <!-- Etiquetas del eje X -->
-                <text x="110" y="195" text-anchor="middle" class="axis-label">Jun</text>
-                <text x="190" y="195" text-anchor="middle" class="axis-label">Jul</text>
-                <text x="270" y="195" text-anchor="middle" class="axis-label">Ago</text>
-                <text x="350" y="195" text-anchor="middle" class="axis-label">Sep</text>
-                <text x="430" y="195" text-anchor="middle" class="axis-label">Oct</text>
-                <text x="510" y="195" text-anchor="middle" class="axis-label">Nov</text>
-
-                <!-- Área bajo la curva -->
+                <!-- Grids -->
+                <line x1="50" y1="20" x2="580" y2="20" stroke="var(--admin-border)" stroke-width="1" stroke-dasharray="4,4"/>
+                <line x1="50" y1="100" x2="580" y2="100" stroke="var(--admin-border)" stroke-width="1" stroke-dasharray="4,4"/>
+                
+                <!-- Área -->
                 <path
                   :d="getRevenueAreaPath()"
-                  fill="url(#revenueGradient)"
-                  opacity="0.3"
+                  fill="url(#revenueGradientKinetic)"
+                  opacity="0.4"
                 />
 
-                <!-- Línea de ingresos -->
+                <!-- Línea -->
                 <path
                   :d="getRevenueLinePath()"
                   fill="none"
-                  stroke="#2196f3"
-                  stroke-width="3"
+                  stroke="var(--admin-accent)"
+                  stroke-width="4"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                 />
 
-                <!-- Puntos de datos -->
-                <circle
-                  v-for="(point, index) in getRevenueDataPoints()"
-                  :key="index"
-                  :cx="point.x"
-                  :cy="point.y"
-                  r="5"
-                  fill="#2196f3"
-                  stroke="white"
-                  stroke-width="2"
-                  :title="`${getLast6Months()[index]}: ${formatCurrency(point.value)}`"
-                />
+                <!-- Labels -->
+                <text x="110" y="195" text-anchor="middle" class="axis-label">Jun</text>
+                <text x="510" y="195" text-anchor="middle" class="axis-label">Nov</text>
 
-                <!-- Gradiente -->
+                <!-- Gradient -->
                 <defs>
-                  <linearGradient id="revenueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#2196f3;stop-opacity:0.8" />
-                    <stop offset="100%" style="stop-color:#2196f3;stop-opacity:0.1" />
+                  <linearGradient id="revenueGradientKinetic" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:var(--admin-accent);stop-opacity:0.6" />
+                    <stop offset="100%" style="stop-color:var(--admin-accent);stop-opacity:0" />
                   </linearGradient>
                 </defs>
               </svg>
             </div>
           </div>
 
-          <!-- Distribución por Planes -->
+          <!-- Popularidad de Planes -->
           <div class="chart-card">
             <div class="chart-header">
-              <h3>Popularidad de Planes</h3>
+              <h3>
+                <ion-icon :icon="cardOutline" style="color: var(--admin-accent);"></ion-icon>
+                Popularidad de Planes
+              </h3>
             </div>
             <div class="plan-popularity">
               <div
@@ -243,44 +223,43 @@
                 :key="plan.planName"
                 class="plan-popularity-item"
               >
-                <div class="plan-name">{{ plan.planName }}</div>
-                <div class="plan-stats">
-                  <div class="plan-count">{{ plan.count }} compras</div>
-                  <div class="plan-bar">
-                    <div
-                      class="plan-bar-fill"
-                      :style="{ width: getPlanPopularityPercentage(plan.count) + '%' }"
-                    ></div>
-                  </div>
-                  <div class="plan-percentage">{{ plan.count }}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span class="plan-name" style="font-weight: 800; font-family: var(--app-font-brand);">{{ plan.planName }}</span>
+                  <span style="font-size: 0.8rem; font-weight: 900; color: var(--admin-accent);">{{ plan.count }} ventas</span>
                 </div>
-              </div>
-              <div v-if="getPurchasedPlans().length === 0" class="no-data-message">
-                <p>No hay planes comprados aún</p>
+                <div class="plan-bar">
+                  <div
+                    class="plan-bar-fill"
+                    :style="{ width: getPlanPopularityPercentage(plan.count) + '%' }"
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Métricas de Rendimiento -->
+          <!-- Métricas Clave -->
           <div class="chart-card">
             <div class="chart-header">
-              <h3>Métricas Clave</h3>
+              <h3>
+                <ion-icon :icon="trendingUpOutline" style="color: var(--admin-accent);"></ion-icon>
+                Rendimiento de Negocio
+              </h3>
             </div>
             <div class="performance-metrics">
               <div class="metric-item">
                 <div class="metric-icon">🎯</div>
                 <div class="metric-content">
                   <div class="metric-value">{{ getConversionRate() }}%</div>
-                  <div class="metric-label">Tasa de Conversión</div>
-                  <div class="metric-desc">Usuarios activos vs registrados</div>
+                  <div class="metric-label">Conversión</div>
+                  <div class="metric-desc">Ratio Activos/Total</div>
                 </div>
               </div>
               <div class="metric-item">
                 <div class="metric-icon">💰</div>
                 <div class="metric-content">
                   <div class="metric-value">{{ getAverageRevenuePerUser() }}</div>
-                  <div class="metric-label">Ingreso por Usuario</div>
-                  <div class="metric-desc">Promedio mensual</div>
+                  <div class="metric-label">ARPU</div>
+                  <div class="metric-desc">Ingreso por usuario</div>
                 </div>
               </div>
               <div class="metric-item">
@@ -288,7 +267,7 @@
                 <div class="metric-content">
                   <div class="metric-value">{{ getGrowthRate() }}%</div>
                   <div class="metric-label">Crecimiento</div>
-                  <div class="metric-desc">Usuarios nuevos este mes</div>
+                  <div class="metric-desc">Nuevos este mes</div>
                 </div>
               </div>
               <div class="metric-item">
@@ -296,13 +275,12 @@
                 <div class="metric-content">
                   <div class="metric-value">{{ getRetentionRate() }}%</div>
                   <div class="metric-label">Retención</div>
-                  <div class="metric-desc">Membresías activas</div>
+                  <div class="metric-desc">Membresías Vigentes</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -313,6 +291,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { logout as authLogout } from '@/services/authService'
 import AdminSidebar from '@/components/AdminSidebar.vue'
+import KineticLoading from '@/components/KineticLoading.vue'
 import { getMetricsData, formatNumber, formatCurrency, type MetricsData } from '@/services/metricsService'
 import {
   peopleOutline,

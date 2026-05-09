@@ -3,240 +3,287 @@
     <!-- Sidebar Component -->
     <AdminSidebar
       :active-section="activeSection"
-      @navigate-to-users="navigateToUsers"
-      @navigate-to-reports="navigateToReports"
-      @navigate-to-charts="navigateToCharts"
-      @navigate-to-payments="navigateToPayments"
       @logout="logout"
     />
 
     <!-- Main Content -->
     <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
-      <!-- Connection Status -->
-      <div class="connection-status">
-        <div class="status-indicator" :class="connectionStatus">
-          <span class="status-dot"></span>
-          <span class="status-text">{{ connectionStatus === 'connected' ? 'Conectado' : 'No conectado' }}</span>
-        </div>
-      </div>
+      <KineticLoading 
+        v-if="loading" 
+        title="Gestión de Pagos" 
+        message="Sincronizando transacciones y estados de membresía..." 
+      />
 
-      <!-- Stats Cards -->
-      <div class="stats-cards">
-        <div class="stat-card">
-          <div class="stat-number">{{ totalPayments }}</div>
-          <div class="stat-label">Total Pagos</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ pendingPayments }}</div>
-          <div class="stat-label">Pagos Pendientes</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">${{ monthlyRevenue }}</div>
-          <div class="stat-label">Ingresos del Mes</div>
-          <div class="month-selector">
-            <input type="month" v-model="selectedMonthYear" @change="updateMonthlyRevenue" />
+      <div v-else class="dashboard-content">
+        <!-- Header & Connection -->
+        <div class="dashboard-header">
+          <div class="header-main">
+            <h1>Control Financiero</h1>
+            <p class="last-update">Gestión de facturación, planes y renovaciones</p>
+          </div>
+          <div class="connection-status">
+            <div class="status-indicator" :class="connectionStatus">
+              <span class="status-dot"></span>
+              <span class="status-text">{{ connectionStatus === 'connected' ? 'Centro de Pagos En Línea' : 'Sincronizando...' }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Payments Table Section -->
-      <div class="payments-table-container">
-        <h2>Pagos y Membresías</h2>
-
-        <!-- Membresías Section -->
-        <div class="memberships-section">
-          <h3>Membresías Activas</h3>
-          <table class="memberships-table">
-            <thead>
-              <tr>
-                <th>ID Membresía</th>
-                <th>Usuario ID</th>
-                <th>Plan</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Fin</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="membership in paginatedActiveMemberships" :key="membership.id">
-                <td>{{ membership.id }}</td>
-                <td>{{ membership.userName }}</td>
-                <td>{{ membership.membership?.planName || 'Sin plan' }}</td>
-                <td>{{ formatDate(membership.startDate) }}</td>
-                <td>{{ formatDate(membership.endDate) }}</td>
-                <td :class="getMembershipStatusClass(membership.status)">{{ membership.status }}</td>
-              </tr>
-              <tr v-if="userMemberships.length === 0">
-                <td colspan="6" class="no-data">No hay membresías activas</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- Pagination for Active Memberships -->
-          <Pagination
-            :total-items="userMemberships.length"
-            :current-page="activeMembershipsCurrentPage"
-            :page-size="activeMembershipsPageSize"
-            item-name="membresías activas"
-            component-id="active-memberships"
-            @update:current-page="activeMembershipsCurrentPage = $event"
-            @update:page-size="activeMembershipsPageSize = $event"
-          />
+        <!-- Stats Grid -->
+        <div class="stats-cards">
+          <div class="stat-card">
+            <span class="stat-number">{{ totalPayments }}</span>
+            <span class="stat-label">Transacciones Totales</span>
+            <div style="font-size: 0.8rem; color: var(--admin-text-sub); margin-top: 5px;">Historial completo del sistema</div>
+          </div>
+          <div class="stat-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <span class="stat-number">{{ pendingPayments }}</span>
+                <span class="stat-label" style="display: block;">Por Procesar</span>
+              </div>
+              <ion-icon :icon="refreshOutline" style="font-size: 24px; color: #f39c12;"></ion-icon>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--admin-text-sub); margin-top: 5px;">Depósito en espera de validación</div>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">${{ monthlyRevenue }}</span>
+            <span class="stat-label">Ingresos Mensuales</span>
+            <div class="month-selector">
+              <input type="month" v-model="selectedMonthYear" @change="updateMonthlyRevenue" />
+            </div>
+          </div>
         </div>
 
-        <!-- Membresías Disponibles Section -->
-        <div class="memberships-section">
-          <h3>Membresías Disponibles</h3>
-          <button class="create-membership-btn" @click="openCreateModal">
-            <ion-icon name="add"></ion-icon>
-            Crear Nueva Membresía
-          </button>
-          <table class="memberships-table">
-            <thead>
-              <tr>
-                <th>ID Plan</th>
-                <th>Nombre del Plan</th>
-                <th>Precio</th>
-                <th>Duración (días)</th>
-                <th>Descripción</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="membership in paginatedAvailableMemberships" :key="membership.membershipId">
-                <td>{{ membership.membershipId }}</td>
-                <td>{{ membership.planName }}</td>
-                <td>${{ formatPrice(membership.price) }}</td>
-                <td>{{ membership.durationDays }}</td>
-                <td>{{ membership.description || 'Sin descripción' }}</td>
-                <td>{{ membership.status }}</td>
-                <td>
-                  <div class="action-buttons">
-                    <button @click="openEditModal(membership)" class="action-btn edit-btn" title="Editar membresía">
-                      <ion-icon :icon="createOutline"></ion-icon>
-                    </button>
+        <!-- Payments Table Section -->
+        <div class="payments-table-container" style="background: transparent; border: none; box-shadow: none;">
+          <!-- Membresías Section -->
+          <div class="memberships-section">
+            <h3>Membresías Activas</h3>
+            <table class="memberships-table">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Plan Actual</th>
+                  <th>Vigencia</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="membership in paginatedActiveMemberships" :key="membership.id">
+                  <td>
+                    <div style="font-weight: 800; font-family: var(--app-font-brand);">{{ membership.userName }}</div>
+                    <div style="font-size: 0.75rem; opacity: 0.6;">Relación #{{ membership.id }}</div>
+                  </td>
+                  <td>
+                    <span style="color: var(--admin-accent); font-weight: 800;">
+                      {{ membership.membership?.planName || 'Sin plan' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div style="font-size: 0.85rem;">{{ formatDate(membership.startDate) }} → {{ formatDate(membership.endDate) }}</div>
+                  </td>
+                  <td>
+                    <span :class="getMembershipStatusClass(membership.status)" class="status-badge">{{ membership.status }}</span>
+                  </td>
+                </tr>
+                <tr v-if="userMemberships.length === 0">
+                  <td colspan="4" class="no-data">No se detectaron suscripciones activas</td>
+                </tr>
+              </tbody>
+            </table>
 
-                    <!-- Toggle Switch Mejorado -->
-                    <div class="status-toggle-wrapper">
-                      <label
-                        class="status-toggle"
-                        :class="{ 'disabled': statusUpdating }"
-                        :title="getToggleTitle(membership.status)"
-                      >
+            <div style="padding: 20px 40px;">
+              <Pagination
+                :total-items="userMemberships.length"
+                :current-page="activeMembershipsCurrentPage"
+                :page-size="activeMembershipsPageSize"
+                item-name="suscripciones"
+                component-id="active-memberships"
+                @update:current-page="activeMembershipsCurrentPage = $event"
+                @update:page-size="activeMembershipsPageSize = $event"
+              />
+            </div>
+          </div>
+
+          <!-- Membresías Disponibles Section -->
+          <div class="memberships-section">
+            <div class="section-header-flex">
+              <h3>Portafolio de Planes</h3>
+              <button class="create-membership-btn" @click="openCreateModal">
+                <ion-icon :icon="createOutline"></ion-icon>
+                <span>Nuevo Plan</span>
+              </button>
+            </div>
+            <table class="memberships-table">
+              <thead>
+                <tr>
+                  <th>Identificador</th>
+                  <th>Costo (COP)</th>
+                  <th>Ciclo</th>
+                  <th>Visibilidad</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="membership in paginatedAvailableMemberships" :key="membership.membershipId">
+                  <td>
+                    <div style="font-weight: 800; font-family: var(--app-font-brand);">{{ membership.planName }}</div>
+                    <div style="font-size: 0.75rem; opacity: 0.6; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ membership.description || 'Sin descripción' }}</div>
+                  </td>
+                  <td style="color: var(--admin-accent); font-weight: 900; font-size: 1.1rem;">
+                    ${{ formatPrice(membership.price) }}
+                  </td>
+                  <td>{{ membership.durationDays }} días</td>
+                  <td>
+                    <span :class="membership.status === 'available' ? 'status-available' : 'status-suspended'" class="status-badge">
+                      {{ membership.status === 'available' ? 'En Catálogo' : 'Oculto' }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <button @click="openEditModal(membership)" class="action-btn edit-btn" title="Ajustar">
+                        <ion-icon :icon="createOutline"></ion-icon>
+                      </button>
+                      
+                      <label class="status-toggle" title="Alternar visibilidad">
                         <input
                           type="checkbox"
                           :checked="membership.status === 'available'"
                           @change="toggleMembershipStatus(membership)"
                           :disabled="statusUpdating"
                         />
-                        <span class="toggle-slider">
-                          <span class="toggle-icon icon-active">
-                            <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                          </span>
-                          <span class="toggle-icon icon-suspended">
-                            <ion-icon :icon="banOutline"></ion-icon>
-                          </span>
-                        </span>
-                        <span class="toggle-label">
-                          {{ membership.status === 'available' ? 'Disponible' : 'Inactivo' }}
-                        </span>
+                        <span class="toggle-slider"></span>
                       </label>
+
+                      <button @click="deleteMembership(membership)" class="action-btn delete-btn" title="Eliminar">
+                        <ion-icon :icon="trashOutline"></ion-icon>
+                      </button>
                     </div>
+                  </td>
+                </tr>
+                <tr v-if="memberships.length === 0">
+                  <td colspan="5" class="no-data">El portafolio de planes está vacío</td>
+                </tr>
+              </tbody>
+            </table>
 
-                    <button @click="deleteMembership(membership)" class="action-btn delete-btn" title="Eliminar membresía">
-                      <ion-icon :icon="trashOutline"></ion-icon>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr v-if="memberships.length === 0">
-                <td colspan="7" class="no-data">No hay membresías disponibles</td>
-              </tr>
-            </tbody>
-          </table>
+            <div style="padding: 20px 40px;">
+              <Pagination
+                :total-items="memberships.length"
+                :current-page="availableMembershipsCurrentPage"
+                :page-size="availableMembershipsPageSize"
+                item-name="planes"
+                component-id="available-memberships"
+                @update:current-page="availableMembershipsCurrentPage = $event"
+                @update:page-size="availableMembershipsPageSize = $event"
+              />
+            </div>
+          </div>
 
-          <!-- Pagination for Available Memberships -->
-          <Pagination
-            :total-items="memberships.length"
-            :current-page="availableMembershipsCurrentPage"
-            :page-size="availableMembershipsPageSize"
-            item-name="membresías disponibles"
-            component-id="available-memberships"
-            @update:current-page="availableMembershipsCurrentPage = $event"
-            @update:page-size="availableMembershipsPageSize = $event"
-          />
-        </div>
+          <!-- Payments Section -->
+          <div class="payments-section">
+            <h3>Historial de Transacciones Kinetic</h3>
+            <table class="payments-table">
+              <thead>
+                <tr>
+                  <th>Referencia</th>
+                  <th>Usuario</th>
+                  <th>Monto</th>
+                  <th>Método</th>
+                  <th>Registro</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="payment in paginatedPayments" :key="payment.id">
+                  <td style="font-family: monospace; opacity: 0.6;">{{ payment.idPago }}</td>
+                  <td>
+                    <div style="font-weight: 700;">{{ payment.identificacion }}</div>
+                    <div style="font-size: 0.75rem; color: var(--admin-accent);">{{ payment.plan }}</div>
+                  </td>
+                  <td style="font-weight: 900; color: var(--admin-text-main);">${{ formatPrice(payment.costo) }}</td>
+                  <td>
+                    <span style="font-size: 0.8rem; font-weight: 800;">{{ payment.metodoPago === 'GATEWAY' ? 'TARJETA' : 'EFECTIVO' }}</span>
+                  </td>
+                  <td>{{ formatDate(payment.fechaPago) }}</td>
+                  <td>
+                    <span :class="getStatusClass(payment.estado)" class="status-badge">{{ payment.estado }}</span>
+                  </td>
+                </tr>
+                <tr v-if="payments.length === 0">
+                  <td colspan="6" class="no-data">No se registran transacciones en el periodo</td>
+                </tr>
+              </tbody>
+            </table>
 
-        <!-- Payments Section -->
-        <div class="payments-section">
-          <h3>Historial de Pagos</h3>
-          <table class="payments-table">
-            <thead>
-              <tr>
-                <th>ID Pago</th>
-                <th>Usuario</th>
-                <th>Fecha de Pago</th>
-                <th>Monto</th>
-                <th>Plan</th>
-                <th>Método</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="payment in paginatedPayments" :key="payment.id">
-                <td>{{ payment.idPago }}</td>
-                <td>{{ payment.identificacion }}</td>
-                <td>{{ formatDate(payment.fechaPago) }}</td>
-                <td>${{ formatPrice(payment.costo) }}</td>
-                <td>{{ payment.plan }}</td>
-                <td>{{ payment.metodoPago === 'GATEWAY' ? 'TARJETA' : (payment.metodoPago || 'GATEWAY') }}</td>
-                <td :class="getStatusClass(payment.estado)">{{ payment.estado }}</td>
-              </tr>
-              <tr v-if="payments.length === 0">
-                <td colspan="7" class="no-data">No hay pagos registrados</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- Pagination for Payments Table -->
-          <Pagination
-            :total-items="payments.length"
-            :current-page="paymentsCurrentPage"
-            :page-size="paymentsPageSize"
-            item-name="pagos"
-            component-id="payments"
-            @update:current-page="paymentsCurrentPage = $event"
-            @update:page-size="paymentsPageSize = $event"
-          />
+            <div style="padding: 20px 40px;">
+              <Pagination
+                :total-items="payments.length"
+                :current-page="paymentsCurrentPage"
+                :page-size="paymentsPageSize"
+                item-name="transacciones"
+                component-id="payments"
+                @update:current-page="paymentsCurrentPage = $event"
+                @update:page-size="paymentsPageSize = $event"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Membership Modal -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <h3>{{ isEditing ? 'Editar Membresía' : 'Crear Nueva Membresía' }}</h3>
+    <!-- Membership Modal Kinetic -->
+    <div v-if="showModal" class="modal-overlay" @click="closeModal" style="display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 2100;">
+      <div class="modal-content" @click.stop style="max-width: 600px; width: 95%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+          <h3 style="margin: 0;">{{ isEditing ? 'Ajustar Plan Kinetic' : 'Nuevo Plan Kinetic' }}</h3>
+          <button @click="closeModal" style="background: none; border: none; font-size: 24px; color: var(--admin-text-sub); cursor: pointer;">
+            <ion-icon :icon="closeOutline"></ion-icon>
+          </button>
+        </div>
+
         <form @submit.prevent="saveMembership">
           <div class="form-group">
-            <label for="planName">Nombre del Plan:</label>
-            <input type="text" id="planName" v-model="currentMembership.planName" required>
+            <label class="form-label">Nombre Comercial del Plan</label>
+            <input type="text" v-model="currentMembership.planName" placeholder="Ej. Plan Gold Kinetic" required>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+              <label class="form-label">Inversión (COP)</label>
+              <input type="number" v-model.number="currentMembership.price" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Duración (Días Calendario)</label>
+              <input type="number" v-model.number="currentMembership.durationDays" required>
+            </div>
           </div>
           <div class="form-group">
-            <label for="price">Precio:</label>
-            <input type="number" id="price" v-model.number="currentMembership.price" step="0.01" required>
+            <label class="form-label">Descripción de Beneficios</label>
+            <textarea v-model="currentMembership.description" placeholder="Describa los accesos y ventajas de este plan..." style="min-height: 120px;"></textarea>
           </div>
-          <div class="form-group">
-            <label for="durationDays">Duración (días):</label>
-            <input type="number" id="durationDays" v-model.number="currentMembership.durationDays" required>
+
+          <!-- Permisos Dinámicos -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; padding: 15px; background: rgba(0, 188, 212, 0.05); border-radius: 12px; border: 1px dashed var(--admin-accent);">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--admin-text-main);">
+                <input type="checkbox" v-model="currentMembership.training" style="width: 20px; height: 20px; accent-color: var(--admin-accent);">
+                <span>Acceso Entrenamiento</span>
+              </label>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--admin-text-main);">
+                <input type="checkbox" v-model="currentMembership.nutrition" style="width: 20px; height: 20px; accent-color: var(--admin-accent);">
+                <span>Acceso Nutrición</span>
+              </label>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="description">Descripción:</label>
-            <textarea id="description" v-model="currentMembership.description"></textarea>
-          </div>
-          <div class="modal-actions">
-            <button type="button" @click="closeModal">Cancelar</button>
-            <button type="submit" :disabled="saving">{{ saving ? 'Guardando...' : 'Guardar' }}</button>
+          
+          <div style="display: flex; gap: 15px; margin-top: 40px; justify-content: flex-end;">
+            <button type="button" @click="closeModal" class="back-btn">Cancelar</button>
+            <button type="submit" :disabled="saving" class="submit-btn" style="min-width: 180px;">
+              {{ saving ? 'Sincronizando...' : 'Confirmar Configuración' }}
+            </button>
           </div>
         </form>
       </div>
@@ -249,6 +296,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { logout as authLogout } from '@/services/authService'
 import AdminSidebar from '@/components/AdminSidebar.vue'
+import KineticLoading from '@/components/KineticLoading.vue'
 import Pagination from '@/components/Pagination.vue'
 import { membershipService, type Payment as ApiPayment, type UserMembership as ApiUserMembership, type Membership } from '@/services/membershipService'
 import { userService } from '@/services/userService'
@@ -363,7 +411,9 @@ const currentMembership = ref<Membership>({
   price: 0,
   durationDays: 0,
   description: '',
-  status: 'available'
+  status: 'available',
+  training: false,
+  nutrition: false
 })
 const originalMembership = ref<Membership | null>(null)
 
@@ -519,6 +569,8 @@ const saveMembership = async () => {
         price: currentMembership.value.price,
         status: currentMembership.value.status,
         description: currentMembership.value.description,
+        training: currentMembership.value.training,
+        nutrition: currentMembership.value.nutrition,
         userMemberships: currentMembership.value.userMemberships || []
       }
       await membershipService.updateMembership(currentMembership.value.membershipId, updateData)

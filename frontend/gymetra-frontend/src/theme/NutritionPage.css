@@ -1,9 +1,7 @@
-/* NutritionPage.css — KINETIC Design System with Theme support */
+/* NutritionPage.css — Aero Athletic Modern Nutrition */
 
-/* ─── Global Styles ─── */
 .nutr-content {
   --background: var(--bg-page) !important;
-  background: var(--bg-page) !important;
 }
 
 /* ─── Header ─── */
@@ -11,11 +9,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 1rem;
   background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 12px 32px rgba(25, 28, 29, 0.04);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -26,12 +21,18 @@
 .nutr-header-right {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  width: 80px; /* Ancho para equilibrar el centro */
+  width: 60px;
 }
 
-.nutr-header-right {
-  justify-content: flex-end;
+.nutr-header-right { justify-content: flex-end; }
+
+.brand-name-header {
+  font-family: var(--app-font-family);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--brand-secondary);
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
 }
 
 .nutr-back-btn, .nutr-logout-btn {
@@ -43,380 +44,184 @@
   align-items: center;
   padding: 0.4rem;
   border-radius: 50%;
-  transition: transform 0.15s, opacity 0.15s;
 }
-.nutr-back-btn:active, .nutr-logout-btn:active { transform: scale(0.9); }
-.nutr-logout-btn { color: var(--text-sub); }
 
 .nutr-logo-link {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   text-decoration: none;
-  transition: transform 0.2s ease;
 }
 
-.nutr-logo-link:active {
-  transform: scale(0.95);
-}
-
-.header-logo-img {
-  height: 28px;
-  width: auto;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-  transition: filter 0.3s ease;
-}
-
-/* En modo claro lo invertimos para visibilidad */
-@media (prefers-color-scheme: light) {
-  .header-logo-img {
-    filter: invert(1) brightness(0.2) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
-  }
-}
-
-.header-logo-text {
-  font-family: var(--app-font-brand);
-  font-size: 1.2rem;
-  font-weight: 900;
-  font-style: italic;
-  color: var(--brand-primary);
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-}
-
-.nutr-header-title {
-  font-family: var(--app-font-brand);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-sub);
-  letter-spacing: 0.02em;
-}
+.header-logo-img { height: 24px; width: auto; }
 
 /* ─── Container ─── */
 .nutr-container {
-  padding: 2.5rem 1.25rem 7rem;
+  padding: 1.5rem 1rem 7rem;
   max-width: 600px;
   margin: 0 auto;
 }
 
 /* ─── Hero ─── */
 .nutr-hero {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 .nutr-hero-eyebrow {
   font-size: 0.65rem;
   font-weight: 800;
-  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--brand-secondary);
-  margin: 0 0 0.5rem;
+  color: var(--brand-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1rem;
 }
 .nutr-hero-title {
-  font-family: var(--app-font-brand);
+  font-family: var(--app-font-family);
   font-size: 2.5rem;
   font-weight: 900;
   color: var(--text-main);
-  letter-spacing: -0.04em;
   line-height: 1;
   margin: 0;
+  letter-spacing: -1px;
 }
 
 /* ─── Form card ─── */
 .nutr-form-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 1.5rem;
-  padding: 1.75rem;
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-md);
 }
 
 .nutr-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-  margin-bottom: 1.75rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
-
-.nutr-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.nutr-form-full { grid-column: span 2; }
 
 .nutr-label {
   font-size: 0.6rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--text-sub);
-  opacity: 0.7;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
 }
 
-/* Select */
-.nutr-select-wrap { position: relative; }
 .nutr-select {
   width: 100%;
   background: var(--bg-subtle);
   border: 1px solid var(--border-color);
-  border-radius: 0.875rem;
-  padding: 0.875rem 2.5rem 0.875rem 1rem;
+  border-radius: var(--radius-lg);
+  padding: 0.8rem 1rem;
   color: var(--text-main);
-  font-size: 0.95rem;
   font-weight: 700;
-  appearance: none;
   outline: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-.nutr-select:focus { border-color: var(--brand-primary); }
-.nutr-select-arrow {
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-sub);
-  pointer-events: none;
 }
 
-/* Calories input */
 .nutr-calories-row {
   display: flex;
   align-items: center;
   background: var(--bg-subtle);
   border: 1px solid var(--border-color);
-  border-radius: 0.875rem;
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
+
 .nutr-cal-btn {
   background: transparent;
   border: none;
-  padding: 0.85rem 1.1rem;
+  padding: 0.8rem;
   color: var(--brand-primary);
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: background 0.15s;
 }
-.nutr-cal-btn:hover { background: rgba(0, 172, 193, 0.08); }
+
 .nutr-calories-input {
   flex: 1;
   background: transparent;
   border: none;
   text-align: center;
-  font-family: var(--app-font-brand);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: var(--text-main);
   outline: none;
-  width: 0;
-  min-width: 0;
+  width: 100%;
 }
 
-/* Generate button */
 .nutr-generate-btn {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 1.1rem 1.75rem;
+  padding: 1rem;
   background: var(--brand-primary);
-  color: #ffffff;
+  color: #fff;
   border: none;
-  border-radius: 9999px;
-  font-size: 1rem;
+  border-radius: 999px;
   font-weight: 800;
-  cursor: pointer;
-  letter-spacing: -0.01em;
-  box-shadow: 0 8px 24px rgba(0, 104, 118, 0.25);
-  transition: transform 0.15s, opacity 0.2s;
-}
-.nutr-generate-btn:active { transform: scale(0.97); }
-.nutr-generate-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-/* ─── Errors & States ─── */
-.nutr-error {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: rgba(186, 26, 26, 0.08);
-  border: 1px solid rgba(186, 26, 26, 0.15);
-  color: #ba1a1a;
-  padding: 1rem 1.25rem;
-  border-radius: 1rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 2rem;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px var(--brand-primary-fade);
 }
 
-/* ─── Macros Grid ─── */
+/* ─── Macros ─── */
 .nutr-macros {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.875rem;
-  margin-bottom: 2.5rem;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
 }
 .nutr-macro-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 1.25rem;
-  padding: 1.25rem 0.875rem;
+  border-radius: var(--radius-lg);
+  padding: 1rem;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 .nutr-macro-highlight {
-  background: rgba(0, 172, 193, 0.05);
-  border-color: rgba(0, 172, 193, 0.15);
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-fade);
 }
 .nutr-macro-val {
-  font-family: var(--app-font-brand);
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 900;
   color: var(--brand-primary);
-  line-height: 1;
+  display: block;
 }
-.nutr-macro-card:not(.nutr-macro-highlight) .nutr-macro-val { color: var(--text-main); }
 .nutr-macro-label {
   font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-sub);
-}
-
-/* ─── Results List ─── */
-.nutr-menu-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-}
-.nutr-menu-title {
-  font-family: var(--app-font-brand);
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text-main);
-  margin: 0;
-}
-.nutr-menu-date {
-  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--brand-secondary);
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-.nutr-meals-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+/* ─── Meals List ─── */
+.nutr-menu-title {
+  font-family: var(--app-font-family);
+  font-size: 1.25rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
 }
 
 .nutr-meal-item {
   display: flex;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 1.25rem;
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s, box-shadow 0.2s;
-  animation: fadeInUp 0.5s ease both;
-}
-.nutr-meal-item:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); }
-.nutr-meal-item:active { transform: scale(0.98); }
-
-.nutr-meal-img-wrap {
-  width: 8rem;
-  min-width: 8rem;
-  height: 8rem;
-  overflow: hidden;
-  background: var(--bg-subtle);
-  flex-shrink: 0;
-}
-.nutr-meal-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-.nutr-meal-item:hover .nutr-meal-img { transform: scale(1.1); }
-
-.nutr-meal-info {
-  flex: 1;
-  padding: 1.15rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-width: 0;
+  margin-bottom: 1rem;
 }
 
-.nutr-meal-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-}
-.nutr-meal-type {
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--brand-primary);
-}
-.nutr-meal-time {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.8rem;
-  color: var(--text-sub);
-  font-weight: 600;
-}
+.nutr-meal-img-wrap { width: 7rem; height: 7rem; overflow: hidden; }
+.nutr-meal-img { width: 100%; height: 100%; object-fit: cover; }
 
-.nutr-meal-title {
-  font-family: var(--app-font-brand);
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--text-main);
-  margin: 0 0 0.5rem;
-  line-height: 1.2;
-}
+.nutr-meal-info { padding: 1rem; flex: 1; }
+.nutr-meal-type { font-size: 0.6rem; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; }
+.nutr-meal-title { font-family: var(--app-font-family); font-size: 1rem; font-weight: 800; margin: 0.25rem 0; line-height: 1.2; }
 
-.nutr-meal-link {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--brand-secondary);
-}
-
-/* ─── Week Layout ─── */
-.nutr-week-day { margin-bottom: 2.5rem; }
 .nutr-day-label {
-  font-family: var(--app-font-brand);
-  font-size: 1.1rem;
+  font-family: var(--app-font-family);
+  font-size: 1.25rem;
   font-weight: 900;
-  color: var(--brand-primary);
-  margin: 0 0 1rem;
+  color: var(--brand-secondary);
+  border-bottom: 2px solid var(--brand-primary);
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--border-color);
-}
-
-/* ─── Empty state ─── */
-.nutr-empty {
-  text-align: center;
-  padding: 5rem 1.5rem 3rem;
-  color: var(--text-sub);
-  opacity: 0.5;
-}
-.nutr-empty p { margin-top: 1.5rem; font-size: 1rem; font-weight: 600; }
-
-/* ─── Animations ─── */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ─── Responsive ─── */
-@media (max-width: 480px) {
-  .nutr-hero-title { font-size: 2.1rem; }
-  .nutr-form-grid { grid-template-columns: 1fr; }
-  .nutr-meal-img-wrap { width: 6.5rem; min-width: 6.5rem; height: 6.5rem; }
+  margin: 2rem 0 1rem;
 }

@@ -1,5 +1,6 @@
 package com.GYMETRA.GYMETRA.qr.controller;
 
+import com.GYMETRA.GYMETRA.qr.service.MembershipProxyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class MembershipProxyController {
 
+    private final MembershipProxyService membershipProxyService;
     private final RestTemplate restTemplate;
 
     @Value("${app.services.membership-url}")
@@ -32,6 +34,12 @@ public class MembershipProxyController {
         } catch (Exception e) {
             return ResponseEntity.status(502).body("Error consultando membresía: " + e.getMessage());
         }
+    }
+
+    @Operation(summary = "Verificar permiso de usuario", description = "Verifica si el usuario tiene un permiso específico (training/nutrition)")
+    @GetMapping("/{userId}/check-permission/{permission}")
+    public ResponseEntity<Boolean> checkPermission(@PathVariable Long userId, @PathVariable String permission) {
+        return ResponseEntity.ok(membershipProxyService.checkPermission(userId, permission));
     }
 }
 

@@ -1,12 +1,12 @@
 <template>
-  <div id="app">
+  <div id="app" :class="{ 'sidebar-collapsed-active': uiStore.isSidebarCollapsed }">
     <router-view />
   </div>
 </template>
 
 <script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://vuejs.org/api/sfc-script-setup.html
+import { useUIStore } from '@/stores/ui'
+const uiStore = useUIStore()
 </script>
 
 <style scoped>

@@ -20,7 +20,7 @@
 
       <router-link to="/home" class="home-logo-link" aria-label="Ir al inicio">
         <img src="/logo.png" alt="Logo" class="header-logo-img" />
-        <span class="header-logo-text">{{ APP_NAME }}</span>
+        <span class="brand-name-header">GYMETRA</span>
       </router-link>
 
       <div class="home-header-right">
@@ -134,6 +134,7 @@
 
           <!-- Card ejercicios: redirige a RutinasView -->
           <div
+            v-if="hasTrainingPermission"
             class="bento-action-card"
             @click="navigateToRutinas"
             tabindex="0"
@@ -156,7 +157,7 @@
           </div>
 
           <!-- Card nutrición / info extra -->
-          <div class="bento-action-card" @click="navigateToNutrition" tabindex="0" role="button" aria-label="Plan nutricional">
+          <div v-if="hasNutritionPermission" class="bento-action-card" @click="navigateToNutrition" tabindex="0" role="button" aria-label="Plan nutricional">
             <div class="bento-action-icon bento-action-icon-amber">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -276,6 +277,20 @@ const getMembershipCardClass = computed(() => {
   if (d <= 3) return "state-critical"
   if (d <= 7) return "state-warning"
   return "state-active"
+})
+
+// --- Control de Acceso basado en Permisos ---
+const hasTrainingPermission = computed(() => {
+  if (loadingMemberships.value || userMemberships.value.length === 0) return false
+  const m = userMemberships.value[0]
+  // Accedemos a los datos del plan (membership) que ahora se serializan correctamente
+  return m.membership?.training === true
+})
+
+const hasNutritionPermission = computed(() => {
+  if (loadingMemberships.value || userMemberships.value.length === 0) return false
+  const m = userMemberships.value[0]
+  return m.membership?.nutrition === true
 })
 
 // --- Gráfica ---

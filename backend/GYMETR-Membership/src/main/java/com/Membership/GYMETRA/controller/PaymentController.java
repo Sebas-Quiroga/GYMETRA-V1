@@ -4,6 +4,7 @@ import com.Membership.GYMETRA.client.UserMembershipClient;
 import com.Membership.GYMETRA.client.UserMembershipResponse;
 import com.Membership.GYMETRA.entity.Membership;
 import com.Membership.GYMETRA.entity.UserMembership;
+import com.Membership.GYMETRA.entity.UserMembershipStatus;
 import com.Membership.GYMETRA.entity.Payment;
 import com.Membership.GYMETRA.service.MembershipService;
 import com.Membership.GYMETRA.service.UserMembershipService;
@@ -129,7 +130,7 @@ public class PaymentController {
                 UserMembership userMembership = UserMembership.builder()
                         .userId(userId)
                         .membership(membership)
-                        .status(UserMembership.Status.ACTIVE)
+                        .status(UserMembershipStatus.ACTIVE)
                         .startDate(LocalDateTime.now().toLocalDate())
                         .endDate(LocalDateTime.now().plusDays(membership.getDurationDays()).toLocalDate())
                         .createdAt(LocalDateTime.now())

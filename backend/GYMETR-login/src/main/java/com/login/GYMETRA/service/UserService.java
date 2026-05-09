@@ -29,6 +29,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
+    private final CognitoUserSyncService cognitoUserSyncService;
+
+    // ==============================================================
+    // SYNC
+    // ==============================================================
+
+    /** Scans Cognito and imports missing users. */
+    public int syncAllUsersFromCognito() {
+        return cognitoUserSyncService.syncAllUsers();
+    }
 
     // ==============================================================
     // READ

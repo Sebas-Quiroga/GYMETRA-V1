@@ -46,6 +46,25 @@ const routes: Array<RouteRecordRaw> = [
     name: 'ReportesPage',
     component: () => import('@/views/ReportesPage.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/adminroles',
+    name: 'RolesPage',
+    component: () => import('@/views/RolesPage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/adminaddrole',
+    name: 'AddRolePage',
+    component: () => import('@/views/AddRolePage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/admineditrole/:roleId',
+    name: 'EditRolePage',
+    component: () => import('@/views/EditRolePage.vue'),
+    meta: { requiresAuth: true },
+    props: true
   }
 ]
 

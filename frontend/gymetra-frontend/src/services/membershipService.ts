@@ -16,6 +16,8 @@ export interface Membership {
   durationDays: number;
   description?: string;
   status: string;
+  training: boolean;
+  nutrition: boolean;
   features?: string[];
   isPopular?: boolean;
 }
@@ -33,6 +35,8 @@ export interface UserMembership {
   endDate: string;
   status: 'active' | 'expired' | 'pending';
   daysRemaining: number;
+  training?: boolean;
+  nutrition?: boolean;
 }
 
 // ===============================
@@ -40,11 +44,11 @@ export interface UserMembership {
 // ===============================
 export async function getAvailableMemberships(): Promise<Membership[]> {
   try {
-    console.log('🔍 Cargando membresías disponibles...');
+
     // Usar apiAuthRequest por si el endpoint requiere seguridad en el futuro
     const response = await apiAuthRequest<Membership[]>(MEMBERSHIP_ENDPOINTS.AVAILABLE, { method: 'GET' });
     if (response.success && response.data) {
-      console.log('✅ Membresías cargadas exitosamente desde API:', response.data);
+
       return response.data;
     }
     throw new Error(response.message || 'No se pudieron cargar las membresías');
@@ -62,7 +66,7 @@ export async function getAvailableMemberships(): Promise<Membership[]> {
 // ===============================
 export async function purchaseMembership(purchaseData: PurchaseRequest): Promise<any> {
   try {
-    console.log('💳 Procesando compra de membresía:', purchaseData);
+
     
     const response = await apiAuthRequest(
       MEMBERSHIP_ENDPOINTS.PURCHASE,
@@ -73,7 +77,7 @@ export async function purchaseMembership(purchaseData: PurchaseRequest): Promise
     );
     
     if (response.success) {
-      console.log('✅ Membresía comprada exitosamente:', response.data);
+
       return response.data;
     }
     
@@ -95,7 +99,7 @@ export async function purchaseMembership(purchaseData: PurchaseRequest): Promise
 // ===============================
 export async function getUserMemberships(): Promise<UserMembership[]> {
   try {
-    console.log('👤 Cargando membresías del usuario...');
+
     
     const response = await apiAuthRequest<UserMembership[]>(
       MEMBERSHIP_ENDPOINTS.USER_MEMBERSHIPS,
@@ -103,7 +107,7 @@ export async function getUserMemberships(): Promise<UserMembership[]> {
     );
     
     if (response.success && response.data) {
-      console.log('✅ Membresías del usuario cargadas:', response.data);
+
       return response.data;
     }
     
@@ -166,7 +170,7 @@ export function calculateDiscount(originalPrice: number, discountedPrice: number
 // ===============================
 export async function checkBackendConnectivity(): Promise<boolean> {
   try {
-    console.log('🔍 Verificando conectividad con el backend...');
+
     
     // Intentar hacer una petición simple al endpoint de membresías
     const controller = new AbortController();
@@ -184,7 +188,7 @@ export async function checkBackendConnectivity(): Promise<boolean> {
     clearTimeout(timeoutId);
     
     const isConnected = response.ok || response.status < 500; // Aceptar cualquier respuesta que no sea error del servidor
-    console.log(isConnected ? '✅ Backend conectado' : '❌ Backend no responde');
+
     return isConnected;
     
   } catch (error: any) {
@@ -192,11 +196,11 @@ export async function checkBackendConnectivity(): Promise<boolean> {
     
     // Diferentes tipos de errores de conexión
     if (error.name === 'AbortError') {
-      console.log('⏰ Timeout de conexión');
+
     } else if (error.message.includes('CORS')) {
-      console.log('🚫 Error de CORS');
+
     } else if (error.message.includes('fetch')) {
-      console.log('🌐 Error de red');
+
     }
     
     return false;

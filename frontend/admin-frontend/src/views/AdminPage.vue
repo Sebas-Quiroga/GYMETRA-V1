@@ -3,198 +3,163 @@
     <!-- Sidebar Component -->
     <AdminSidebar
       :active-section="activeSection"
-      @navigate-to-users="navigateToUsers"
-      @navigate-to-reports="navigateToReports"
-      @navigate-to-charts="navigateToCharts"
-      @navigate-to-payments="navigateToPayments"
-      @navigate-to-roles="navigateToRoles"
       @logout="logout"
     />
 
     <!-- Main Content -->
     <div class="main-content" :class="{ 'main-content-mobile': isMobile }">
-      <!-- Stats Cards -->
-      <div class="stats-cards">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <ion-icon :icon="peopleOutline"></ion-icon>
+      <KineticLoading 
+        v-if="loading" 
+        title="Gestión de Usuarios" 
+        message="Sincronizando el directorio maestro con el núcleo Kinetic..." 
+      />
+      
+      <div v-else class="dashboard-content">
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <ion-icon :icon="peopleOutline"></ion-icon>
+            </div>
+            <div class="stat-number">{{ users.length }}</div>
+            <div class="stat-label">Usuarios Totales</div>
+            <div class="stat-subtitle">Historial de registros</div>
           </div>
-          <div class="stat-number">{{ users.length }}</div>
-          <div class="stat-label">Usuarios Registrados</div>
-          <div class="stat-subtitle">Total de miembros activos</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">
-            <ion-icon :icon="statsChartOutline"></ion-icon>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(39, 174, 96, 0.1);">
+              <ion-icon :icon="checkmarkCircleOutline" style="color: #27ae60;"></ion-icon>
+            </div>
+            <div class="stat-number">{{ users.filter(u => u.estado === 'Activo').length }}</div>
+            <div class="stat-label">Miembros Activos</div>
+            <div class="stat-subtitle">Acceso total habilitado</div>
           </div>
-          <div class="stat-number">{{ users.filter(u => u.estado === 'Activo').length }}</div>
-          <div class="stat-label">Usuarios Activos</div>
-          <div class="stat-subtitle">Miembros con acceso completo</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">
-            <ion-icon :icon="personAddOutline"></ion-icon>
+          <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(186, 26, 26, 0.1);">
+              <ion-icon :icon="banOutline" style="color: #ba1a1a;"></ion-icon>
+            </div>
+            <div class="stat-number">{{ users.filter(u => u.estado === 'Suspendido').length }}</div>
+            <div class="stat-label">Suspendidos</div>
+            <div class="stat-subtitle">Cuentas con restricciones</div>
           </div>
-          <div class="stat-number">{{ users.filter(u => u.estado === 'Suspendido').length }}</div>
-          <div class="stat-label">Cuentas Suspendidas</div>
-          <div class="stat-subtitle">Usuarios con restricciones</div>
         </div>
-      </div>
 
-      <!-- Users Table Section -->
-      <div class="users-table-container">
-        <div class="table-header">
-          <h2>
-            <ion-icon :icon="peopleOutline" style="font-size: 28px; color: #00BCD4;"></ion-icon>
-            Gestión de Usuarios
-          </h2>
-          <button @click="addNewUser" class="add-user-btn">
-            <ion-icon :icon="addCircleOutline"></ion-icon>
-            Agregar Usuario
-          </button>
-        </div>
-        <table class="users-table">
-          <thead>
-            <tr>
-              <th style="width: 12%;">Nombre</th>
-              <th style="width: 12%;">Apellido</th>
-              <th style="width: 18%;">Correo</th>
-              <th style="width: 10%;">Teléfono</th>
-              <th style="width: 11%;">Identificación</th>
-              <th style="width: 8%;">Estado</th>
-              <th style="width: 13%;">Fecha de Creación</th>
-              <th style="width: 16%;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Aquí se conectará con la API/base de datos -->
-            <tr v-for="user in paginatedUsers" :key="user.id || user.nombre">
-              <td style="font-weight: 500;">{{ user.nombre }}</td>
-              <td style="font-weight: 500;">{{ user.apellido }}</td>
-              <td style="word-break: break-all;">{{ user.correo }}</td>
-              <td>{{ user.telefono || 'N/A' }}</td>
-              <td>{{ user.identificacion }}</td>
-              <td :class="getStatusClass(user.estado)">
-                <span class="status-badge">{{ user.estado }}</span>
-              </td>
-              <td>{{ formatDate(user.fechaCreacion) }}</td>
-              <td>
-                <div class="action-buttons">
-                  <button @click="editUser(user)" class="action-btn edit-btn" title="Editar usuario">
-                    <ion-icon :icon="createOutline"></ion-icon>
-                  </button>
-                  
-                  <!-- Toggle Switch Mejorado -->
-                  <div class="status-toggle-wrapper">
-                    <label 
-                      class="status-toggle" 
-                      :class="{ 'disabled': statusUpdating }"
-                      :title="getStatusButtonTitle(user.estado)"
-                    >
+        <!-- Users Table Section -->
+        <div class="users-table-container">
+          <div class="table-header">
+            <h2>
+              <ion-icon :icon="peopleOutline"></ion-icon>
+              Directorio de Usuarios
+            </h2>
+            <div class="header-actions">
+              <button @click="syncUsers" class="sync-users-btn" :disabled="syncing">
+                <ion-icon :icon="syncOutline" :class="{ 'spin': syncing }"></ion-icon>
+                <span>{{ syncing ? 'Sincronizando...' : 'Sincronizar Cognito' }}</span>
+              </button>
+              <button @click="addNewUser" class="add-user-btn">
+                <ion-icon :icon="personAddOutline"></ion-icon>
+                <span>Agregar Usuario</span>
+              </button>
+            </div>
+          </div>
+          
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Contacto</th>
+                <th>Identificación</th>
+                <th>Estado</th>
+                <th>Registro</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="user in paginatedUsers" :key="user.id || user.correo">
+                <td>
+                  <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 800; font-family: var(--app-font-brand);">{{ user.nombre }} {{ user.apellido }}</span>
+                    <span style="font-size: 0.8rem; color: var(--admin-text-sub);">{{ user.correo }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span style="font-size: 0.9rem;">{{ user.telefono || 'Sin teléfono' }}</span>
+                </td>
+                <td>
+                  <span style="font-family: monospace; font-weight: 700;">{{ user.identificacion }}</span>
+                </td>
+                <td :class="getStatusClass(user.estado)">
+                  <span class="status-badge">{{ user.estado }}</span>
+                </td>
+                <td>
+                  <span style="font-size: 0.8rem; color: var(--admin-text-sub);">{{ formatDate(user.fechaCreacion) }}</span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <!-- Toggle Switch Kinetic -->
+                    <label class="kinetic-toggle" :title="getStatusButtonTitle(user.estado)">
                       <input 
                         type="checkbox" 
                         :checked="user.estado === 'Activo'"
                         @change="toggleUserStatus(user)"
                         :disabled="statusUpdating"
                       />
-                      <span class="toggle-slider">
-                        <span class="toggle-icon icon-active">
-                          <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                        </span>
-                        <span class="toggle-icon icon-suspended">
-                          <ion-icon :icon="banOutline"></ion-icon>
-                        </span>
-                      </span>
-                      <span class="toggle-label">
-                        {{ user.estado === 'Activo' ? 'Activo' : 'Suspendido' }}
-                      </span>
+                      <span class="toggle-slider-kinetic"></span>
                     </label>
+
+                    <button @click="editUser(user)" class="action-btn edit-btn" title="Editar">
+                      <ion-icon :icon="createOutline"></ion-icon>
+                    </button>
+                    
+                    <button @click="deleteUser(user)" class="action-btn delete-btn" title="Eliminar">
+                      <ion-icon :icon="trashOutline"></ion-icon>
+                    </button>
                   </div>
+                </td>
+              </tr>
+              
+              <tr v-if="users.length === 0">
+                <td colspan="6" style="text-align: center; padding: 60px;">
+                  <ion-icon :icon="peopleOutline" style="font-size: 48px; color: var(--admin-accent-soft);"></ion-icon>
+                  <div style="margin-top: 15px; font-weight: 700; color: var(--admin-text-sub);">No se encontraron usuarios</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-                  <button @click="deleteUser(user)" class="action-btn delete-btn" title="Eliminar usuario">
-                    <ion-icon :icon="trashOutline"></ion-icon>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <!-- Mostrar mensaje si no hay datos -->
-            <tr v-if="users.length === 0">
-              <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
-                <ion-icon :icon="peopleOutline" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></ion-icon>
-                <div>No hay usuarios registrados</div>
-              </td>
-            </tr>
-            <!-- Mostrar mensaje si no hay usuarios en la página actual -->
-            <tr v-else-if="paginatedUsers.length === 0">
-              <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
-                <ion-icon :icon="peopleOutline" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></ion-icon>
-                <div>No hay usuarios en esta página</div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Pagination Controls -->
-        <div v-if="users.length > 0" class="pagination-container">
-          <div class="pagination-info">
-            Mostrando {{ startItem }} - {{ endItem }} de {{ totalUsers }} usuarios
-            <span class="pagination-page-indicator">
-              (Página {{ currentPage }} de {{ totalPages }})
-            </span>
-          </div>
-
-          <div class="pagination-controls">
-            <button
-              @click="goToPage(currentPage - 1)"
-              :disabled="currentPage === 1"
-              class="pagination-btn pagination-prev"
-              title="Página anterior"
-            >
-              <ion-icon :icon="chevronBackOutline"></ion-icon>
-              Anterior
-            </button>
-
-            <div class="pagination-numbers">
-              <!-- Mostrar al menos la página 1 cuando hay usuarios -->
-              <button
-                v-if="totalPages === 1"
-                @click="goToPage(1)"
-                class="pagination-btn pagination-number active"
-              >
-                1
-              </button>
-              <!-- Mostrar páginas múltiples cuando hay más de una -->
-              <button
-                v-else
-                v-for="page in visiblePages"
-                :key="page"
-                @click="goToPage(page)"
-                :class="['pagination-btn pagination-number', { active: page === currentPage }]"
-              >
-                {{ page }}
-              </button>
+          <!-- Pagination Controls -->
+          <div v-if="users.length > 0" class="pagination-container">
+            <div class="pagination-info">
+              Mostrando <strong>{{ startItem }} - {{ endItem }}</strong> de {{ totalUsers }}
             </div>
 
-            <button
-              @click="goToPage(currentPage + 1)"
-              :disabled="currentPage === totalPages"
-              class="pagination-btn pagination-next"
-              title="Página siguiente"
-            >
-              Siguiente
-              <ion-icon :icon="chevronForwardOutline"></ion-icon>
-            </button>
-          </div>
+            <div class="pagination-controls">
+              <button
+                @click="goToPage(currentPage - 1)"
+                :disabled="currentPage === 1"
+                class="pagination-btn"
+              >
+                Anterior
+              </button>
 
-          <div class="pagination-page-size">
-            <label for="pageSize">Mostrar:</label>
-            <select id="pageSize" v-model="pageSize" @change="changePageSize" class="page-size-select">
-              <option :value="5">5</option>
-              <option :value="10">10</option>
-              <option :value="25">25</option>
-              <option :value="50">50</option>
-            </select>
-            <span>por página</span>
+              <div class="pagination-numbers">
+                <button
+                  v-for="page in visiblePages"
+                  :key="page"
+                  @click="goToPage(page)"
+                  :class="['pagination-btn', { active: page === currentPage }]"
+                >
+                  {{ page }}
+                </button>
+              </div>
+
+              <button
+                @click="goToPage(currentPage + 1)"
+                :disabled="currentPage === totalPages"
+                class="pagination-btn"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -244,6 +209,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { logout as authLogout } from '@/services/authService'
 import AdminSidebar from '@/components/AdminSidebar.vue'
+import KineticLoading from '@/components/KineticLoading.vue'
 import { userService, type User as ApiUser } from '@/services/userService'
 import {
   logOutOutline,
@@ -259,7 +225,8 @@ import {
   checkmarkCircleOutline,
   banOutline,
   chevronBackOutline,
-  chevronForwardOutline
+  chevronForwardOutline,
+  syncOutline
 } from 'ionicons/icons'
 
 // Mobile responsive state
@@ -267,7 +234,7 @@ const isMobile = ref(false)
 
 // Check if mobile on mount
 const checkMobile = () => {
-  isMobile.value = window.innerWidth <= 768
+  isMobile.value = window.innerWidth <= 1024
 }
 
 onMounted(() => {
@@ -349,6 +316,22 @@ const selectedUser = ref<User | null>(null)
 const deletedUserName = ref('')
 const deleting = ref(false)
 const statusUpdating = ref(false)
+const syncing = ref(false)
+
+// Función para sincronizar usuarios desde Cognito
+const syncUsers = async () => {
+  try {
+    syncing.value = true
+    const message = await userService.syncUsersFromCognito()
+    alert(message)
+    await loadUsers() // Recargar la tabla
+  } catch (error) {
+    console.error('Error sincronizando usuarios:', error)
+    alert('Error al sincronizar con Cognito. Verifica los logs del servidor.')
+  } finally {
+    syncing.value = false
+  }
+}
 
 
 // Función para cargar usuarios desde la API
@@ -530,10 +513,49 @@ onMounted(() => {
 <style>
 @import '../theme/AdminPage.css';
 
-.action-buttons {
+.table-header {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 32px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.sync-users-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: white;
+  color: var(--ion-color-primary);
+  border: 2px solid var(--ion-color-primary);
+  border-radius: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sync-users-btn:hover:not(:disabled) {
+  background: var(--admin-accent-soft);
+  transform: translateY(-2px);
+}
+
+.sync-users-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ============================================
