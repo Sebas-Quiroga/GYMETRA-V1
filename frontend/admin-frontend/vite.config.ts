@@ -2,6 +2,11 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
+const VITE_PORT = Number(process.env.VITE_PORT) || 8101;
+const AUTH_API_TARGET = process.env.VITE_API_URL_LOGIN || 'http://localhost:8080';
+const MEMBERSHIP_API_TARGET = process.env.VITE_API_URL_MEMBERSHIP || 'http://localhost:8081';
+const QR_API_TARGET = process.env.VITE_API_URL_QR || 'http://localhost:8090';
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -19,10 +24,10 @@ export default defineConfig({
     }
   },
   server: {
-    port: 8101,
+    port: VITE_PORT,
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: AUTH_API_TARGET,
         changeOrigin: true,
         secure: false,
         timeout: 60000,
@@ -41,7 +46,7 @@ export default defineConfig({
         }
       },
       '/membership-api': {
-        target: 'http://localhost:8081',
+        target: MEMBERSHIP_API_TARGET,
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/membership-api/, '/api'),
@@ -61,7 +66,7 @@ export default defineConfig({
         }
       },
       '/qr-api': {
-        target: 'http://localhost:8090',
+        target: QR_API_TARGET,
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/qr-api/, '/api'),

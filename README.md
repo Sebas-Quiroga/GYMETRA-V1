@@ -70,15 +70,84 @@ El backlog del producto se mantiene actualizado en JIRA, priorizando las histori
 - Frontend Usuario: http://localhost:8100
 - Backend Login/Registro: http://localhost:8080
 - Backend Membresías: http://localhost:8081
-- Backend QR: http://localhost:8082
+- Backend QR: http://localhost:8090
 - Swagger API Login/Registro: http://localhost:8080/swagger-ui.html
 - Swagger API Membresías: http://localhost:8081/swagger-ui.html
-- Swagger API QR: http://localhost:8082/swagger-ui.html
+- Swagger API QR: http://localhost:8090/swagger-ui.html
 
+### Configuración de Variables de Entorno para Frontends
 
+Los frontends requieren configuración de variables de entorno para conectarse a los backends y servicios externos. Cada frontend tiene su propio conjunto de variables.
 
+#### Frontend Admin (`frontend/admin-frontend`)
 
-## 📚 Documentación
+1. **Crear archivos de entorno**:
+   ```bash
+   cd frontend/admin-frontend
+   cp .env.example .env.development
+   ```
+
+2. **Variables requeridas en `.env.development`**:
+   ```env
+   # Puerto del servidor de desarrollo
+   VITE_PORT=8101
+
+   # URLs de los backends
+   VITE_API_URL_LOGIN=http://localhost:8080/api
+   VITE_API_URL_MEMBERSHIP=http://localhost:8081/api
+   VITE_API_URL_QR=http://localhost:8090/api
+
+   # Configuración de AWS Cognito
+   VITE_COGNITO_REGION=us-east-2
+   VITE_COGNITO_USER_POOL_ID=us-east-2_ckSy7zPAt
+   VITE_COGNITO_CLIENT_ID=3gnvfec5v6tfp32u634mq645ll
+   ```
+
+3. **Archivo `.env.example`**:
+   - Contiene valores de ejemplo genéricos
+   - Se sube a Git como template
+   - No incluye credenciales reales
+
+#### Frontend Usuario (`frontend/gymetra-frontend`)
+
+1. **Crear archivos de entorno**:
+   ```bash
+   cd frontend/gymetra-frontend
+   cp .env.example .env.development
+   ```
+
+2. **Variables requeridas en `.env.development`**:
+   ```env
+   # Puerto del servidor de desarrollo
+   VITE_PORT=8100
+
+   # URLs de los backends
+   VITE_API_URL_LOGIN=http://localhost:8080/api
+   VITE_API_URL_MEMBERSHIP=http://localhost:8081/api
+   VITE_API_URL_QR=http://localhost:8090/api
+
+   # Configuración de AWS Cognito
+   VITE_COGNITO_REGION=us-east-2
+   VITE_COGNITO_USER_POOL_ID=us-east-2_ckSy7zPAt
+   VITE_COGNITO_CLIENT_ID=3gnvfec5v6tfp32u634mq645ll
+
+   # Claves de servicios externos
+   VITE_STRIPE_PUBLIC_KEY=pk_test_tu_clave_de_stripe
+   VITE_SPOONACULAR_API_KEY=tu_clave_de_spoonacular
+   ```
+
+3. **Archivo `.env.example`**:
+   - Contiene valores de ejemplo
+   - Incluye placeholders para claves sensibles
+
+#### Notas Importantes
+- **Nunca subas `.env.development` o `.env.production` a Git** - contienen credenciales reales
+- **Usa `.env.example` como template** para nuevos desarrolladores
+- **Las variables `VITE_` son accesibles en el código** a través de `import.meta.env`
+- **Para producción**, configura las URLs absolutas de los backends desplegados
+- **Los puertos de desarrollo** se pueden cambiar modificando `VITE_PORT` en el archivo `.env`
+
+### Instalación
 
 ### Estructura del Proyecto
 ```

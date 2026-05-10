@@ -5,6 +5,8 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 import { defineConfig } from 'vite'
 
+const VITE_PORT = Number(process.env.VITE_PORT) || 8100;
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -15,6 +17,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  server: {
+    port: VITE_PORT,
   },
   test: {
     globals: true,

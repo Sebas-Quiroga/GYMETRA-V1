@@ -1,13 +1,23 @@
 import { Amplify } from 'aws-amplify';
+
+const env = (import.meta as any).env || {};
+const cognitoRegion = env.VITE_COGNITO_REGION || 'us-east-2';
+const cognitoUserPoolId = env.VITE_COGNITO_USER_POOL_ID || '';
+const cognitoUserPoolClientId = env.VITE_COGNITO_CLIENT_ID || '';
+
 export const cognitoConfig = {
   Auth: {
+    region: cognitoRegion,
+    userPoolId: cognitoUserPoolId,
+    userPoolWebClientId: cognitoUserPoolClientId,
     Cognito: {
-      userPoolId: 'us-east-2_ckSy7zPAt',
-      userPoolClientId: '3gnvfec5v6tfp32u634mq645ll',
+      userPoolId: cognitoUserPoolId,
+      userPoolClientId: cognitoUserPoolClientId,
       signUpVerificationMethod: 'code',
     }
   }
 };
+
 export const configureAmplify = () => {
   Amplify.configure(cognitoConfig);
   console.log('🛡️ Amplify configurado con éxito');

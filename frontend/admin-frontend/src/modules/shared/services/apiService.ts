@@ -2,11 +2,11 @@ import axios from 'axios';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 /**
- * Standardized URLs using Vite proxies defined in vite.config.ts
+ * Standardized URLs using environment variables and Vite proxies for development.
  */
-export const LOGIN_API_URL = "/api";
-export const MEMBERSHIP_API_URL = "/membership-api";
-export const QR_API_URL = "/qr-api";
+export const LOGIN_API_URL = import.meta.env.VITE_API_URL_LOGIN || "/api";
+export const MEMBERSHIP_API_URL = import.meta.env.VITE_API_URL_MEMBERSHIP || "/membership-api";
+export const QR_API_URL = import.meta.env.VITE_API_URL_QR || "/qr-api";
 
 // Compatibility with existing code
 export const MAIN_API_URL = LOGIN_API_URL;

@@ -11,9 +11,9 @@ spring:
   # Base de Datos
   # -----------------------------------------------
   datasource:
-    url: jdbc:postgresql://localhost:5000/gymdb_dev
+    url: jdbc:postgresql://localhost:5432/gymdb
     username: postgres
-    password: 123456
+    password: 1234567890
     driver-class-name: org.postgresql.Driver
 
   # -----------------------------------------------
