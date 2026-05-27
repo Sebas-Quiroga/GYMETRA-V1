@@ -75,28 +75,11 @@ export interface DailyActivityData {
 // ===============================
 export async function getMetricsData(): Promise<MetricsData> {
   try {
-    console.log('📊 Cargando métricas del dashboard...');
-
     // Obtener datos de múltiples endpoints usando axios con manejo de errores individual
-    const usersPromise = axios.get('/api/auth/users').catch(err => {
-      console.warn('⚠️ Endpoint /api/auth/users no disponible:', err.message);
-      return { data: [] };
-    });
-
-    const membershipsPromise = axios.get(`${METRICS_API_URL}/memberships`).catch(err => {
-      console.warn('⚠️ Endpoint /memberships no disponible:', err.message);
-      return { data: [] };
-    });
-
-    const paymentsPromise = axios.get(`${METRICS_API_URL}/payments/all`).catch(err => {
-      console.warn('⚠️ Endpoint /payments/all no disponible:', err.message);
-      return { data: [] };
-    });
-
-    const userMembershipsPromise = axios.get(`${METRICS_API_URL}/user-memberships/all`).catch(err => {
-      console.warn('⚠️ Endpoint /user-memberships/all no disponible:', err.message);
-      return { data: [] };
-    });
+    const usersPromise = axios.get('/api/auth/users').catch(() => ({ data: [] }));
+    const membershipsPromise = axios.get(`${METRICS_API_URL}/memberships`).catch(() => ({ data: [] }));
+    const paymentsPromise = axios.get(`${METRICS_API_URL}/payments/all`).catch(() => ({ data: [] }));
+    const userMembershipsPromise = axios.get(`${METRICS_API_URL}/user-memberships/all`).catch(() => ({ data: [] }));
 
     const [
       usersResponse,
@@ -116,30 +99,11 @@ export async function getMetricsData(): Promise<MetricsData> {
     const payments = paymentsResponse.data || [];
     const userMemberships = userMembershipsResponse.data || [];
 
-    console.log('✅ Datos obtenidos para métricas:', {
-      users: users.length,
-      memberships: memberships.length,
-      payments: payments.length,
-      userMemberships: userMemberships.length
-    });
-
-    // Debug: Mostrar estructura de datos
-    if (users.length > 0) {
-      console.log('👤 Ejemplo usuario:', users[0]);
-    }
-    if (payments.length > 0) {
-      console.log('💰 Ejemplo pago:', payments[0]);
-    }
-    if (memberships.length > 0) {
-      console.log('🏋️ Ejemplo membresía:', memberships[0]);
-    }
-
     // Calcular métricas
     const metrics = calculateMetrics(users, memberships, payments, userMemberships);
 
     return metrics;
   } catch (error: any) {
-    console.error('❌ Error cargando métricas:', error);
     throw new Error(error.message || 'Error al cargar métricas del dashboard');
   }
 }
@@ -167,12 +131,6 @@ function calculateMetrics(
   // Usuarios activos y suspendidos (basado en AdminPage.vue)
   const activeUsers = users.filter(u => u.status === 'active' || u.estado === 'Activo').length;
   const suspendedUsers = users.filter(u => u.status === 'suspended' || u.estado === 'Suspendido').length;
-
-  console.log('👥 Usuarios procesados:', {
-    total: totalUsers,
-    active: activeUsers,
-    suspended: suspendedUsers
-  });
 
   // === MEMBRESÍAS ===
   const totalMemberships = userMemberships.length;
@@ -210,13 +168,6 @@ function calculateMetrics(
       return paymentDate >= today && (p.paymentStatus === 'COMPLETED' || p.paymentStatus === 'CONFIRMED');
     })
     .reduce((sum, p) => sum + (p.amount || p.monto || 0), 0);
-
-  console.log('💰 Pagos procesados:', {
-    total: totalPayments,
-    totalRevenue: totalRevenue,
-    monthlyRevenue: monthlyRevenue,
-    dailyRevenue: dailyRevenue
-  });
 
   // Métodos de pago
   const paymentMethods = calculatePaymentMethods(payments);
@@ -345,7 +296,12 @@ function calculateRevenueByPlan(payments: any[], memberships: any[]): RevenueByP
     .sort((a, b) => b.revenue - a.revenue);
 }
 
-function calculateUserGrowth(users: any[], days: number): TimeSeriesData[] {
+function calculateTimeSeriesData(
+  items: any[],
+  days: number,
+  getDate: (item: any) => string | undefined,
+  getValue: (itemsForDay: any[]) => number
+): TimeSeriesData[] {
   const result: TimeSeriesData[] = [];
   const now = new Date();
 
@@ -353,68 +309,48 @@ function calculateUserGrowth(users: any[], days: number): TimeSeriesData[] {
     const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
     const dateStr = date.toISOString().split('T')[0];
 
-    const count = users.filter(u => {
-      const userDate = new Date(u.createdAt || u.registrationDate);
-      return userDate.toISOString().split('T')[0] === dateStr;
-    }).length;
+    const itemsForDay = items.filter(item => {
+      const itemDateVal = getDate(item);
+      if (!itemDateVal) return false;
+      const itemDate = new Date(itemDateVal);
+      return itemDate.toISOString().split('T')[0] === dateStr;
+    });
 
     result.push({
       date: dateStr,
-      value: count,
+      value: getValue(itemsForDay),
       label: date.toLocaleDateString('es-ES', { weekday: 'short' })
     });
   }
 
   return result;
+}
+
+function calculateUserGrowth(users: any[], days: number): TimeSeriesData[] {
+  return calculateTimeSeriesData(
+    users,
+    days,
+    u => u.createdAt || u.registrationDate,
+    items => items.length
+  );
 }
 
 function calculateRevenueGrowth(payments: any[], days: number): TimeSeriesData[] {
-  const result: TimeSeriesData[] = [];
-  const now = new Date();
-
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    const dateStr = date.toISOString().split('T')[0];
-
-    const revenue = payments
-      .filter(p => {
-        const paymentDate = new Date(p.paymentDate || p.fechaPago || p.createdAt);
-        return paymentDate.toISOString().split('T')[0] === dateStr &&
-               (p.paymentStatus === 'COMPLETED' || p.paymentStatus === 'SUCCESS');
-      })
-      .reduce((sum, p) => sum + (p.amount || p.monto || 0), 0);
-
-    result.push({
-      date: dateStr,
-      value: revenue,
-      label: date.toLocaleDateString('es-ES', { weekday: 'short' })
-    });
-  }
-
-  return result;
+  return calculateTimeSeriesData(
+    payments.filter(p => p.paymentStatus === 'COMPLETED' || p.paymentStatus === 'SUCCESS' || p.paymentStatus === 'CONFIRMED'),
+    days,
+    p => p.paymentDate || p.fechaPago || p.createdAt,
+    items => items.reduce((sum, p) => sum + (p.amount || p.monto || 0), 0)
+  );
 }
 
 function calculateMembershipTrends(userMemberships: any[], days: number): TimeSeriesData[] {
-  const result: TimeSeriesData[] = [];
-  const now = new Date();
-
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-    const dateStr = date.toISOString().split('T')[0];
-
-    const count = userMemberships.filter(um => {
-      const membershipDate = new Date(um.createdAt || um.startDate);
-      return membershipDate.toISOString().split('T')[0] === dateStr;
-    }).length;
-
-    result.push({
-      date: dateStr,
-      value: count,
-      label: date.toLocaleDateString('es-ES', { weekday: 'short' })
-    });
-  }
-
-  return result;
+  return calculateTimeSeriesData(
+    userMemberships,
+    days,
+    um => um.createdAt || um.startDate,
+    items => items.length
+  );
 }
 
 function calculateDailyActivity(payments: any[], users: any[]): DailyActivityData[] {

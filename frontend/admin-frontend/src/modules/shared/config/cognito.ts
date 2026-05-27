@@ -20,5 +20,4 @@ export const cognitoConfig = {
 
 export const configureAmplify = () => {
   Amplify.configure(cognitoConfig);
-  console.log('🛡️ Amplify configurado para Admin con éxito');
 };

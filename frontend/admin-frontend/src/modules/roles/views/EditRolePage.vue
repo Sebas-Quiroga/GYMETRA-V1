@@ -105,8 +105,7 @@ const loadRole = async () => {
     loading.value = true
     const role = await userService.getRoleById(roleId)
     form.roleName = role.roleName
-  } catch (error) {
-    console.error('Error loading role:', error)
+  } catch {
     router.push('/adminroles')
   } finally {
     loading.value = false
@@ -116,16 +115,11 @@ const loadRole = async () => {
 const handleSubmit = async () => {
   if (!form.roleName.trim()) return
 
-  try {
-    submitting.value = true
-    await userService.updateRole(roleId, { roleName: form.roleName.trim() })
-    successMessage.value = 'Rol actualizado exitosamente'
-    setTimeout(() => router.push('/adminroles'), 1200)
-  } catch (error) {
-    console.error('Error updating role:', error)
-  } finally {
-    submitting.value = false
-  }
+  submitting.value = true
+  await userService.updateRole(roleId, { roleName: form.roleName.trim() })
+  successMessage.value = 'Rol actualizado exitosamente'
+  setTimeout(() => router.push('/adminroles'), 1200)
+  submitting.value = false
 }
 
 const goBack = () => router.push('/adminroles')
@@ -147,6 +141,4 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-@import '../../../theme/AddUserPage.css';
-</style>
+<style scoped src="../../../theme/AddUserPage.css"></style>

@@ -13,6 +13,9 @@ export default defineConfig({
     vue(),
     legacy()
   ],
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

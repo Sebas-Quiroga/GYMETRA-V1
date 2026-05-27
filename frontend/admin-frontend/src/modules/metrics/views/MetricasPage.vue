@@ -292,7 +292,7 @@ import { useRouter } from 'vue-router'
 import { logout as authLogout } from '../../auth/services/authService'
 import AdminSidebar from '@/components/AdminSidebar.vue'
 import KineticLoading from '@/components/KineticLoading.vue'
-import { getMetricsData, formatNumber, formatCurrency, type MetricsData } from '../services/metricsService.ts/metricsService'
+import { getMetricsData, formatNumber, formatCurrency, type MetricsData } from '../services/metricsService'
 import {
   peopleOutline,
   cardOutline,
@@ -355,9 +355,7 @@ const loadMetrics = async () => {
   try {
     const data = await getMetricsData()
     metrics.value = data
-    console.log('✅ Métricas cargadas exitosamente:', data)
   } catch (err: any) {
-    console.error('❌ Error cargando métricas:', err)
     error.value = err.message || 'Error al cargar las métricas. Verifica que los servicios backend estén ejecutándose.'
   } finally {
     loading.value = false
@@ -465,14 +463,12 @@ const getMonthlyRevenue = (monthName: string): number => {
   if (monthIndex === 5) {
     const currentMonth = now.toLocaleDateString('es-ES', { month: 'long', year: '2-digit' })
     if (monthName === currentMonth) {
-      console.log('📊 Ingresos reales de noviembre:', metrics.value.monthlyRevenue)
       return metrics.value.monthlyRevenue || 0
     }
   }
 
   // Para meses anteriores, SI NO HAY DATOS REALES, MOSTRAR 0
   // Esto refleja que solo noviembre tiene datos reales
-  console.log(`📊 ${monthName}: Sin datos históricos disponibles`)
   return 0
 }
 
@@ -534,7 +530,6 @@ const getPurchasedPlans = () => {
     { planName: 'Plan VIP', count: 0 }
   ].filter(plan => plan.count > 0) // Solo mostrar planes con compras
 
-  console.log('📊 Planes comprados:', purchasedPlans)
   return purchasedPlans
 }
 
@@ -586,12 +581,10 @@ const navigateToUsers = () => {
 
 const navigateToReports = () => {
   activeSection.value = 'reports'
-  console.log('Navegando a reportes')
 }
 
 const navigateToCharts = () => {
   activeSection.value = 'charts'
-  console.log('Navegando a gráficas')
 }
 
 const navigateToPayments = () => {
@@ -607,6 +600,4 @@ onMounted(() => {
 })
 </script>
 
-<style>
-@import '../../../theme/MetricasPage.css';
-</style>
+<style src="../../../theme/MetricasPage.css"></style>

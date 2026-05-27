@@ -21,6 +21,7 @@ import '@ionic/vue/css/text-transformation.css'
 import '@ionic/vue/css/flex-utils.css'
 import '@ionic/vue/css/display.css'
 import './theme/variables.css'
+import './theme/global.css'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -30,14 +31,13 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (to.meta.requiresAuth) {
-    const isAuth = await isAuthenticatedAsync();
-    
-    if (isAuth) {
-      next();
-    } else {
-      next('/loginadmin');
-    }
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const isAuth = await isAuthenticatedAsync();
+
+  if (requiresAuth && !isAuth) {
+    next({ path: '/login' });
+  } else if (!requiresAuth && isAuth && to.path === '/login') {
+    next({ path: '/adminpanel' });
   } else {
     next();
   }
@@ -52,8 +52,16 @@ const initApp = async () => {
     await router.isReady();
     app.mount('#app');
   } catch (error) {
-    console.error('Error fatal al iniciar Admin App:', error);
+    // Silent fail
   }
 };
+
+if (import.meta.env.PROD) {
+  console.log = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+  console.info = () => {};
+  console.debug = () => {};
+}
 
 initApp();

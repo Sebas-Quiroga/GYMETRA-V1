@@ -3,10 +3,7 @@
     <div class="nutr-header" role="banner">
       <div class="nutr-header-left">
         <button class="nutr-back-btn" @click="$router.push('/home')" aria-label="Volver">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
+          <ArrowLeft :size="22" stroke-width="2.5" />
         </button>
       </div>
       <router-link to="/home" class="nutr-logo-link" aria-label="Ir al inicio">
@@ -15,12 +12,7 @@
       </router-link>
       <div class="nutr-header-right">
         <button class="nutr-logout-btn" @click="logout" aria-label="Cerrar sesión">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
+          <LogOut :size="22" stroke-width="2" />
         </button>
       </div>
     </div>
@@ -39,18 +31,18 @@
                   <option value="day">Diario</option>
                   <option value="week">Semanal</option>
                 </select>
-                <svg class="nutr-select-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                <ChevronDown class="nutr-select-arrow" :size="16" stroke-width="2" />
               </div>
             </div>
             <div class="nutr-form-group">
               <label class="nutr-label">Calorías Objetivo</label>
               <div class="nutr-calories-row">
                 <button class="nutr-cal-btn" @click="decreaseCalories" aria-label="Reducir calorias">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
+                  <Minus :size="18" stroke-width="2.5" />
                 </button>
                 <input v-model.number="form.targetCalories" type="number" class="nutr-calories-input" />
                 <button class="nutr-cal-btn" @click="increaseCalories" aria-label="Aumentar calorias">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                  <Plus :size="18" stroke-width="2.5" />
                 </button>
               </div>
             </div>
@@ -64,7 +56,7 @@
                   <option value="paleo">Paleo</option>
                   <option value="ketogenic">Keto</option>
                 </select>
-                <svg class="nutr-select-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                <ChevronDown class="nutr-select-arrow" :size="16" stroke-width="2" />
               </div>
             </div>
           </div>
@@ -125,7 +117,7 @@
           </div>
         </div>
         <div v-if="!plan && !loading" class="nutr-empty">
-           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+           <UtensilsCrossed :size="48" stroke-width="1.5" />
            <p>Define tus objetivos y genera tu plan ideal.</p>
         </div>
       </div>
@@ -134,73 +126,46 @@
       :is-open="modal.isOpen"
       :recipe="modal.recipe"
       :loading="modal.loading"
-      @close="modal.isOpen = false"
+      @close="closeRecipeModal"
     />
   </ion-page>
 </template>
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
 import { IonPage, IonContent, IonSpinner } from '@ionic/vue'
+import { ArrowLeft, LogOut, ChevronDown, Minus, Plus, UtensilsCrossed } from '@lucide/vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../auth/store/auth'
 import { APP_NAME } from '../../shared/config/branding'
-import { NutritionService } from '../services/nutritionService'
-import { DayPlan, MealPlanResponse, RecipeDetail, Meal } from '../../shared/types/nutrition'
+import { DayPlan, MealPlanResponse, Meal } from '../../shared/types/nutrition'
 import RecipeDetailModal from '../components/RecipeDetailModal.vue'
+import { useNutrition } from '../composables/useNutrition'
+
 const router = useRouter()
 const auth = useAuthStore()
-const loading = ref(false)
-const plan = ref<MealPlanResponse | null>(null)
-const error = ref<string | null>(null)
-const form = reactive({
-  timeFrame: 'day' as 'day' | 'week',
-  targetCalories: 2000,
-  diet: ''
-})
-const modal = reactive({
-  isOpen: false,
-  loading: false,
-  recipe: null as RecipeDetail | null
-})
+
+const {
+  loading,
+  plan,
+  error,
+  form,
+  modal,
+  decreaseCalories,
+  increaseCalories,
+  generatePlan,
+  openRecipe,
+  closeRecipeModal
+} = useNutrition()
+
 const mealLabels = ['Desayuno', 'Almuerzo', 'Cena']
 const mealLabel = (i: number) => mealLabels[i] || `Comida ${i + 1}`
 const isDayPlan = (p: MealPlanResponse): p is DayPlan => !!(p as DayPlan).meals
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-const getMealImage = (m: Meal) => `https://spoonacular.com/recipeImages/${m.id}-312x231.${m.imageType}`;
-const decreaseCalories = () => { form.targetCalories = Math.max(500, form.targetCalories - 50) }
-const increaseCalories = () => { form.targetCalories = Math.min(6000, form.targetCalories + 50) }
-const logout = () => { auth.clearToken(); router.push('/login') }
-const openRecipe = async (id: number) => {
-  modal.isOpen = true
-  modal.loading = true
-  modal.recipe = null
-  try {
-    modal.recipe = await NutritionService.getRecipeDetail(id)
-  } catch (err) {
-    console.error('Error loading recipe:', err)
-  } finally {
-    modal.loading = false
-  }
+const getMealImage = (m: Meal) => `https://spoonacular.com/recipeImages/${m.id}-312x231.${m.imageType || 'jpg'}`;
+
+const logout = () => { 
+  auth.clearToken()
+  router.push('/login') 
 }
-const generatePlan = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    const res = await NutritionService.generateMealPlan(form.timeFrame, form.targetCalories, form.diet || undefined)
-    plan.value = res
-    localStorage.setItem('cached_nutrition_plan', JSON.stringify(res))
-  } catch (err: any) {
-    error.value = err.message
-  } finally {
-    loading.value = false
-  }
-}
-onMounted(() => {
-  const cached = localStorage.getItem('cached_nutrition_plan')
-  if (cached) {
-    try { plan.value = JSON.parse(cached) } catch { localStorage.removeItem('cached_nutrition_plan') }
-  }
-})
 </script>
 <style src="../theme/NutritionPage.css"></style>
 

@@ -172,13 +172,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import type { User, Payment } from '../../../types/reports'
 import { logout as authLogout } from '../../auth/services/authService'
 import AdminSidebar from '@/components/AdminSidebar.vue'
 import ReportesButtons from '@/components/ReportesButtons.vue'
 import Pagination from '@/components/Pagination.vue'
 import KineticLoading from '@/components/KineticLoading.vue'
-import { formatNumber, formatCurrency } from '../../metrics/services/metricsService.ts/metricsService'
-import { reportsService, type Report, type ReportFilters, type ReportStats, type ReportTypeStats } from '../services/reportsService.ts/reportsService'
+import { formatNumber, formatCurrency } from '../../metrics/services/metricsService'
+import { reportsService, type Report, type ReportFilters, type ReportStats, type ReportTypeStats } from '../services/reportsService'
 import { userService, type User as ApiUser } from '../../users/services/userService'
 import { membershipService, type Membership } from '../../payments/services/membershipService'
 import {
@@ -241,19 +242,6 @@ const settings = ref({
 // Estado para pagos
 const payments = ref<Payment[]>([])
 
-// Interface para definir la estructura de datos de pago
-interface Payment {
-  id?: number
-  idPago: string
-  identificacion: string
-  persona: string
-  fechaPago: Date | string
-  costo: number
-  plan: string
-  estado: 'Completado' | 'Pendiente' | 'Fallido'
-  metodoPago?: string
-}
-
 // Estado para usuarios
 const users = ref<User[]>([])
 
@@ -296,18 +284,6 @@ const mapApiUserToLocal = (apiUser: ApiUser): User => ({
   estado: apiUser.status === 'active' ? 'Activo' : 'Suspendido',
   fechaCreacion: apiUser.createdAt || ''
 })
-
-// Interface para definir la estructura de datos de usuario (igual que AdminPage.vue)
-interface User {
-  id?: number
-  nombre: string
-  apellido: string
-  correo: string
-  telefono: string
-  identificacion: number
-  estado: 'Activo' | 'Vencido' | 'Suspendido'
-  fechaCreacion: Date | string
-}
 
 // Cargar reportes
 const loadReports = async () => {
@@ -360,9 +336,7 @@ const loadReports = async () => {
       payments.value = []
     }
 
-    console.log('✅ Reportes y pagos cargados exitosamente:', { stats: reportStats, popular: popularTypes, payments: payments.value.length })
   } catch (err: any) {
-    console.error('❌ Error cargando reportes:', err)
     error.value = err.message || 'Error al cargar los reportes.'
   } finally {
     loading.value = false
@@ -371,15 +345,9 @@ const loadReports = async () => {
 
 // Función para cargar usuarios desde la API (igual que AdminPage.vue)
 const loadUsers = async () => {
-  try {
-    console.log('👥 Cargando usuarios desde la API...')
+  
     const apiUsers = await userService.getAllUsers()
-    users.value = apiUsers.map(mapApiUserToLocal)
-    console.log('✅ Usuarios cargados:', users.value.length)
-  } catch (error) {
-    console.error('❌ Error cargando usuarios:', error)
-    // No mostrar error al usuario, solo log
-  }
+    users.value = apiUsers.map(mapApiUserToLocal) 
 }
 
 // Generar reporte
@@ -388,8 +356,6 @@ const generateReport = async () => {
     dateRange: dateRange.value as any,
     reportType: reportType.value as any
   }
-
-  console.log(`📊 Generando reporte: ${reportType.value} para rango: ${dateRange.value}`)
 
   try {
     const newReport = await reportsService.generateReport(filters)
@@ -402,13 +368,11 @@ const generateReport = async () => {
       const report = recentReports.value.find(r => r.id === newReport.id)
       if (report) {
         report.status = 'completed'
-        console.log('✅ Reporte generado exitosamente:', report.name)
       }
     }, 2000 + Math.random() * 3000) // 2-5 segundos
 
     alert(`Generando reporte de ${getReportTypeLabel(reportType.value)}...`)
-  } catch (error) {
-    console.error('Error generando reporte:', error)
+  } catch {
     alert('Error al generar el reporte. Intente nuevamente.')
   }
 }
@@ -416,8 +380,6 @@ const generateReport = async () => {
 // Descargar reporte
 const downloadReport = async (report: Report) => {
   try {
-    console.log('📥 Descargando reporte:', report.name)
-
     const blob = await reportsService.downloadReport(report.id)
 
     // Crear URL para descarga
@@ -431,15 +393,10 @@ const downloadReport = async (report: Report) => {
     document.body.removeChild(a)
 
     alert(`Descargando: ${report.name}`)
-  } catch (error) {
-    console.error('Error descargando reporte:', error)
+  } catch {
     alert('Error al descargar el reporte.')
   }
 }
-
-
-
-
 
 // Eliminar reporte
 const deleteReport = async (report: Report) => {
@@ -447,9 +404,7 @@ const deleteReport = async (report: Report) => {
     try {
       await reportsService.deleteReport(report.id)
       recentReports.value = recentReports.value.filter(r => r.id !== report.id)
-      console.log('🗑️ Reporte eliminado:', report.name)
-    } catch (error) {
-      console.error('Error eliminando reporte:', error)
+    } catch {
       alert('Error al eliminar el reporte.')
     }
   }
@@ -519,7 +474,6 @@ const navigateToUsers = () => {
 
 const navigateToReports = () => {
   activeSection.value = 'reports'
-  console.log('Navegando a reportes')
 }
 
 const navigateToCharts = () => {
@@ -532,18 +486,15 @@ const navigateToPayments = () => {
 
 // Funciones para manejar usuarios (igual que AdminPage.vue)
 const viewUser = (user: User) => {
-  console.log('👁️ Ver usuario:', user.nombre)
-  // Por ahora solo log, se puede implementar navegación
+  // Por ahora se puede implementar navegación
 }
 
 const editUser = (user: User) => {
-  console.log('✏️ Editar usuario:', user.nombre)
-  // Por ahora solo log, se puede implementar navegación
+  // Por ahora se puede implementar navegación
 }
 
 const deleteUser = (user: User) => {
   if (confirm(`¿Eliminar al usuario ${user.nombre} ${user.apellido}?`)) {
-    console.log('🗑️ Eliminar usuario:', user.nombre)
     // Implementar eliminación
   }
 }
@@ -559,12 +510,10 @@ const toggleUserStatus = async (user: User) => {
 
     if (success) {
       user.estado = newStatus === 'active' ? 'Activo' : 'Suspendido'
-      console.log('✅ Estado de usuario actualizado:', user.nombre)
     } else {
       alert('Error al actualizar el estado del usuario')
     }
-  } catch (error) {
-    console.error('Error updating user status:', error)
+  } catch {
     alert('Error al actualizar el estado del usuario')
   } finally {
     statusUpdating.value = false
@@ -598,7 +547,4 @@ onMounted(() => {
 })
 </script>
 
-<style>
-@import '../../../theme/ReportesPage.css';
-@import '../../../theme/AdminPage.css';
-</style>
+<style src="../../../theme/ReportesPage.css"></style>

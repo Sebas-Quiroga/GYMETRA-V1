@@ -1,21 +1,7 @@
 <template>
   <ion-page>
     <ion-content class="login-page">
-      <Transition name="fade-notif">
-        <div v-if="notification.show" class="notification-toast" :class="notification.type" role="alert">
-          <div class="notification-content">
-            <ion-icon :icon="notification.icon" class="notification-icon"></ion-icon>
-            <div class="notification-text">
-              <h4>{{ notification.title }}</h4>
-              <p>{{ notification.message }}</p>
-            </div>
-            <ion-button fill="clear" size="small" @click="dismissNotification" aria-label="Cerrar">
-              <ion-icon :icon="closeOutline"></ion-icon>
-            </ion-button>
-          </div>
-          <div class="notification-progress" :style="{ width: notification.progress + '%' }"></div>
-        </div>
-      </Transition>
+
 
       <div class="login-container" role="main">
         <div class="logo-container">
@@ -157,7 +143,7 @@ import {
   alertCircle, closeOutline 
 } from "ionicons/icons";
 import { useAuthStore } from "../../auth/store/auth";
-import { login, sendRecoveryToken, validateRecoveryToken, resetPassword as resetPasswordService } from "..";
+import { authService, sendRecoveryToken, validateRecoveryToken, resetPassword as resetPasswordService } from "..";
 import { useNotification } from "../../shared/composables/useNotification";
 
 const router = useRouter();
@@ -198,7 +184,7 @@ const performLogin = async () => {
   if (!userEmail.value || !userPassword.value) return;
   isProcessLoading.value = true;
   try {
-    const response = await login(userEmail.value, userPassword.value);
+    const response = await authService.login(userEmail.value, userPassword.value);
     if (response.token) {
       auth.setToken(response.token);
       router.push("/home");
@@ -283,6 +269,4 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
-@import '../theme/LoginPage.css';
-</style>
+<style scoped src="../theme/LoginPage.css"></style>

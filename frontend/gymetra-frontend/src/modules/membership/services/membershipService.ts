@@ -33,16 +33,11 @@ export interface UserMembership {
   nutrition?: boolean;
 }
 export async function getAvailableMemberships(): Promise<Membership[]> {
-  try {
-    const response = await apiAuthRequest<Membership[]>(MEMBERSHIP_ENDPOINTS.AVAILABLE, { method: 'GET' });
-    if (response.success && response.data) {
-      return response.data;
-    }
-    throw new Error(response.message || 'No se pudieron cargar las membresías');
-  } catch (error: any) {
-    console.error('❌ Error al cargar membresías desde API:', error);
-    throw new Error(error.message || 'Error al cargar los planes disponibles');
+  const response = await apiAuthRequest<Membership[]>(MEMBERSHIP_ENDPOINTS.AVAILABLE, { method: 'GET' });
+  if (response.success && response.data) {
+    return response.data;
   }
+  throw new Error(response.message || 'No se pudieron cargar las membresías');
 }
 export async function purchaseMembership(purchaseData: PurchaseRequest): Promise<any> {
   try {
@@ -58,27 +53,21 @@ export async function purchaseMembership(purchaseData: PurchaseRequest): Promise
     }
     throw new Error(response.message || 'Error al procesar la compra');
   } catch (error: any) {
-    console.error('❌ Error al comprar membresía:', error);
-    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+    if (error.message?.includes('CORS') || error.message?.includes('Failed to fetch')) {
       throw new Error('external_payment_required: Error de conexión, redirigir a pasarela');
     }
     throw new Error(error.message || 'Error al procesar la compra');
   }
 }
 export async function getUserMemberships(): Promise<UserMembership[]> {
-  try {
-    const response = await apiAuthRequest<UserMembership[]>(
-      MEMBERSHIP_ENDPOINTS.USER_MEMBERSHIPS,
-      { method: 'GET' }
-    );
-    if (response.success && response.data) {
-      return response.data;
-    }
-    throw new Error(response.message || 'No se pudieron cargar las membresías del usuario');
-  } catch (error: any) {
-    console.error('❌ Error al cargar membresías del usuario:', error);
-    throw new Error(error.message || 'Error al cargar tus membresías');
+  const response = await apiAuthRequest<UserMembership[]>(
+    MEMBERSHIP_ENDPOINTS.USER_MEMBERSHIPS,
+    { method: 'GET' }
+  );
+  if (response.success && response.data) {
+    return response.data;
   }
+  throw new Error(response.message || 'No se pudieron cargar las membresías del usuario');
 }
 export function formatPrice(price: number): string {
   return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -123,14 +112,8 @@ export async function checkBackendConnectivity(): Promise<boolean> {
       signal: controller.signal
     });
     clearTimeout(timeoutId);
-    const isConnected = response.ok || response.status < 500;
-    return isConnected;
-  } catch (error: any) {
-    console.error('❌ Error de conectividad:', error.message);
-    if (error.name === 'AbortError') {
-    } else if (error.message.includes('CORS')) {
-    } else if (error.message.includes('fetch')) {
-    }
+    return response.ok || response.status < 500;
+  } catch {
     return false;
   }
 }

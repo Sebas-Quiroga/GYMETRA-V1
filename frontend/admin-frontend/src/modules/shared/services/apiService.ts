@@ -21,7 +21,7 @@ axios.interceptors.request.use(async (config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   } catch (err) {
-    console.warn('⚠️ No se pudo obtener sesión activa de Cognito para la petición API');
+    // Session not found
   }
   return config;
 }, (error) => {
@@ -33,7 +33,6 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.error('🚫 Sesión expirada o inválida. Redirigiendo...');
       // Evitar bucles infinitos si ya estamos en login
       if (!window.location.pathname.includes('/loginadmin')) {
         window.location.href = '/loginadmin';

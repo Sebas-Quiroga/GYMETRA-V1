@@ -176,14 +176,9 @@ onMounted(async () => {
 
 // Load roles from API
 const loadRoles = async () => {
-  try {
-    loading.value = true
-    roles.value = await userService.getRoles()
-  } catch (error) {
-    console.error('Error loading roles:', error)
-  } finally {
-    loading.value = false
-  }
+  loading.value = true
+  roles.value = await userService.getRoles()
+  loading.value = false
 }
 
 // Navigation functions
@@ -214,18 +209,13 @@ const closeDeleteModal = () => {
 const deleteRole = async () => {
   if (!roleToDelete.value) return
 
-  try {
-    deleting.value = true
-    const success = await userService.deleteRole(roleToDelete.value.roleId)
-    if (success) {
-      roles.value = roles.value.filter(r => r.roleId !== roleToDelete.value!.roleId)
-      closeDeleteModal()
-    }
-  } catch (error) {
-    console.error('Error deleting role:', error)
-  } finally {
-    deleting.value = false
+  deleting.value = true
+  const success = await userService.deleteRole(roleToDelete.value.roleId)
+  if (success) {
+    roles.value = roles.value.filter(r => r.roleId !== roleToDelete.value!.roleId)
+    closeDeleteModal()
   }
+  deleting.value = false
 }
 
 const logout = () => {
@@ -233,6 +223,4 @@ const logout = () => {
 }
 </script>
 
-<style scoped>
-@import '../../../theme/RolesPage.css';
-</style>
+<style scoped src="../../../theme/RolesPage.css"></style>

@@ -23,32 +23,21 @@ export interface Exercise {
   bodyPart: string;
 }
 export const getExercisesByBodyPart = async (bodyPart: string): Promise<Exercise[]> => {
-  try {
-    const response = await apiClient.get(`/bodyPart/${bodyPart.toLowerCase()}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching exercises for body part ${bodyPart}:`, error);
-    throw error;
-  }
+  const response = await apiClient.get(`/bodyPart/${bodyPart.toLowerCase()}`);
+  return response.data;
 };
 export const getLocalGifUrl = (exerciseId: string): string => {
   return `${EXERCISES_API}/${exerciseId}/gif`;
 };
 export const getExercisesByMuscle = async (muscle: string): Promise<Exercise[]> => {
-  try {
-    const response = await apiClient.get(`/target/${muscle.toLowerCase()}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching exercises for muscle ${muscle}:`, error);
-    throw error;
-  }
+  const response = await apiClient.get(`/target/${muscle.toLowerCase()}`);
+  return response.data;
 };
 export const getBodyPartList = async (): Promise<string[]> => {
   try {
     const response = await axios.get(`${EXERCISES_API}/bodyPartList`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching body part list:', error);
+  } catch {
     return [];
   }
 };
@@ -56,8 +45,7 @@ export const getTargetList = async (): Promise<string[]> => {
   try {
     const response = await axios.get(`${EXERCISES_API}/targetList`);
     return response.data;
-  } catch (error) {
-    console.error('Error fetching target list:', error);
+  } catch {
     return [];
   }
 };

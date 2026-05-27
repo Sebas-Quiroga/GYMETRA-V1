@@ -4,6 +4,7 @@ export interface Meal {
   readyInMinutes: number;
   servings: number;
   sourceUrl: string;
+  imageType?: string;
 }
 export interface Nutrients {
   calories: number;

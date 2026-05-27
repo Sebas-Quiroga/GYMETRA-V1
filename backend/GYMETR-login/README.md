@@ -6,9 +6,32 @@
 
 Este microservicio es el **corazón de identidad** de todo el ecosistema GYMETRA. Gestiona la integración con AWS Cognito y sincroniza los perfiles de usuario con la base de datos local.
 
-## 🚀 Responsabilidades Centrales
-- **Autoridad de Identidad**: Valida que los tokens JWT de Cognito sean auténticos.
-- **Sincronización de Perfiles**: Crea automáticamente registros en la tabla `user` local cuando se detecta un nuevo usuario de Cognito.
+## ⚙️ Configuración del Entorno (Variables de Entorno)
+
+Por razones de seguridad, las credenciales no deben ser compartidas públicamente. Para desplegar este microservicio, configura tu entorno:
+
+1. En la raíz del proyecto (`backend/GYMETR-login/`), busca el archivo `.env.example`.
+2. Cópialo o renómbralo a `.env` (o `.env.development`).
+3. Abre tu nuevo `.env` e inserta los datos correspondientes:
+   - **PostgreSQL**: Credenciales para conectarte a tu base de datos local.
+   - **AWS Cognito**: URI del Issuer, el Client ID y el URI JWKS de tu User Pool.
+   - **AWS Credentials**: (Opcional si usas el AWS Default Provider Chain, pero útil en local) Access Key y Secret Key.
+   - **Gmail SMTP**: Correo y contraseña de aplicación para envío de correos (reset de contraseñas, etc.).
+
+> [!IMPORTANT]
+> El archivo `.env` nunca debe ser subido al repositorio Git.
+
+## 🚀 Cómo Ejecutar
+
+Una vez preparado tu archivo `.env` y teniendo PostgreSQL corriendo, inicia el servidor:
+
+```bash
+./mvnw spring-boot:run
+```
+
+## ✨ Responsabilidades Centrales
+- **Autoridad de Identidad**: Valida que los tokens JWT de Cognito sean auténticos usando las claves públicas de AWS (JWKS).
+- **Sincronización de Perfiles**: Crea automáticamente registros en la tabla `user` local cuando se detecta un nuevo registro desde Cognito.
 - **Gestión de Roles**: Traduce los grupos de Cognito (`Admin`, `Client`) a autoridades de Spring Security.
 
 ## 🛠️ Tecnologías
@@ -22,10 +45,3 @@ Puedes probar los endpoints y ver la estructura de datos en:
 
 > [!TIP]
 > Para probar endpoints protegidos en Swagger, obtén un token desde el frontend y úsalo en el botón **Authorize** de la esquina superior derecha.
-
-## ⚙️ Configuración Requerida
-Asegúrate de tener estas variables en tu `application.properties`:
-```properties
-cognito.issuer=https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt
-cognito.client-id=3gnvfec5v6tfp32u634mq645ll
-```

@@ -38,6 +38,21 @@ public class NutritionController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Obtener imagen de la receta", description = "Obtiene el archivo binario de la imagen de una receta")
+    @GetMapping("/recipes/{id}/image")
+    public ResponseEntity<byte[]> getRecipeImage(@PathVariable Integer id) {
+        return localNutritionService.getRecipeDetail(id)
+                .map(recipe -> {
+                    byte[] image = recipe.getImageData();
+                    if (image == null) return new ResponseEntity<byte[]>(org.springframework.http.HttpStatus.NOT_FOUND);
+
+                    org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+                    headers.setContentType(org.springframework.http.MediaType.IMAGE_JPEG);
+                    return new ResponseEntity<>(image, headers, org.springframework.http.HttpStatus.OK);
+                })
+                .orElse(new ResponseEntity<>(org.springframework.http.HttpStatus.NOT_FOUND));
+    }
+
     @Operation(summary = "Sincronización manual", description = "Dispara manualmente la sincronización de recetas desde Spoonacular")
     @PostMapping("/sync")
     public ResponseEntity<String> syncNow() {

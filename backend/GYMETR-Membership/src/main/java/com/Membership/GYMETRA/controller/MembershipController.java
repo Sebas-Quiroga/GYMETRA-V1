@@ -65,6 +65,7 @@ public class MembershipController {
     // Endpoint para obtener todas las membresías de usuario
     @Operation(summary = "Listar todas las membresías de usuario", description = "Obtiene una lista completa de todas las membresías de usuario en el sistema")
     @GetMapping("/user-memberships/all")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<UserMembership>> getAllUserMemberships() {
         List<UserMembership> userMemberships = membershipService.getAllUserMemberships();
         return ResponseEntity.ok(userMemberships);

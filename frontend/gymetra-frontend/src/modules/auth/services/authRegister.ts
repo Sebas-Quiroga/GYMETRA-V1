@@ -35,7 +35,6 @@ export function useRegister(): UseRegisterReturn {
     loading.value = true;
     error.value = '';
     try {
-      console.log('🚀 Iniciando registro en Cognito para:', data.email);
       let formattedPhone = data.phone.trim();
       if (formattedPhone && !formattedPhone.startsWith('+')) {
         formattedPhone = `+57${formattedPhone}`;
@@ -53,7 +52,6 @@ export function useRegister(): UseRegisterReturn {
           }
         }
       });
-      console.log('✅ Registro procesado:', { isSignUpComplete, nextStep });
       return {
         success: true,
         message: 'Registro exitoso. Por favor verifica tu correo electrónico.',
@@ -65,7 +63,6 @@ export function useRegister(): UseRegisterReturn {
         }
       };
     } catch (err: any) {
-      console.error('💥 Error en registro Cognito:', err);
       let errorMessage = err.message || 'Error inesperado al registrar usuario';
       if (err.name === 'UsernameExistsException') {
         errorMessage = 'Este correo electrónico ya está registrado';

@@ -1,23 +1,5 @@
 /* AdminPage - Aero Athletic Design */
 
-.main-content {
-  margin-left: var(--admin-sidebar-width);
-  padding: 40px;
-  background-color: var(--admin-bg-page);
-  min-height: 100vh;
-  transition: var(--admin-transition);
-}
-
-.sidebar-collapsed-active .main-content {
-  margin-left: var(--admin-sidebar-collapsed-width);
-}
-
-.main-content-mobile {
-  margin-left: 0 !important;
-  padding: 80px 20px 40px;
-  min-height: 100vh;
-}
-
 /* Stats Cards Section */
 .stats-cards {
   display: grid;
@@ -81,32 +63,22 @@
   font-weight: 600;
 }
 
-/* Users Table Section */
-.users-table-container {
-  background: var(--admin-bg-card);
-  border-radius: var(--admin-radius-lg);
-  border: 1px solid var(--admin-border);
-  box-shadow: var(--admin-shadow-md);
-  overflow: hidden;
-}
+/* User Specific Cells */
+.user-info-cell { display: flex; flex-direction: column; }
+.user-full-name { font-weight: 800; font-family: var(--app-font-brand); }
+.user-email-sub { font-size: 0.8rem; color: var(--admin-text-sub); }
+.user-phone { font-size: 0.9rem; }
+.user-id-badge { font-family: monospace; font-weight: 700; }
+.user-date { font-size: 0.8rem; color: var(--admin-text-sub); }
+.empty-table-cell { text-align: center; padding: 60px; }
+.empty-icon { font-size: 48px; color: var(--admin-accent-soft); }
+.empty-text { margin-top: 15px; font-weight: 700; color: var(--admin-text-sub); }
 
 .table-header {
-  padding: 2rem 2.5rem;
-  border-bottom: 1px solid var(--admin-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.table-header h2 {
-  font-family: var(--app-font-family);
-  font-weight: 900;
-  font-size: 1.5rem;
-  color: var(--brand-secondary);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0;
+  margin-bottom: 32px;
 }
 
 .header-actions {
@@ -114,90 +86,36 @@
   gap: 12px;
 }
 
-/* Table Design */
-.users-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.users-table th {
-  padding: 1rem 2.5rem;
-  text-align: left;
-  background: var(--admin-bg-subtle);
-  color: var(--text-sub);
-  font-weight: 900;
-  font-size: 0.7rem;
-  letter-spacing: 0.1rem;
-  text-transform: uppercase;
-}
-
-.users-table td {
-  padding: 1.25rem 2.5rem;
-  border-bottom: 1px solid var(--admin-border);
-  color: var(--text-main);
-  font-weight: 600;
-}
-
-.users-table tr:hover td {
-  background: var(--brand-primary-fade);
-}
-
-.users-table th {
-  padding: 16px 24px;
-  text-align: left;
-  background: var(--admin-bg-subtle);
-  color: var(--admin-text-sub);
-  font-weight: 900;
-  font-size: 0.75rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.users-table td {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--admin-border);
-  color: var(--admin-text-main);
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.users-table tr:hover td {
-  background: rgba(4, 184, 229, 0.02);
-}
-
-/* Status Badges */
-.status-badge {
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.status-active .status-badge {
-  background: rgba(39, 174, 96, 0.1);
-  color: #2e7d32;
-}
-
-.status-suspended .status-badge {
-  background: rgba(186, 26, 26, 0.1);
-  color: #c62828;
-}
-
-/* Action Buttons in Table */
-.action-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+.sync-users-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  background: var(--admin-bg-card);
+  color: var(--brand-primary);
   border: 1px solid var(--admin-border);
-  background: var(--admin-bg-subtle);
-  color: var(--text-sub);
+  border-radius: var(--admin-radius-md);
+  font-family: var(--app-font-brand);
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--admin-transition);
 }
 
-.edit-btn:hover { color: var(--brand-primary); border-color: var(--brand-primary); }
-.delete-btn:hover { color: #c62828; border-color: #c62828; }
+.sync-users-btn:hover:not(:disabled) {
+  background: var(--admin-accent-soft);
+  border-color: var(--brand-primary);
+  transform: translateY(-2px);
+}
+
+.sync-users-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
 
 /* Modern Toggle */
 .kinetic-toggle {
@@ -243,40 +161,62 @@ input:checked + .toggle-slider-kinetic:before {
   transform: translateX(24px);
 }
 
-/* Pagination */
+/* Pagination UI */
 .pagination-container {
-  padding: 1.5rem 2.5rem;
-  background: var(--admin-bg-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--admin-bg-subtle);
+  border-radius: var(--admin-radius-md);
+  border: 1px solid var(--admin-border);
 }
 
-.pagination-numbers {
+.pagination-info {
+  font-size: 0.88rem;
+  color: var(--admin-text-sub);
+  font-weight: 700;
+}
+
+.pagination-controls {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
 .pagination-btn {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
   border: 1px solid var(--admin-border);
   background: var(--admin-bg-card);
-  color: var(--text-main);
-  font-weight: 800;
-  font-size: 0.85rem;
+  color: var(--admin-text-main);
+  border-radius: 999px;
   cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 800;
+  transition: var(--admin-transition);
+  min-width: 40px;
+  justify-content: center;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--admin-accent-soft);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .pagination-btn.active {
   background: var(--brand-primary);
-  color: #fff;
   border-color: var(--brand-primary);
-}
-
-/* Mobile Adjustments */
-@media (max-width: 1024px) {
-  .users-table-container {
-    overflow-x: auto;
-  }
+  color: white;
 }

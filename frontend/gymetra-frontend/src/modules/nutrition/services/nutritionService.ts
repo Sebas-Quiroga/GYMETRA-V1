@@ -1,7 +1,6 @@
-// src/services/nutritionService.ts
 import axios from 'axios';
-import { MealPlanResponse, RecipeDetail, DayPlan } from '@/interfaces/nutrition';
-import { TranslationService } from './translationService';
+import { MealPlanResponse, RecipeDetail, DayPlan } from '../../shared/types/nutrition';
+import { TranslationService } from '../../shared/services/translationService';
 
 const API_KEY = import.meta.env.VITE_SPOONACULAR_API_KEY;
 const BASE_URL = 'https://api.spoonacular.com/mealplanner/generate';
@@ -53,7 +52,6 @@ export class NutritionService {
 
       return data;
     } catch (error: any) {
-      console.error('Error generating meal plan:', error);
       const errorMessage = error.response?.data?.message || 'Error al conectar con la API de nutrición';
       throw new Error(errorMessage);
     }
@@ -99,7 +97,6 @@ export class NutritionService {
 
       return detail;
     } catch (error: any) {
-      console.error('Error fetching recipe detail:', error);
       throw new Error('Error al obtener los detalles de la receta');
     }
   }

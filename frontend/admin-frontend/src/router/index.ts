@@ -3,68 +3,70 @@ import { RouteRecordRaw } from 'vue-router'
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/loginadmin'
+    redirect: '/login'
   },
   {
-    path: '/loginadmin',
-    name: 'LoginAdminPage',
+    path: '/login',
+    name: 'Login',
     component: () => import('../modules/auth/views/LoginAdminPage.vue')
   },
   {
-    path: '/adminpanel',
-    name: 'AdminPanel',
-    component: () => import('../modules/users/views/AdminPage.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/adminmetricas',
-    name: 'MetricasPage',
-    component: () => import('../modules/metrics/views/MetricasPage.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/adminpagos',
-    name: 'PagosPage',
-    component: () => import('../modules/payments/views/PagosPage.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/adminadduser',
-    name: 'AddUserPage',
-    component: () => import('../modules/users/views/AddUserPage.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/adminedituser/:userId',
-    name: 'EditUserPage',
-    component: () => import('../modules/users/views/EditUserPage.vue'),
+    path: '/admin',
+    component: () => import('../layouts/AdminLayout.vue'),
     meta: { requiresAuth: true },
-    props: true
+    children: [
+      {
+        path: '/adminpanel',
+        name: 'AdminPanel',
+        component: () => import('../modules/users/views/AdminPage.vue')
+      },
+      {
+        path: '/adminmetricas',
+        name: 'MetricasPage',
+        component: () => import('../modules/metrics/views/MetricasPage.vue')
+      },
+      {
+        path: '/adminpagos',
+        name: 'PagosPage',
+        component: () => import('../modules/payments/views/PagosPage.vue')
+      },
+      {
+        path: '/adminadduser',
+        name: 'AddUserPage',
+        component: () => import('../modules/users/views/AddUserPage.vue')
+      },
+      {
+        path: '/adminedituser/:userId',
+        name: 'EditUserPage',
+        component: () => import('../modules/users/views/EditUserPage.vue'),
+        props: true
+      },
+      {
+        path: '/adminreportes',
+        name: 'ReportesPage',
+        component: () => import('../modules/reports/views/ReportesPage.vue')
+      },
+      {
+        path: '/adminroles',
+        name: 'RolesPage',
+        component: () => import('../modules/roles/views/RolesPage.vue')
+      },
+      {
+        path: '/adminaddrole',
+        name: 'AddRolePage',
+        component: () => import('../modules/roles/views/AddRolePage.vue')
+      },
+      {
+        path: '/admineditrole/:roleId',
+        name: 'EditRolePage',
+        component: () => import('../modules/roles/views/EditRolePage.vue'),
+        props: true
+      }
+    ]
   },
   {
-    path: '/adminreportes',
-    name: 'ReportesPage',
-    component: () => import('../modules/reports/views/ReportesPage.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/adminroles',
-    name: 'RolesPage',
-    component: () => import('../modules/roles/views/RolesPage.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/adminaddrole',
-    name: 'AddRolePage',
-    component: () => import('../modules/roles/views/AddRolePage.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/admineditrole/:roleId',
-    name: 'EditRolePage',
-    component: () => import('../modules/roles/views/EditRolePage.vue'),
-    meta: { requiresAuth: true },
-    props: true
+    path: '/:pathMatch*',
+    redirect: '/login'
   }
 ]
 

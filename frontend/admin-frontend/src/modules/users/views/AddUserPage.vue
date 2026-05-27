@@ -337,6 +337,4 @@ onUnmounted(() => {
 });
 </script>
 
-<style>
-@import '../../../theme/AddUserPage.css';
-</style>
+<style src="../../../theme/AddUserPage.css"></style>

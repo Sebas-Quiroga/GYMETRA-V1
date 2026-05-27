@@ -37,13 +37,11 @@ export async function login(email: string, password: string) {
     }
   } catch (err: any) {
     if (err.name === 'UserAlreadyAuthenticatedException') {
-      console.log('ℹ️ Admin ya autenticado. Recuperando sesión...');
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
       axios.defaults.headers.common["Authorization"] = `Bearer ${idToken}`;
       return { token: idToken };
     }
-    console.error('❌ Error en login Admin:', err);
     throw err;
   }
 }
@@ -54,12 +52,11 @@ export async function login(email: string, password: string) {
 export async function logout() {
   try {
     await amplifySignOut();
-    delete axios.defaults.headers.common["Authorization"];
-    window.location.href = "/loginadmin";
   } catch (err) {
-    console.error('Error al cerrar sesión:', err);
-    window.location.href = "/loginadmin";
+    // Proceed with cleaning state even if Amplify sign out fails
   }
+  delete axios.defaults.headers.common["Authorization"];
+  window.location.href = "/loginadmin";
 }
 
 /**

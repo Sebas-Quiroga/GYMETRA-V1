@@ -33,6 +33,7 @@ public class UserMembership {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "membership_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Membership membership;
 
     @Column(name = "start_date", nullable = false)

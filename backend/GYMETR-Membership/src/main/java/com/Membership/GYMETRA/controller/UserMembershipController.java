@@ -81,6 +81,7 @@ public class UserMembershipController {
     // =====================================
     @Operation(summary = "Listar membresías de usuario", description = "Obtiene todas las membresías asociadas a un usuario específico")
     @GetMapping("/user/{userId}")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<UserMembership>> getMembershipsByUser(@PathVariable Integer userId) {
         List<UserMembership> memberships = userMembershipService.getUserMembershipsByUserId(userId);
         return ResponseEntity.ok(memberships);

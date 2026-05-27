@@ -207,6 +207,7 @@ public class PaymentController {
      */
     @Operation(summary = "Obtener todos los pagos", description = "Devuelve una lista de todos los pagos registrados en el sistema")
     @GetMapping("/all")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<Payment>> getAllPayments() {
         try {
             List<Payment> payments = paymentService.getAllPayments();

@@ -32,6 +32,9 @@ public class Recipe {
 
     private String imageUrl;
 
+    @Column(name = "image_data")
+    private byte[] imageData;
+
     private Integer readyInMinutes;
 
     private Integer servings;

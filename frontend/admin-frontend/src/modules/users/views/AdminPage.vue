@@ -229,42 +229,26 @@ const suspendedUsersCount = computed(() => userList.value.filter(u => u.status =
 const checkResponsiveLayout = () => { isMobileView.value = window.innerWidth <= 1024; };
 
 const loadUserDirectory = async () => {
-  try {
-    isDataLoading.value = true;
-    const data = await userService.getAllUsers();
-    userList.value = data || [];
-  } catch (error) {
-    console.error('Error cargando usuarios:', error);
-  } finally {
-    isDataLoading.value = false;
-  }
+  isDataLoading.value = true;
+  userList.value = await userService.getAllUsers() || [];
+  isDataLoading.value = false;
 };
 
 const handleSyncCognito = async () => {
-  try {
-    isSyncingInProgress.value = true;
-    const message = await userService.syncUsersFromCognito();
-    alert(message);
-    await loadUserDirectory();
-  } catch (error) {
-    console.error('Error sincronizando con Cognito:', error);
-  } finally {
-    isSyncingInProgress.value = false;
-  }
+  isSyncingInProgress.value = true;
+  const message = await userService.syncUsersFromCognito();
+  alert(message);
+  await loadUserDirectory();
+  isSyncingInProgress.value = false;
 };
 
 const handleStatusToggle = async (user: any) => {
   if (!user.userId) return;
-  try {
-    isStatusUpdating.value = true;
-    const nextStatus = user.status === 'active' ? 'suspended' : 'active';
-    const isSuccess = await userService.updateUserStatus(user.userId, nextStatus);
-    if (isSuccess) user.status = nextStatus;
-  } catch (error) {
-    console.error('Error actualizando estado:', error);
-  } finally {
-    isStatusUpdating.value = false;
-  }
+  isStatusUpdating.value = true;
+  const nextStatus = user.status === 'active' ? 'suspended' : 'active';
+  const isSuccess = await userService.updateUserStatus(user.userId, nextStatus);
+  if (isSuccess) user.status = nextStatus;
+  isStatusUpdating.value = false;
 };
 
 const initiateUserDeletion = (user: any) => {
@@ -274,18 +258,13 @@ const initiateUserDeletion = (user: any) => {
 
 const handleConfirmDelete = async () => {
   if (!selectedUserRef.value?.userId) return;
-  try {
-    isDeletionInProgress.value = true;
-    await userService.deleteUser(selectedUserRef.value.userId);
-    deletedUserNameValue.value = `${selectedUserRef.value.firstName} ${selectedUserRef.value.lastName}`;
-    isDeleteModalVisible.value = false;
-    isSuccessModalVisible.value = true;
-    await loadUserDirectory();
-  } catch (error) {
-    console.error('Error eliminando usuario:', error);
-  } finally {
-    isDeletionInProgress.value = false;
-  }
+  isDeletionInProgress.value = true;
+  await userService.deleteUser(selectedUserRef.value.userId);
+  deletedUserNameValue.value = `${selectedUserRef.value.firstName} ${selectedUserRef.value.lastName}`;
+  isDeleteModalVisible.value = false;
+  isSuccessModalVisible.value = true;
+  await loadUserDirectory();
+  isDeletionInProgress.value = false;
 };
 
 const getUserStatusClass = (status: string) => {
@@ -333,123 +312,4 @@ onUnmounted(() => {
 });
 </script>
 
-<style>
-@import '../../../theme/AdminPage.css';
-
-.user-info-cell { display: flex; flex-direction: column; }
-.user-full-name { font-weight: 800; font-family: var(--app-font-brand); }
-.user-email-sub { font-size: 0.8rem; color: var(--admin-text-sub); }
-.user-phone { font-size: 0.9rem; }
-.user-id-badge { font-family: monospace; font-weight: 700; }
-.user-date { font-size: 0.8rem; color: var(--admin-text-sub); }
-.empty-table-cell { text-align: center; padding: 60px; }
-.empty-icon { font-size: 48px; color: var(--admin-accent-soft); }
-.empty-text { margin-top: 15px; font-weight: 700; color: var(--admin-text-sub); }
-
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.sync-users-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 0 18px;
-  background: var(--admin-bg-card);
-  color: var(--brand-primary);
-  border: 1px solid var(--admin-border);
-  border-radius: var(--admin-radius-md);
-  font-family: var(--app-font-brand);
-  font-weight: 800;
-  cursor: pointer;
-  transition: var(--admin-transition);
-}
-
-.sync-users-btn:hover:not(:disabled) {
-  background: var(--admin-accent-soft);
-  border-color: var(--brand-primary);
-  transform: translateY(-2px);
-}
-
-.sync-users-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.pagination-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 20px;
-  padding: 20px;
-  background: var(--admin-bg-subtle);
-  border-radius: var(--admin-radius-md);
-  border: 1px solid var(--admin-border);
-}
-
-.pagination-info {
-  font-size: 0.88rem;
-  color: var(--admin-text-sub);
-  font-weight: 700;
-}
-
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pagination-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid var(--admin-border);
-  background: var(--admin-bg-card);
-  color: var(--admin-text-main);
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.86rem;
-  font-weight: 800;
-  transition: var(--admin-transition);
-  min-width: 40px;
-  justify-content: center;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: var(--admin-accent-soft);
-  border-color: var(--brand-primary);
-  color: var(--brand-primary);
-  transform: translateY(-1px);
-  box-shadow: none;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-btn.active {
-  background: var(--brand-primary);
-  border-color: var(--brand-primary);
-  color: white;
-}
-</style>
+<style src="../../../theme/AdminPage.css"></style>

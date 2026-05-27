@@ -165,6 +165,9 @@ public class CognitoUserSyncService {
                 }
             }
 
+        } catch (software.amazon.awssdk.core.exception.SdkClientException e) {
+            log.error("AWS credentials not found or invalid: {}", e.getMessage());
+            throw new IllegalStateException("Faltan las credenciales de AWS (AWS_ACCESS_KEY_ID y AWS_SECRET_ACCESS_KEY). No se puede sincronizar con Cognito.");
         } catch (Exception e) {
             log.error("Failed to perform Cognito sync: {}", e.getMessage());
             throw new RuntimeException("Error sincronizando usuarios con Cognito: " + e.getMessage());

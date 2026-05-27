@@ -151,8 +151,7 @@ const fetchUserProfile = async () => {
       role: cognitoClaims['cognito:groups']?.includes('Admin') ? 'Súper Usuario' : 'Gestor de Sistema',
       avatar: localProfile.photoUrl || ''
     }
-  } catch (error) {
-    console.error('Error fetching admin profile:', error)
+  } catch {
     userProfile.value = {
       name: 'Admin User',
       role: 'Súper Usuario',
@@ -333,7 +332,7 @@ const handleLogout = () => {
   padding: 0;
   border-radius: 0;
   background: transparent;
-  filter: drop-shadow(0 8px 18px rgba(0, 172, 193, 0.24));
+  filter: var(--logo-filter) drop-shadow(0 8px 18px rgba(0, 172, 193, 0.24));
 }
 
 .brand-text {

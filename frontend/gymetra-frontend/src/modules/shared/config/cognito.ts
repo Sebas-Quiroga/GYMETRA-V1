@@ -7,19 +7,15 @@ const cognitoUserPoolClientId = env.VITE_COGNITO_CLIENT_ID || '';
 
 export const cognitoConfig = {
   Auth: {
-    region: cognitoRegion,
-    userPoolId: cognitoUserPoolId,
-    userPoolWebClientId: cognitoUserPoolClientId,
     Cognito: {
       userPoolId: cognitoUserPoolId,
       userPoolClientId: cognitoUserPoolClientId,
-      signUpVerificationMethod: 'code',
+      signUpVerificationMethod: 'code' as const,
     }
   }
 };
 
 export const configureAmplify = () => {
   Amplify.configure(cognitoConfig);
-  console.log('🛡️ Amplify configurado con éxito');
 };
 

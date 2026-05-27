@@ -22,12 +22,7 @@
       </router-link>
       <div class="home-header-right">
         <button class="home-logout-btn" @click="handleLogout" aria-label="Cerrar sesión">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
+          <LogOut :size="22" stroke-width="2" />
         </button>
       </div>
     </div>
@@ -54,13 +49,7 @@
 
           <button class="bento-qr" @click="navigateToQR" aria-label="Check-in QR">
             <div class="bento-qr-icon">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-                <path d="M14 14h1v1h-1zM17 14h1v1h-1zM20 14h1v1h-1zM14 17h1v1h-1zM17 17h1v1h-1zM20 17h1v1h-1zM14 20h1v1h-1zM17 20h1v1h-1zM20 20h1v1h-1z"/>
-              </svg>
+              <QrCode :size="40" stroke-width="1.5" />
             </div>
             <span class="bento-qr-label">Check-in QR</span>
             <span class="bento-qr-sub">Acceso Rápido</span>
@@ -73,10 +62,7 @@
               <p class="cta-sub">Adquiere un plan PRO y domina el gimnasio</p>
             </div>
             <div class="cta-action">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="9 18 15 12 9 6"/>
-              </svg>
+              <ChevronRight :size="24" stroke-width="3" />
             </div>
           </div>
 
@@ -118,13 +104,7 @@
 
           <div v-if="hasTrainingPermission" class="bento-action-card" @click="navigateToRutinas" tabindex="0" role="button">
             <div class="bento-action-icon bento-action-icon-teal">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M6.5 6.5h11M6.5 12h11M6.5 17.5h11"/>
-                <circle cx="3.5" cy="6.5" r="1"/>
-                <circle cx="3.5" cy="12" r="1"/>
-                <circle cx="3.5" cy="17.5" r="1"/>
-              </svg>
+              <Dumbbell :size="22" stroke-width="2" />
             </div>
             <div>
               <h4 class="bento-action-title">Planes de Entrenamiento</h4>
@@ -134,11 +114,7 @@
 
           <div v-if="hasNutritionPermission" class="bento-action-card" @click="navigateToNutrition" tabindex="0" role="button">
             <div class="bento-action-icon bento-action-icon-amber">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/>
-                <path d="M12 6v6l4 2"/>
-              </svg>
+              <Apple :size="22" stroke-width="2" />
             </div>
             <div>
               <h4 class="bento-action-title">Plan Nutricional</h4>
@@ -155,8 +131,10 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { IonPage, IonContent, onIonViewWillEnter } from "@ionic/vue";
+import { LogOut, QrCode, ChevronRight, Dumbbell, Apple } from "lucide-vue-next";
 import { useAuthStore } from "../../auth/store/auth";
 import { useUserMembership } from "../composables/useUserMembership";
+import { useActivityChart } from "../composables/useActivityChart";
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -194,24 +172,7 @@ const membershipCardClass = computed(() => `state-${membershipStatus.value}`);
 const hasTrainingPermission = computed(() => hasPermission('training'));
 const hasNutritionPermission = computed(() => hasPermission('nutrition'));
 
-const activityChartData = ref([
-  { day: "L", height: 60, isActive: false },
-  { day: "M", height: 80, isActive: false },
-  { day: "X", height: 50, isActive: false },
-  { day: "J", height: 100, isActive: false },
-  { day: "V", height: 70, isActive: false },
-  { day: "S", height: 90, isActive: false },
-  { day: "D", height: 30, isActive: false },
-]);
-
-const updateChartDayHighlight = () => {
-  const dayLetters = ["D", "L", "M", "X", "J", "V", "S"];
-  const currentDayLetter = dayLetters[new Date().getDay()];
-  activityChartData.value = activityChartData.value.map(bar => ({ 
-    ...bar, 
-    isActive: bar.day === currentDayLetter 
-  }));
-};
+const { activityChartData, updateChartDayHighlight } = useActivityChart();
 
 const handleLogout = async () => {
   await auth.logout();
@@ -223,13 +184,18 @@ const navigateToMembership = () => router.push("/Planes");
 const navigateToNutrition = () => router.push("/nutrition-plan");
 const navigateToRutinas = () => router.push("/rutinas");
 const navigateToQR = () => router.push({ path: "/qr", query: { fromHome: "1" } });
-const handleImageError = (event: any) => { event.target.src = ""; };
+
+const handleImageError = (imageEvent: Event) => {
+  const targetElement = imageEvent.target as HTMLImageElement;
+  targetElement.src = "";
+};
 
 onIonViewWillEnter(() => auth.user?.userId && loadMemberships());
-onMounted(updateChartDayHighlight);
+onMounted(() => {
+  updateChartDayHighlight();
+  if (auth.user?.userId) loadMemberships();
+});
 watch(() => auth.user?.userId, (id) => id && loadMemberships());
 </script>
 
-<style scoped>
-@import '../theme/HomePage.css';
-</style>
+<style scoped src="../theme/HomePage.css"></style>

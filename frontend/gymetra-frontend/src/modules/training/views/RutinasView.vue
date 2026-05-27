@@ -93,9 +93,8 @@ const fetchExercises = async () => {
   try {
     const data = await getExercisesByBodyPart(selectedMuscle.value);
     exercises.value = data;
-  } catch (err: any) {
+  } catch {
     error.value = 'No se pudo conectar con la base de datos de ejercicios. Verifica tu API Key.';
-    console.error(err);
   } finally {
     loading.value = false;
   }
@@ -105,185 +104,17 @@ const handleMuscleChange = () => {
 };
 const initView = async () => {
   loadingLists.value = true;
-  try {
-    const list = await getBodyPartList();
-    muscleList.value = list;
-    if (list.length > 0) {
-      selectedMuscle.value = list.find(m => m.toLowerCase().includes('pech')) || list[0];
-      await fetchExercises();
-    }
-  } catch (err) {
-    console.error('Error inicializando vista:', err);
-  } finally {
-    loadingLists.value = false;
+  const list = await getBodyPartList();
+  muscleList.value = list;
+  if (list.length > 0) {
+    selectedMuscle.value = list.find(m => m.toLowerCase().includes('pech')) || list[0];
+    await fetchExercises();
   }
+  loadingLists.value = false;
 };
 onMounted(() => {
   initView();
 });
 </script>
-<style scoped>
-.view-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1.25rem;
-  background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.04);
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  border-bottom: 1px solid var(--border-color);
-}
-.header-side { width: 40px; }
-.logo-link {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  text-decoration: none;
-}
-.header-logo-img {
-  height: 28px;
-  width: auto;
-}
-@media (prefers-color-scheme: light) {
-  .header-logo-img { filter: invert(1) brightness(0.2); }
-}
-.brand-name-header {
-  font-family: var(--app-font-family);
-  font-size: 1.25rem;
-  font-weight: 900;
-  color: var(--brand-secondary);
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-}
-.rutinas-content {
-  --background: var(--bg-page);
-}
-.rutinas-container {
-  padding: 2rem 1.5rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
-.rutinas-intro { margin-bottom: 2.5rem; text-align: center; }
-.rutinas-title {
-  font-family: var(--app-font-family);
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: var(--text-main);
-  letter-spacing: -1px;
-  margin-bottom: 0.5rem;
-}
-.rutinas-title .accent { color: var(--brand-primary); }
-.rutinas-sub { color: var(--text-sub); font-weight: 500; font-family: var(--app-font-family); }
-.selector-card {
-  background: var(--bg-card);
-  border-radius: 1.5rem;
-  border: 1px solid var(--border-color);
-  padding: 0.5rem;
-  margin-bottom: 2.5rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.02);
-}
-.muscle-item {
-  --background: transparent;
-  --color: var(--text-main);
-}
-.exercise-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-.exercise-card {
-  background: var(--bg-card);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-md);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-}
-.exercise-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--brand-primary);
-}
-.card-visual {
-  position: relative;
-  height: 200px;
-  background: #fff;
-}
-.card-visual img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.card-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
-}
-.equipment-tag {
-  position: absolute;
-  bottom: 0.75rem;
-  right: 0.75rem;
-  background: rgba(var(--brand-primary-rgb), 0.1);
-  color: var(--brand-primary);
-  padding: 0.3rem 0.75rem;
-  border-radius: 2rem;
-  font-size: 0.65rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(var(--brand-primary-rgb), 0.2);
-}
-.card-info {
-  padding: 1.25rem;
-  flex: 1;
-}
-.exercise-name {
-  font-family: var(--app-font-family);
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--text-main);
-  text-transform: capitalize;
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.5px;
-}
-.muscle-tag {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--text-sub);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.dot {
-  width: 6px;
-  height: 6px;
-  background: var(--brand-secondary);
-  border-radius: 50%;
-}
-.state-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 1rem;
-  gap: 1rem;
-  color: var(--text-sub);
-}
-.state-container.error ion-icon { font-size: 3rem; color: var(--color-error); }
-.limit-notice {
-  text-align: center;
-  margin-top: 3rem;
-  font-size: 0.8rem;
-  color: var(--text-sub);
-  font-weight: 500;
-}
-</style>
+<style scoped src="../theme/RutinasView.css"></style>
 

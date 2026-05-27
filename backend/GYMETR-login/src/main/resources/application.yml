@@ -6,14 +6,16 @@
 spring:
   application:
     name: gymetraSystem
+  config:
+    import: optional:file:.env.development[.properties]
 
   # -----------------------------------------------
   # Base de Datos
   # -----------------------------------------------
   datasource:
-    url: jdbc:postgresql://localhost:5432/gymdb
-    username: postgres
-    password: 1234567890
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gymdb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
 
   # -----------------------------------------------
@@ -30,24 +32,22 @@ spring:
 
   # -----------------------------------------------
   # AWS Cognito — OAuth2 Resource Server
-  # Pool ID : us-east-2_ckSy7zPAt
-  # Client ID: 3gnvfec5v6tfp32u634mq645ll
   # -----------------------------------------------
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt
+          issuer-uri: ${COGNITO_ISSUER_URI:}
           # Explicit JWKS URI avoids cold-start DNS/cache issues
-          jwk-set-uri: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt/.well-known/jwks.json
+          jwk-set-uri: ${COGNITO_JWKS_URI:}
   # -----------------------------------------------
   # Correo electrónico (SMTP)
   # -----------------------------------------------
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: jsnq2001@gmail.com
-    password: sbxdtyjwezpusonw
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -70,11 +70,11 @@ spring:
 app:
   security:
     cognito:
-      issuer: https://cognito-idp.us-east-2.amazonaws.com/us-east-2_ckSy7zPAt
-      client-id: 3gnvfec5v6tfp32u634mq645ll
+      issuer: ${COGNITO_ISSUER_URI:}
+      client-id: ${COGNITO_CLIENT_ID:}
       # Credenciales para sincronización (Utilizar variables de entorno en producción)
-      access-key: ${AWS_ACCESS_KEY_ID:AKIA_YOUR_KEY}
-      secret-key: ${AWS_SECRET_ACCESS_KEY:YOUR_SECRET}
+      access-key: ${AWS_ACCESS_KEY_ID:}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:}
 
 # -----------------------------------------------
 # Servidor

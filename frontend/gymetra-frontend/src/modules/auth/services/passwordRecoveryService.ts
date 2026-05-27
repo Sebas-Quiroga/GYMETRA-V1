@@ -12,7 +12,6 @@ export async function sendRecoveryToken(email: string): Promise<string> {
         return 'Proceso de recuperación iniciado';
     }
   } catch (err: any) {
-    console.error('❌ Error en resetPassword (Cognito):', err);
     throw new Error(err.message || 'Error al enviar correo de recuperación');
   }
 }
@@ -29,7 +28,6 @@ export async function resetPassword(email: string, token: string, newPassword: s
     });
     return "Contraseña restablecida con éxito. Ya puedes iniciar sesión.";
   } catch (err: any) {
-    console.error('❌ Error en confirmResetPassword (Cognito):', err);
     throw new Error(err.message || 'Error al restablecer la contraseña');
   }
 }

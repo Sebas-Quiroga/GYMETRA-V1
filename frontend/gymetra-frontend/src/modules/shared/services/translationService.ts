@@ -14,8 +14,7 @@ export class TranslationService {
         return response.data.responseData.translatedText;
       }
       return text;
-    } catch (error) {
-      console.error('Translation error:', error);
+    } catch {
       return text;
     }
   }

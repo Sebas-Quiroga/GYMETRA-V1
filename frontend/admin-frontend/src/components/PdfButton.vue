@@ -7,6 +7,7 @@
 
 <script setup lang="ts">
 import { documentTextOutline } from 'ionicons/icons'
+import type { User, Payment } from '../types/reports'
 
 // Props
 interface Props {
@@ -17,31 +18,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-// Interface para definir la estructura de datos de usuario
-interface User {
-  id?: number
-  nombre: string
-  apellido: string
-  correo: string
-  telefono: string
-  identificacion: number
-  estado: 'Activo' | 'Vencido' | 'Suspendido'
-  fechaCreacion: Date | string
-}
-
-// Interface para definir la estructura de datos de pago
-interface Payment {
-  id?: number
-  idPago: string
-  identificacion: string
-  persona: string
-  fechaPago: Date | string
-  costo: number
-  plan: string
-  estado: 'Completado' | 'Pendiente' | 'Fallido'
-  metodoPago?: string
-}
 
 // Función auxiliar para formatear fechas
 const formatDate = (date: Date | string | null | undefined): string => {
@@ -118,8 +94,6 @@ const exportToPDF = async () => {
 // Exportar usuarios a PDF con diseño profesional
 const exportUsersToPDF = async () => {
   try {
-    console.log('📄 Generando reporte PDF profesional de usuarios...')
-
     // Verificar que hay datos
     if (!props.users || props.users.length === 0) {
       alert('No hay usuarios para exportar.')
@@ -131,8 +105,7 @@ const exportUsersToPDF = async () => {
     try {
       const jspdfModule = await import('jspdf')
       jsPDF = jspdfModule.jsPDF || jspdfModule.default
-    } catch (error) {
-      console.error('Error al importar jsPDF:', error)
+    } catch {
       alert('Las dependencias necesarias no están instaladas. Ejecute "npm install jspdf" para instalar las dependencias requeridas.')
       return
     }
@@ -335,20 +308,16 @@ const exportUsersToPDF = async () => {
     // Descargar archivo
     doc.save(fileName)
 
-    console.log('✅ Reporte PDF profesional de usuarios generado exitosamente:', fileName)
     alert(`📄 Reporte PDF Ejecutivo generado exitosamente!\n\n📁 Archivo: ${fileName}\n👥 Total de usuarios: ${props.users.length}\n📊 Diseño profesional incluido`)
 
-  } catch (error) {
-    console.error('❌ Error generando reporte PDF:', error)
-    alert('Error al generar el reporte PDF. Verifique la consola para más detalles.')
+  } catch {
+    alert('Error al generar el reporte PDF.')
   }
 }
 
 // Exportar pagos a PDF con diseño profesional
 const exportPaymentsToPDF = async () => {
   try {
-    console.log('💰 Generando reporte PDF profesional de pagos...')
-
     // Verificar que hay datos
     if (!props.payments || props.payments.length === 0) {
       alert('No hay pagos para exportar.')
@@ -360,8 +329,7 @@ const exportPaymentsToPDF = async () => {
     try {
       const jspdfModule = await import('jspdf')
       jsPDF = jspdfModule.jsPDF || jspdfModule.default
-    } catch (error) {
-      console.error('Error al importar jsPDF:', error)
+    } catch {
       alert('Las dependencias necesarias no están instaladas. Ejecute "npm install jspdf" para instalar las dependencias requeridas.')
       return
     }
@@ -591,12 +559,10 @@ const exportPaymentsToPDF = async () => {
     // Descargar archivo
     doc.save(fileName)
 
-    console.log('✅ Reporte PDF profesional de pagos generado exitosamente:', fileName)
     alert(`📄 Reporte PDF Ejecutivo generado exitosamente!\n\n📁 Archivo: ${fileName}\n💰 Total de pagos: ${props.payments.length}\n💵 Total ingresos: $${totalAmount.toLocaleString('es-ES')}\n📊 Diseño profesional incluido`)
 
-  } catch (error) {
-    console.error('❌ Error generando reporte PDF:', error)
-    alert('Error al generar el reporte PDF. Verifique la consola para más detalles.')
+  } catch {
+    alert('Error al generar el reporte PDF.')
   }
 }
 </script>

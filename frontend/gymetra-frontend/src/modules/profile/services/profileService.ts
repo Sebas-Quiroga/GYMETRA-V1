@@ -50,7 +50,6 @@ export const syncUserProfileUpdate = async (options: ProfileUpdateOptions) => {
     if (onSuccess) onSuccess();
 
   } catch (error: any) {
-    console.error('Error en sincronización de perfil:', error);
     showNotification('error', 'Error de Actualización', error.message || 'No se pudieron sincronizar los datos.');
     throw error;
   }

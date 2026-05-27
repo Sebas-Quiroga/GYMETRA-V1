@@ -22,10 +22,7 @@
       </router-link>
       <div class="header-side header-right">
         <button class="qr-back-btn" @click="$router.back()" aria-label="Volver" tabindex="0">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+          <ArrowLeft :size="24" stroke-width="2.5" />
         </button>
       </div>
     </div>
@@ -75,9 +72,7 @@
               <p class="bento-value bento-name">{{ auth.userName }}</p>
             </div>
             <div class="bento-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="white" aria-hidden="true">
-                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
+              <ShieldCheck :size="20" fill="white" stroke="currentColor" />
             </div>
           </div>
           <div class="bento-card bento-half">
@@ -95,10 +90,7 @@
         </div>
         <div class="qr-actions">
           <button class="btn-secondary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-            </svg>
+            <LifeBuoy :size="18" stroke-width="2" />
             Contactar soporte
           </button>
         </div>
@@ -107,21 +99,29 @@
   </ion-page>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { IonPage, IonContent } from '@ionic/vue'
 import QrcodeVue from 'qrcode.vue'
+import { ArrowLeft, ShieldCheck, LifeBuoy } from '@lucide/vue'
 import { useAuthStore } from '../../auth/store/auth'
-import { apiAuthRequest, QR_API_URL, MEMBERSHIP_API_URL } from '../../shared/services/apiService'
 import { useRouter } from 'vue-router'
 import { APP_NAME } from '../../shared/config/branding'
+import { useQrAccess } from '../composables/useQrAccess'
 const auth = useAuthStore()
 const router = useRouter()
-const qrCode = ref<string | null>(null)
-const qrStatus = ref('')
-const qrEndDate = ref<string | null>(null)
-const loading = ref(true)
-const activeMembership = ref<any>(null)
+
+const {
+  qrCode,
+  qrStatus,
+  qrEndDate,
+  loading,
+  isActive,
+  memberSince,
+  planName
+} = useQrAccess(auth.user?.userId)
+
 const firstName = computed(() => auth.user?.firstName || "Usuario")
+
 const profilePhoto = computed(() => {
   const url = auth.user?.photoUrl
   if (!url) return null
@@ -129,64 +129,13 @@ const profilePhoto = computed(() => {
     ? url
     : `data:image/jpeg;base64,${url}`
 })
-const isActive = computed(() => qrStatus.value.toLowerCase().includes('activa'))
-const memberSince = computed(() => {
-  if (!activeMembership.value?.startDate) return '---'
-  return new Date(activeMembership.value.startDate).toLocaleDateString('es-CO', {
-    month: 'short',
-    year: 'numeric'
-  })
-})
-const planName = computed(() => activeMembership.value?.membershipName || 'Sin Plan')
+
 const navigateToProfile = () => router.push("/perfil")
-const handleImageError = (e: any) => { e.target.src = "" }
-function formatDate(dateStr: string) {
-  try {
-    return new Date(dateStr).toLocaleDateString('es-CO', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  } catch {
-    return ''
-  }
+
+const handleImageError = (imageEvent: Event) => {
+  const targetElement = imageEvent.target as HTMLImageElement;
+  targetElement.src = "";
 }
-onMounted(async () => {
-  if (!auth.user?.userId) {
-    qrStatus.value = 'Usuario no autenticado'
-    loading.value = false
-    return
-  }
-  try {
-    const qrResponse = await apiAuthRequest(`${QR_API_URL}/qr-access/user/${auth.user.userId}`)
-    if (qrResponse.success && qrResponse.data) {
-      const data = qrResponse.data
-      qrCode.value = data.qrCode
-      qrEndDate.value = data.endDate ? formatDate(data.endDate) : null
-      const status = data.status?.toLowerCase()
-      if (status === 'active') {
-        qrStatus.value = 'Membresía activa'
-      } else if (status === 'inactive') {
-        qrStatus.value = 'Membresía inactiva'
-      } else {
-        qrStatus.value = data.status || 'sin datos'
-      }
-      localStorage.setItem('qrCodeData', data.qrCode)
-    }
-    const membershipResponse = await apiAuthRequest(`${MEMBERSHIP_API_URL}/user-memberships/user/${auth.user.userId}`)
-    if (membershipResponse.success && membershipResponse.data) {
-      const memberships = Array.isArray(membershipResponse.data) ? membershipResponse.data : []
-      activeMembership.value = memberships
-        .filter((m: any) => m.status?.toUpperCase() === 'ACTIVE')
-        .sort((a: any, b: any) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0] || null
-    }
-  } catch (error) {
-    console.error('Error cargando datos de acceso:', error)
-    qrStatus.value = 'Error de conexión'
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 <style src="../theme/QrPage.css"></style>
 

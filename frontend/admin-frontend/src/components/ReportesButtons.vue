@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import ExcelButton from './ExcelButton.vue'
 import PdfButton from './PdfButton.vue'
+import type { User, Payment } from '../types/reports'
 
 // Props
 interface Props {
@@ -28,31 +29,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-// Interface para definir la estructura de datos de usuario
-interface User {
-  id?: number
-  nombre: string
-  apellido: string
-  correo: string
-  telefono: string
-  identificacion: number
-  estado: 'Activo' | 'Vencido' | 'Suspendido'
-  fechaCreacion: Date | string
-}
-
-// Interface para definir la estructura de datos de pago
-interface Payment {
-  id?: number
-  idPago: string
-  identificacion: string
-  persona: string
-  fechaPago: Date | string
-  costo: number
-  plan: string
-  estado: 'Completado' | 'Pendiente' | 'Fallido'
-  metodoPago?: string
-}
 </script>
 
 <style scoped>

@@ -42,6 +42,7 @@
   --ion-color-primary: var(--brand-primary);
   --ion-color-primary-rgb: 0, 172, 193;
   --ion-color-primary-contrast: #ffffff;
+  --logo-filter: brightness(0);
 }
 
 /* Semantic Theme Tokens - DARK */
@@ -55,6 +56,7 @@
     --admin-text-muted: #64748B;
     --admin-border: rgba(255, 255, 255, 0.08);
     --admin-shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
+    --logo-filter: none;
   }
 }
 

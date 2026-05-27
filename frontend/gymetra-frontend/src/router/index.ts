@@ -1,9 +1,7 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router'
 import { RouteRecordRaw } from 'vue-router'
-import HomePage from '../modules/home/views/HomePage.vue'
-import LoginPage from '../modules/auth/views/LoginPage.vue'
-import RegisterPage from '../modules/auth/views/RegisterPage.vue'
-import { isAuthenticated } from '../modules/auth/services/authService'
+import { useAuthStore } from '../modules/auth/store/auth'
+
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
@@ -12,7 +10,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/home',
     name: 'Home',
-    component: HomePage,
+    component: () => import('../modules/home/views/HomePage.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -23,12 +21,12 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'Login',
-    component: LoginPage
+    component: () => import('../modules/auth/views/LoginPage.vue')
   },
   {
     path: '/register',
     name: 'register',
-    component: RegisterPage
+    component: () => import('../modules/auth/views/RegisterPage.vue')
   },
   {
     path: '/perfil',
@@ -58,15 +56,19 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true }
   }
 ]
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 })
+
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth && !isAuthenticated()) {
+  const authStore = useAuthStore()
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
   } else {
     next()
   }
 })
+
 export default router

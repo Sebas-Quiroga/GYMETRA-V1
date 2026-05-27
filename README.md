@@ -1,217 +1,112 @@
-# 🏋️ Sistema de Gestión de Membresías de Gimnasio
+# 🏋️‍♂️ Sistema de Gestión de Membresías de Gimnasio (GYMETRA)
 
-## 📋 Descripción
+## 📄 Descripción
 
-Sistema distribuido para la gestión integral de membresías de gimnasio, desarrollado como proyecto académico para el curso de Sistemas Distribuidos. La solución incluye administración de usuarios, planes de membresía, pagos, control de acceso por QR y generación de reportes.
+Sistema distribuido para la gestión integral de membresías de gimnasio, desarrollado como proyecto académico para el curso de Sistemas Distribuidos. La solución incluye administración de usuarios, planes de membresía, pagos, control de acceso por QR, recetas nutricionales, catálogo de ejercicios y generación de reportes.
 
 ## 🎯 Objetivo del Proyecto
 
 Desarrollar una plataforma robusta y escalable para la gestión de membresías de gimnasio que permita a los administradores gestionar usuarios, membresías y pagos de manera eficiente, y a los usuarios acceder a sus membresías mediante códigos QR, todo en una arquitectura distribuida que garantice alta disponibilidad y rendimiento.
 
-### ✨ Características Principales
+### 🌟 Características Principales
 
-- 🔐 **Autenticación y Autorización** con JWT y roles (Administrador, Cliente)
+- 🔐 **Autenticación y Autorización** con JWT, AWS Cognito y roles (Administrador, Cliente)
 - 👥 **Gestión de Usuarios** con registro, inicio de sesión y perfiles
 - 💳 **Gestión de Membresías** (registro, renovación, suspensión)
-- 💰 **Procesamiento de Pagos** con integración de pasarela externa
+- 💰 **Procesamiento de Pagos** con integración de Stripe
 - 📱 **Control de Acceso por QR** para validación en tiempo real
+- 🥗 **Nutrición y Ejercicios** Sincronización con APIs de terceros (Spoonacular, RapidAPI)
 - 📊 **Reportes y Análisis** para ingresos y asistencia
-- 🏗️ **Arquitectura Distribuida** escalable y resiliente
+- 🏛️ **Arquitectura Distribuida** escalable y resiliente
 
-## 🏗️ Arquitectura
+## 🏛️ Arquitectura
 
 ### Servicios Backend
-- **Servicio de Membresías**: Gestión de planes y membresías
-- **Servicio de Control de Acceso**: Validación de QR y registro de accesos
-- **Servicio de Pagos**: Procesamiento de pagos y conciliación
-
-### Arquitectura Distribuida
-
-La arquitectura distribuida permite la separación de responsabilidades en diferentes servicios backend que se comunican entre sí, asegurando escalabilidad, mantenibilidad y tolerancia a fallos. Cada servicio opera de manera independiente pero coordinada, utilizando una base de datos compartida para la persistencia de datos.
+- **GYMETR-login (Puerto 8080)**: Servicio base de identidad.
+- **GYMETR-Membership (Puerto 8081)**: Gestión de planes, membresías y pagos.
+- **GYMETRA - Qr (Puerto 8090)**: Validación de QR, registro de accesos, ejercicios y nutrición.
 
 ### Tecnologías Utilizadas
+- **Backend**: Spring Boot 3.x, Spring Security (OAuth2), PostgreSQL, Swagger.
+- **Frontend**: Vue.js 3 + Ionic (Admin y Cliente App).
+- **Infraestructura**: Docker, AWS Cognito.
 
-#### Backend
-- **Framework**: Spring Boot 3.x
-- **Seguridad**: Spring Security + JWT/OAuth2
-- **Base de Datos**: PostgreSQL
-- **Documentación**: OpenAPI/Swagger
+---
 
-#### Frontend
-- **Admin Web**: Vue.js 3 + Ionic
-- **App Móvil**: Ionic + Vue.js (híbrida)
+## 🚀 Instalación y Configuración (Para Desarrolladores)
 
-#### Infraestructura
-- **Contenedores**: Docker
-- **Orquestación**: Docker Compose
-- **CI/CD**: GitHub Actions
-- **Nube**: AWS/GCP
+### Prerrequisitos Globales
+- **Java 17+** (y Maven)
+- **Node.js 18+**
+- **PostgreSQL 14+**
+- **Cuenta de AWS** (Configuración de Cognito User Pool)
+- **Cuenta de Stripe** (Para la pasarela de pagos)
 
-## 📋 Metodología de Trabajo
+### 1. Configuración de Variables de Entorno (`.env`)
+Por seguridad, el proyecto **no contiene credenciales quemadas en el código**. Cada microservicio (backend) y aplicación frontend cuenta con un archivo `.env.example`.
 
-El proyecto se desarrolla siguiendo la metodología Scrum, con sprints de dos semanas, reuniones diarias de stand-up, planificación de sprint y retrospectivas. Se utiliza JIRA para la gestión de tareas y backlog, y Git con GitFlow para el control de versiones.
+Para desplegar el proyecto, debes ir a la raíz de cada carpeta y crear tu archivo de configuración:
 
-## 📊 Gestión del Backlog
+**Backends (`backend/`)**:
+1. Entra a `backend/GYMETR-login`, copia el `.env.example` y renómbralo a `.env.development` (o `.env`). Rellena tus datos de DB y AWS Cognito.
+2. Entra a `backend/GYMETR-Membership`, copia el `.env.example` y renómbralo a `.env.development`. Rellena tus datos de DB, AWS Cognito, SMTP y Stripe.
+3. Entra a `backend/GYMETRA - Qr`, copia el `.env.example` y renómbralo a `.env.development`. Rellena tus datos de DB, AWS Cognito, y las APIs de Spoonacular/RapidAPI.
 
-El backlog del producto se mantiene actualizado en JIRA, priorizando las historias de usuario según su valor y complejidad. Se realiza refinamiento del backlog en cada sprint para asegurar que las tareas estén bien definidas y estimadas.
+**Frontends (`frontend/`)**:
+1. Entra a `frontend/admin-frontend`, copia el `.env.example` y renómbralo a `.env.development`.
+2. Entra a `frontend/gymetra-frontend`, copia el `.env.example` y renómbralo a `.env.development`. Asegúrate de poner tu Public Key de Stripe.
 
-## 🚀 Instalación y Configuración
+### 2. Base de Datos
+- Levanta tu instancia de PostgreSQL.
+- Crea una base de datos llamada `gymdb` (`CREATE DATABASE gymdb;`). Las tablas se generarán automáticamente por Hibernate.
 
-### Prerrequisitos
-- Java 17+
-- Node.js 18+
-- Docker & Docker Compose
-- PostgreSQL 14+
-- Git
+### 3. Ejecución de los Backends
+En terminales separadas, navega a cada backend e inicialos:
+```bash
+cd backend/GYMETR-login
+./mvnw spring-boot:run
 
-### Puertos
+cd backend/GYMETR-Membership
+./mvnw spring-boot:run
 
-- Frontend Admin: http://localhost:8101
-- Frontend Usuario: http://localhost:8100
-- Backend Login/Registro: http://localhost:8080
-- Backend Membresías: http://localhost:8081
-- Backend QR: http://localhost:8090
-- Swagger API Login/Registro: http://localhost:8080/swagger-ui.html
-- Swagger API Membresías: http://localhost:8081/swagger-ui.html
-- Swagger API QR: http://localhost:8090/swagger-ui.html
-
-### Configuración de Variables de Entorno para Frontends
-
-Los frontends requieren configuración de variables de entorno para conectarse a los backends y servicios externos. Cada frontend tiene su propio conjunto de variables.
-
-#### Frontend Admin (`frontend/admin-frontend`)
-
-1. **Crear archivos de entorno**:
-   ```bash
-   cd frontend/admin-frontend
-   cp .env.example .env.development
-   ```
-
-2. **Variables requeridas en `.env.development`**:
-   ```env
-   # Puerto del servidor de desarrollo
-   VITE_PORT=8101
-
-   # URLs de los backends
-   VITE_API_URL_LOGIN=http://localhost:8080/api
-   VITE_API_URL_MEMBERSHIP=http://localhost:8081/api
-   VITE_API_URL_QR=http://localhost:8090/api
-
-   # Configuración de AWS Cognito
-   VITE_COGNITO_REGION=us-east-2
-   VITE_COGNITO_USER_POOL_ID=us-east-2_ckSy7zPAt
-   VITE_COGNITO_CLIENT_ID=3gnvfec5v6tfp32u634mq645ll
-   ```
-
-3. **Archivo `.env.example`**:
-   - Contiene valores de ejemplo genéricos
-   - Se sube a Git como template
-   - No incluye credenciales reales
-
-#### Frontend Usuario (`frontend/gymetra-frontend`)
-
-1. **Crear archivos de entorno**:
-   ```bash
-   cd frontend/gymetra-frontend
-   cp .env.example .env.development
-   ```
-
-2. **Variables requeridas en `.env.development`**:
-   ```env
-   # Puerto del servidor de desarrollo
-   VITE_PORT=8100
-
-   # URLs de los backends
-   VITE_API_URL_LOGIN=http://localhost:8080/api
-   VITE_API_URL_MEMBERSHIP=http://localhost:8081/api
-   VITE_API_URL_QR=http://localhost:8090/api
-
-   # Configuración de AWS Cognito
-   VITE_COGNITO_REGION=us-east-2
-   VITE_COGNITO_USER_POOL_ID=us-east-2_ckSy7zPAt
-   VITE_COGNITO_CLIENT_ID=3gnvfec5v6tfp32u634mq645ll
-
-   # Claves de servicios externos
-   VITE_STRIPE_PUBLIC_KEY=pk_test_tu_clave_de_stripe
-   VITE_SPOONACULAR_API_KEY=tu_clave_de_spoonacular
-   ```
-
-3. **Archivo `.env.example`**:
-   - Contiene valores de ejemplo
-   - Incluye placeholders para claves sensibles
-
-#### Notas Importantes
-- **Nunca subas `.env.development` o `.env.production` a Git** - contienen credenciales reales
-- **Usa `.env.example` como template** para nuevos desarrolladores
-- **Las variables `VITE_` son accesibles en el código** a través de `import.meta.env`
-- **Para producción**, configura las URLs absolutas de los backends desplegados
-- **Los puertos de desarrollo** se pueden cambiar modificando `VITE_PORT` en el archivo `.env`
-
-### Instalación
-
-### Estructura del Proyecto
-```
-GYMETRA-V1/
-├── backend/
-│   ├── GYMETR-Membership/  # Servicio de Membresías (puerto 8081)
-│   ├── GYMETRA/            # Servicio base
-│   └── GYMETRA - Qr/       # Servicio de Control de Acceso (puerto 8090)
-├── frontend/
-│   ├── admin-frontend/     # Frontend Admin (puerto 8101)
-│   └── gymetra-frontend/   # Frontend Usuario (puerto 5173)
-├── data/
-│   └── Database-Setup/     # Scripts de base de datos
-├── doc/                    # Documentación local
-└── docker-compose.yml
+cd "backend/GYMETRA - Qr"
+./mvnw spring-boot:run
 ```
 
-### APIs Principales
+### 4. Ejecución de los Frontends
+En terminales separadas, navega a cada frontend:
+```bash
+# Admin Web
+cd frontend/admin-frontend
+npm install
+npm run dev
 
-#### Autenticación
-- `POST /api/auth/register` - Registro de usuario
-- `POST /api/auth/login` - Inicio de sesión
-- `POST /api/auth/refresh` - Refresco de token
+# Cliente App
+cd frontend/gymetra-frontend
+npm install
+npm run dev
+```
 
-#### Membresías
-- `GET /api/memberships` - Listar planes
-- `POST /api/memberships` - Crear membresía
-- `PUT /api/memberships/{id}` - Actualizar membresía
+---
 
-#### Control de Acceso
-- `POST /api/access/validate-qr` - Validar código QR
-- `GET /api/access/history` - Historial de accesos
+## 🔗 Puertos y Accesos Rápidos
 
-### Diagramas de Arquitectura
-- [Diagrama de Clases](doc/diagrams/class/class.puml)
-- [Diagrama de Despliegue](doc/diagrams/deploy/deploy.puml)
-- [Diagrama ER](doc/diagrams/er/er.puml)
-- [Diagrama de Paquetes](doc/diagrams/packeage/Packeage.puml)
-- [Diagrama de Secuencia](doc/diagrams/secuence/Secuence.puml)
-- [Diagrama de Casos de Uso](doc/diagrams/use_case/use_case.puml)
+- **Frontend Admin**: `http://localhost:8101` (Puerto puede variar en tu Vite)
+- **Frontend Usuario**: `http://localhost:8100` (Puerto puede variar en tu Vite)
+- **Backend Auth**: `http://localhost:8080`
+- **Backend Membresías**: `http://localhost:8081`
+- **Backend QR**: `http://localhost:8090`
 
-## 🔗 Enlaces
+**Documentación API (Swagger):**
+- [Swagger Auth](http://localhost:8080/swagger-ui.html)
+- [Swagger Membresías](http://localhost:8081/swagger-ui.html)
+- [Swagger QR](http://localhost:8090/swagger-ui.html)
 
-| Recurso | Descripción | Enlace |
-|---------|-------------|--------|
-| 📁 Repositorio Backend | Código fuente del backend | [GitHub](https://github.com/Sebas-Quiroga/GYMETRA_backend.git) |
-| 📁 Repositorio Frontend | Código fuente del frontend | [GitHub](https://github.com/Sebas-Quiroga/GYMETRA-V1_frontend.git) |
-| 📁 Repositorio Documentación | Documentación del proyecto | [GitHub](https://github.com/JJ0ta19/GYMETRA_docs.git) |
-| 📁 Repositorio Trazabilidad | Trazabilidad del proyecto | [GitHub](https://github.com/Sebas-Quiroga/GYMETRA-V1.git) |
-| 🎨 Diseño en Figma | Diseños de interfaz | [Figma](https://www.figma.com/design/6wvsYaVryxBWp2NIUM2zci/GYMETRA-PRIN?node-id=0-1&p=f&t=JSPiUM0bfykeal7f-0) |
-| 📝 Tablero JIRA | Gestión de tareas y backlog | [JIRA](https://gymetra.atlassian.net/jira/software/projects/SCRUM/boards/1) |
-
-**Nota**: Cada repositorio (backend, frontend, docs) está separado y contiene su propio Jenkinsfile y docker-compose.yml, excepto el repositorio de docs.
-
-## 👥 Participantes
-
+## 👥 Equipo y Participantes
 - **Jhon Jamez Nieto Perez** - Product Owner (PO)
 - **Johan Sebastian Naranjo** - Desarrollador (DEV)
 - **Juan Felipe Narvaez Amaya** - Control de Calidad (QA)
 
-**Profesor**: Jesus Ariel Gonzalez Bonilla
-**Institución**: Corporación Universitaria del Huila
-**Curso**: Sistemas Distribuidos - 8th Semester
-
-## 📄 Licencia
-
-Este proyecto se desarrolla con fines académicos en la Corporación Universitaria del Huila.
+**Profesor**: Jesus Ariel Gonzalez Bonilla  
+**Institución**: Corporación Universitaria del Huila  
+**Curso**: Sistemas Distribuidos - 8th Semester  

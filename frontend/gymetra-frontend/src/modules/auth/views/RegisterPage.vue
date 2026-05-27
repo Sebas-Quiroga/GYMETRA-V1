@@ -3,10 +3,7 @@
     <div class="register-header" role="banner">
       <div class="header-side header-left">
         <button class="register-back-btn" @click="goBack" aria-label="Volver">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
+          <ArrowLeft :size="22" stroke-width="2.5" />
         </button>
       </div>
       <router-link to="/home" class="header-logo-link" aria-label="Ir al inicio">
@@ -27,7 +24,7 @@
                 v-model="verificationCode"
                 type="text"
                 placeholder="000000"
-                maxlength=6
+                :maxlength="6"
                 class="code-input"
                 text-center
               ></ion-input>
@@ -45,36 +42,22 @@
         </div>
       </ion-modal>
 
-      <div v-if="notification.show" class="notification-toast" :class="notification.type">
-        <div class="notification-content">
-          <ion-icon :icon="notification.icon" class="notification-icon"></ion-icon>
-          <div class="notification-text">
-            <h4>{{ notification.title }}</h4>
-            <p>{{ notification.message }}</p>
-          </div>
-          <ion-button fill="clear" size="small" @click="dismissNotification">
-            <ion-icon :icon="closeOutline"></ion-icon>
-          </ion-button>
-        </div>
-        <div class="notification-progress" :style="{ width: notification.progress + '%' }"></div>
-      </div>
+
 
       <div class="register-container">
-        <div class="card-header">
-          <img src="/logo.png" alt="Logo" class="card-logo" />
-          <h1 class="brand-name-card">GYMETRA</h1>
-          <p class="brand-tagline">Únete a la revolución fitness</p>
-        </div>
+        <div class="register-card">
+          <div class="card-header">
+            <img src="/logo.png" alt="Logo" class="card-logo" />
+            <h1 class="brand-name-card">GYMETRA</h1>
+            <p class="brand-tagline">Únete a la revolución fitness</p>
+          </div>
 
-        <form @submit.prevent="handleRegister">
-          <ion-item>
+          <form @submit.prevent="handleRegister">
+          <ion-item lines="none">
             <ion-icon :icon="cardOutline" slot="start"></ion-icon>
             <ion-input
               v-model="formData.identification"
               type="text"
-              label="Identificación"
-              label-placement="floating"
-              fill="outline"
               placeholder="Número de identificación"
               :maxlength="12"
               :class="{ 'ion-invalid': errors.identification }"
@@ -88,14 +71,11 @@
           <div v-if="errors.identification" class="field-error">{{ errors.identification }}</div>
 
           <div class="name-row">
-            <ion-item class="name-item">
+            <ion-item class="name-item" lines="none">
               <ion-icon :icon="personOutline" slot="start"></ion-icon>
               <ion-input
                 v-model="formData.firstName"
-                label="Nombre"
-                label-placement="floating"
-                fill="outline"
-                placeholder="Tu nombre"
+                placeholder="Nombre"
                 :class="{ 'ion-invalid': errors.firstName }"
                 @ion-blur="validateField('firstName')"
                 autocomplete="given-name"
@@ -105,14 +85,11 @@
             </ion-item>
             <div v-if="errors.firstName" class="field-error">{{ errors.firstName }}</div>
 
-            <ion-item class="name-item">
+            <ion-item class="name-item" lines="none">
               <ion-icon :icon="personOutline" slot="start"></ion-icon>
               <ion-input
                 v-model="formData.lastName"
-                label="Apellido"
-                label-placement="floating"
-                fill="outline"
-                placeholder="Tu apellido"
+                placeholder="Apellido"
                 :class="{ 'ion-invalid': errors.lastName }"
                 @ion-blur="validateField('lastName')"
                 autocomplete="family-name"
@@ -123,15 +100,12 @@
             <div v-if="errors.lastName" class="field-error">{{ errors.lastName }}</div>
           </div>
 
-          <ion-item>
+          <ion-item lines="none">
             <ion-icon :icon="mailOutline" slot="start"></ion-icon>
             <ion-input
               v-model="formData.email"
               type="email"
-              label="Correo Electrónico"
-              label-placement="floating"
-              fill="outline"
-              placeholder="correo@ejemplo.com"
+              placeholder="Correo electrónico"
               :class="{ 'ion-invalid': errors.email }"
               @ion-blur="validateField('email')"
               autocomplete="email"
@@ -141,15 +115,12 @@
           </ion-item>
           <div v-if="errors.email" class="field-error">{{ errors.email }}</div>
 
-          <ion-item>
+          <ion-item lines="none">
             <ion-icon :icon="lockClosedOutline" slot="start"></ion-icon>
             <ion-input
               v-model="formData.password"
               :type="showPassword ? 'text' : 'password'"
-              label="Contraseña"
-              label-placement="floating"
-              fill="outline"
-              placeholder="Mínimo 8 caracteres"
+              placeholder="Contraseña (Mín. 8 caracteres)"
               :class="{ 'ion-invalid': errors.password }"
               @ion-blur="validateField('password')"
               autocomplete="new-password"
@@ -176,15 +147,12 @@
             <span :class="passwordStrengthInfo.class" class="strength-text">{{ passwordStrengthInfo.text }}</span>
           </div>
 
-          <ion-item>
+          <ion-item lines="none">
             <ion-icon :icon="lockClosedOutline" slot="start"></ion-icon>
             <ion-input
               v-model="formData.confirmPassword"
               :type="showConfirmPassword ? 'text' : 'password'"
-              label="Confirmar Contraseña"
-              label-placement="floating"
-              fill="outline"
-              placeholder="Repite tu contraseña"
+              placeholder="Confirmar contraseña"
               :class="{ 'ion-invalid': errors.confirmPassword }"
               @ion-blur="validateField('confirmPassword')"
               autocomplete="new-password"
@@ -200,15 +168,12 @@
           </ion-item>
           <div v-if="errors.confirmPassword" class="field-error">{{ errors.confirmPassword }}</div>
 
-          <ion-item>
+          <ion-item lines="none">
             <ion-icon :icon="callOutline" slot="start"></ion-icon>
             <ion-input
               v-model="formData.phone"
               type="tel"
-              label="Teléfono (Opcional)"
-              label-placement="floating"
-              fill="outline"
-              placeholder="300 123 4567"
+              placeholder="Teléfono (Opcional)"
               :class="{ 'ion-invalid': errors.phone }"
               @ion-blur="validateField('phone')"
               @ion-input="formatPhone"
@@ -219,7 +184,7 @@
           </ion-item>
           <div v-if="errors.phone" class="field-error">{{ errors.phone }}</div>
 
-          <ion-item button @click="triggerFileInput" class="photo-item" :disabled="registerLoading">
+          <ion-item button @click="triggerFileInput" class="photo-item" :disabled="registerLoading" lines="none">
             <ion-icon :icon="cameraOutline" slot="start"></ion-icon>
             <ion-label>Foto de Perfil (Opcional)</ion-label>
             <div slot="end" class="photo-preview">
@@ -275,6 +240,7 @@
           <p>¿Ya tienes cuenta?
             <a @click="goToLogin" class="login-link">Inicia sesión aquí</a>
           </p>
+        </div>
         </div>
       </div>
 
@@ -354,6 +320,7 @@ import {
   lockClosedOutline, callOutline, cardOutline, addOutline, checkmarkCircleOutline,
   closeOutline, informationCircle
 } from "ionicons/icons";
+import { ArrowLeft } from '@lucide/vue';
 
 import { useRegister, prepareRegisterData, validateRegisterData, type RegisterData } from "../services/authRegister";
 import { useNotification } from "../../shared/composables/useNotification";
@@ -523,6 +490,7 @@ const handleVerification = async () => {
   }
 
   showNotification('success', '¡Cuenta Activada!', 'Redirigiendo...');
+  isVerifying.value = false;
   setTimeout(() => router.push("/login"), 1500);
 };
 
@@ -568,6 +536,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-@import "../theme/RegisterPage.css";
-</style>
+<style scoped src="../theme/RegisterPage.css"></style>

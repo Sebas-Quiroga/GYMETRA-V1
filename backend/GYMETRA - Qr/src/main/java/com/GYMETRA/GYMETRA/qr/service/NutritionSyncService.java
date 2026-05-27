@@ -67,7 +67,7 @@ public class NutritionSyncService {
 
     private void syncByCategory(String diet, int count) {
         try {
-            String url = String.format("%s/recipes/complexSearch?apiKey=%s&addRecipeInformation=true&fillIngredients=true&number=%d",
+            String url = String.format("%s/recipes/complexSearch?apiKey=%s&addRecipeInformation=true&instructionsRequired=true&fillIngredients=true&number=%d",
                     apiUrl, apiKey, count);
             
             if (diet != null) {
@@ -97,7 +97,7 @@ public class NutritionSyncService {
         }
     }
 
-    private Recipe mapToEntity(Map<String, Object> data, String diet) {
+    private Recipe mapToEntity(Map<String, Object> data, String fallbackDiet) {
         // Extraer macros del campo nutrition si existe, de lo contrario usar valores por defecto
         Map<String, Object> nutrition = (Map<String, Object>) data.get("nutrition");
         Double cal = 0.0, prot = 0.0, fat = 0.0, carbs = 0.0;
@@ -114,7 +114,7 @@ public class NutritionSyncService {
             }
         }
 
-        // Determinar dishType simplificado
+        // Determinar dishType simplificado y traducirlo
         List<String> dishTypes = (List<String>) data.get("dishTypes");
         String mainDishType = "main course";
         if (dishTypes != null && !dishTypes.isEmpty()) {
@@ -123,21 +123,70 @@ public class NutritionSyncService {
             else if (dishTypes.contains("dinner")) mainDishType = "dinner";
             else mainDishType = dishTypes.get(0);
         }
+        mainDishType = translationService.translateToSpanish(mainDishType);
+
+        // Determinar dietType desde la API y traducirlo
+        List<String> dietsList = (List<String>) data.get("diets");
+        String dietType = fallbackDiet;
+        if (dietsList != null && !dietsList.isEmpty()) {
+            dietType = dietsList.get(0); // Tomar la primera dieta de la lista
+        }
+        if (dietType != null) {
+            dietType = translationService.translateToSpanish(dietType);
+        } else {
+            dietType = "General";
+        }
+
+        // Extraer instrucciones desde analyzedInstructions si instructions es nulo
+        String instructionsStr = (String) data.get("instructions");
+        if (instructionsStr == null || instructionsStr.trim().isEmpty()) {
+            List<Map<String, Object>> analyzedInstructions = (List<Map<String, Object>>) data.get("analyzedInstructions");
+            if (analyzedInstructions != null && !analyzedInstructions.isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                for (Map<String, Object> section : analyzedInstructions) {
+                    List<Map<String, Object>> steps = (List<Map<String, Object>>) section.get("steps");
+                    if (steps != null) {
+                        for (Map<String, Object> step : steps) {
+                            sb.append(step.get("number")).append(". ").append(step.get("step")).append("\n");
+                        }
+                    }
+                }
+                instructionsStr = sb.toString();
+            }
+        }
+
+        String imageUrl = (String) data.get("image");
+        byte[] imageData = downloadImage(imageUrl);
 
         return Recipe.builder()
                 .id((Integer) data.get("id"))
                 .title(translationService.translateToSpanish((String) data.get("title")))
                 .summary(translationService.translateToSpanish((String) data.get("summary")))
-                .instructions(translationService.translateToSpanish((String) data.get("instructions")))
-                .imageUrl((String) data.get("image"))
+                .instructions(translationService.translateToSpanish(instructionsStr))
+                .imageUrl(imageUrl)
+                .imageData(imageData)
                 .readyInMinutes((Integer) data.get("readyInMinutes"))
                 .servings((Integer) data.get("servings"))
                 .calories(cal)
                 .protein(prot)
                 .fat(fat)
                 .carbs(carbs)
-                .dietType(diet)
+                .dietType(dietType)
                 .dishType(mainDishType)
                 .build();
+    }
+
+    /**
+     * Descarga la imagen de la receta en formato binario.
+     */
+    private byte[] downloadImage(String url) {
+        if (url == null || url.isEmpty()) return null;
+        try {
+            ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
+            return response.getBody();
+        } catch (Exception e) {
+            log.warn("🖼️ No se pudo descargar imagen desde {}: {}", url, e.getMessage());
+            return null;
+        }
     }
 }

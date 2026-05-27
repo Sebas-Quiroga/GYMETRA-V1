@@ -28,7 +28,7 @@
   width: 90px;
   height: auto;
   margin-bottom: 0.5rem;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+  filter: var(--logo-filter) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
 }
 .brand-name {
   font-family: var(--app-font-family);
@@ -54,35 +54,7 @@
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-color);
 }
-.input-card ion-item {
-  --background: var(--bg-subtle);
-  --border-radius: var(--radius-lg);
-  --padding-start: 1rem;
-  --inner-padding-end: 1rem;
-  --highlight-height: 0;
-  margin-bottom: 1rem;
-  border: 1px solid transparent;
-  transition: all 0.2s ease;
-}
-.input-card ion-item:focus-within {
-  border-color: var(--brand-primary);
-  background: var(--bg-card);
-  box-shadow: 0 0 0 4px var(--brand-primary-fade);
-}
-.input-card ion-icon {
-  color: var(--text-muted);
-  font-size: 1.25rem;
-  margin-right: 0.75rem;
-}
-.input-card ion-item:focus-within ion-icon {
-  color: var(--brand-primary);
-}
-.input-card ion-input {
-  --color: var(--text-main);
-  --placeholder-color: var(--text-muted);
-  font-weight: 500;
-  font-family: var(--app-font-family);
-}
+
 .validation-error {
   color: var(--color-error);
   font-size: 0.75rem;
@@ -113,20 +85,7 @@
 .btn-container {
   margin-top: 2rem;
 }
-.login-btn {
-  --background: var(--brand-primary) !important;
-  --color: #ffffff !important;
-  --border-radius: 1rem;
-  --box-shadow: 0 8px 20px var(--brand-primary-fade);
-  height: 3.5rem;
-  font-weight: 800;
-  font-size: 1rem;
-  text-transform: none;
-  letter-spacing: 0.02em;
-}
-.login-btn::part(native) {
-  border-radius: 1rem;
-}
+
 .email-suggestions {
   background: var(--bg-card);
   border: 1px solid var(--border-color);

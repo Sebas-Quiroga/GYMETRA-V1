@@ -48,13 +48,7 @@ export interface UserMutationResponse {
 
 export const userService = {
   async getAllUsers(): Promise<User[]> {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/users`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      throw error;
-    }
+    return (await axios.get(`${API_BASE_URL}/users`)).data;
   },
 
   async createUser(userData: UserRequest): Promise<UserMutationResponse> {
@@ -66,7 +60,6 @@ export const userService = {
         user: response.data?.user || response.data
       };
     } catch (error: any) {
-      console.error('Error creating user:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'Error creating user'
@@ -83,7 +76,6 @@ export const userService = {
         user: response.data?.user || response.data
       };
     } catch (error: any) {
-      console.error('Error updating user:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'Error updating user'
@@ -92,82 +84,42 @@ export const userService = {
   },
 
   async deleteUser(userId: number): Promise<boolean> {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/users/${userId}`);
-      return response.status === 200;
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      throw error;
-    }
+    const response = await axios.delete(`${API_BASE_URL}/users/${userId}`);
+    return response.status === 200;
   },
 
   async getRoles(): Promise<Role[]> {
-    try {
-      const response = await axios.get('/api/roles');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching roles:', error);
-      throw error;
-    }
+    return (await axios.get('/api/roles')).data;
   },
 
   async createRole(roleData: RoleRequest): Promise<RoleResponse> {
-    try {
-      const response = await axios.post('/api/roles', roleData);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating role:', error);
-      throw error;
-    }
+    return (await axios.post('/api/roles', roleData)).data;
   },
 
   async getRoleById(roleId: number): Promise<RoleResponse> {
-    try {
-      const response = await axios.get(`/api/roles/${roleId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching role:', error);
-      throw error;
-    }
+    return (await axios.get(`/api/roles/${roleId}`)).data;
   },
 
   async updateRole(roleId: number, roleData: RoleRequest): Promise<RoleResponse> {
-    try {
-      const response = await axios.put(`/api/roles/${roleId}`, roleData);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating role:', error);
-      throw error;
-    }
+    return (await axios.put(`/api/roles/${roleId}`, roleData)).data;
   },
 
   async deleteRole(roleId: number): Promise<boolean> {
-    try {
-      const response = await axios.delete(`/api/roles/${roleId}`);
-      return response.status === 200;
-    } catch (error) {
-      console.error('Error deleting role:', error);
-      throw error;
-    }
+    const response = await axios.delete(`/api/roles/${roleId}`);
+    return response.status === 200;
   },
 
   async updateUserStatus(userId: number, status: 'active' | 'suspended'): Promise<boolean> {
-    try {
-      const response = await axios.patch(`/api/auth/users/${userId}/status?status=${status}`);
-      return response.status === 200;
-    } catch (error) {
-      console.error('Error updating user status:', error);
-      throw error;
-    }
+    const response = await axios.patch(`/api/auth/users/${userId}/status?status=${status}`);
+    return response.status === 200;
   },
 
   async syncUsersFromCognito(): Promise<string> {
     try {
       const response = await axios.post(`${API_BASE_URL}/users/sync`);
       return response.data;
-    } catch (error) {
-      console.error('Error syncing users from Cognito:', error);
-      throw error;
+    } catch (error: any) {
+      return error.response?.data?.message || 'Error (500): Fallo de configuración o credenciales en el backend al intentar contactar a AWS Cognito.';
     }
   }
 };

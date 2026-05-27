@@ -55,9 +55,8 @@ export const useAuthStore = defineStore("auth", {
             cognitoSub: data.sub
           };
         }
-        console.log("✅ Perfil sincronizado con éxito:", this.user);
       } catch (err) {
-        console.error("❌ Error al sincronizar perfil local:", err);
+        // Fallar silenciosamente
       }
     },
     setToken(token: string) {
@@ -83,10 +82,9 @@ export const useAuthStore = defineStore("auth", {
         const { signOut } = await import('aws-amplify/auth');
         await signOut({ global: true });
       } catch (err) {
-        console.error("❌ Error al cerrar sesión en Cognito:", err);
+        // Fallar silenciosamente
       } finally {
         this.clearToken();
-        console.log("🚪 Sesión cerrada y estado limpiado");
       }
     },
   },

@@ -1,10 +1,10 @@
 import { ref, computed } from "vue";
 import { apiAuthRequest, MEMBERSHIP_API_URL } from "../../shared/services/apiService";
 
-export const useUserMembership = (userId: string | number | undefined) => {
-  const userMemberships = ref<any[]>([]);
-  const isLoadingMemberships = ref(false);
+const userMemberships = ref<any[]>([]);
+const isLoadingMemberships = ref(false);
 
+export const useUserMembership = (userId: string | number | undefined) => {
   const loadMemberships = async () => {
     if (!userId) return;
     
@@ -19,8 +19,7 @@ export const useUserMembership = (userId: string | number | undefined) => {
       userMemberships.value = (Array.isArray(response.data) ? response.data : [])
         .filter((membership: any) => membership.status?.toUpperCase() === "ACTIVE")
         .sort((a: any, b: any) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
-    } catch (error) {
-      console.error("Error cargando membresías:", error);
+    } catch {
       userMemberships.value = [];
     } finally {
       isLoadingMemberships.value = false;

@@ -207,8 +207,7 @@ const loadInitialData = async () => {
     
     populateForm(targetUser);
     await loadUserMembershipData();
-  } catch (error) {
-    console.error('Error al cargar datos iniciales:', error);
+  } catch {
     router.push('/adminpanel');
   } finally {
     isDataLoading.value = false;
@@ -229,34 +228,27 @@ const populateForm = (user: any) => {
 };
 
 const loadUserMembershipData = async () => {
-  try {
-    isMembershipLoading.value = true;
-    const memberships = await membershipService.getAllUserMemberships();
-    const userHistory = memberships
-      .filter(m => m.userId === parseInt(userId))
-      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
-    
-    userActiveMembership.value = userHistory.find(m => m.status === 'ACTIVE') || userHistory[0] || null;
-  } catch (error) {
-    console.error('Error cargando membresía:', error);
-  } finally {
-    isMembershipLoading.value = false;
-  }
+  isMembershipLoading.value = true;
+  const memberships = await membershipService.getAllUserMemberships();
+  const userHistory = memberships
+    .filter(m => m.userId === parseInt(userId))
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+  
+  userActiveMembership.value = userHistory.find(m => m.status === 'ACTIVE') || userHistory[0] || null;
+  isMembershipLoading.value = false;
 };
 
 const handleUpdateSubmit = async () => {
-  try {
-    isUpdateProcessing.value = true;
-    const changes = detectChanges();
-    if (Object.keys(changes).length === 0) return router.push('/adminpanel');
-
-    const response = await userService.updateUser(parseInt(userId), changes);
-    if (response.success) router.push('/adminpanel');
-  } catch (error) {
-    console.error('Error al actualizar usuario:', error);
-  } finally {
+  isUpdateProcessing.value = true;
+  const changes = detectChanges();
+  if (Object.keys(changes).length === 0) {
     isUpdateProcessing.value = false;
+    return router.push('/adminpanel');
   }
+
+  const response = await userService.updateUser(parseInt(userId), changes);
+  if (response.success) router.push('/adminpanel');
+  isUpdateProcessing.value = false;
 };
 
 const detectChanges = () => {
@@ -290,37 +282,4 @@ onUnmounted(() => {
 });
 </script>
 
-<style>
-@import '../../../theme/AddUserPage.css';
-
-.membership-status-banner {
-  margin: 0 40px 20px;
-  padding: 20px 30px;
-  border-radius: var(--admin-radius-md);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-left: 6px solid transparent;
-}
-
-.membership-status-banner.active { background: rgba(39, 174, 96, 0.1); border-left-color: #27ae60; }
-.membership-status-banner.pending { background: rgba(255, 152, 0, 0.1); border-left-color: #ff9800; }
-.membership-status-banner.inactive, .membership-status-banner.expired { background: rgba(186, 26, 26, 0.1); border-left-color: #ba1a1a; }
-
-.status-info { display: flex; align-items: center; gap: 15px; }
-.status-icon { font-size: 2rem; color: inherit; }
-.status-label { font-family: var(--app-font-brand); font-weight: 800; font-size: 1.1rem; color: var(--admin-text-main); text-transform: uppercase; }
-.status-detail { margin: 0; font-size: 0.9rem; color: var(--admin-text-sub); font-weight: 600; }
-.membership-badge { background: var(--admin-bg-card); padding: 8px 16px; border-radius: 100px; font-weight: 800; font-size: 0.8rem; border: 1px solid var(--admin-border); color: var(--admin-text-sub); }
-
-.span-full { grid-column: span 2; }
-.optional-hint { font-size: 0.8rem; font-weight: 500; opacity: 0.6; }
-.input-select-wrapper { padding-left: 52px !important; }
-.select-input { padding-left: 0 !important; cursor: pointer; }
-.btn-icon { margin-right: 10px; }
-
-@media (max-width: 768px) {
-  .membership-status-banner { margin: 0 20px 20px; flex-direction: column; align-items: flex-start; gap: 15px; }
-  .span-full { grid-column: span 1; }
-}
-</style>
+<style src="../../../theme/EditUserPage.css"></style>

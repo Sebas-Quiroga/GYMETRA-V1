@@ -1,10 +1,10 @@
-import { apiAuthRequest, MEMBERSHIP_API_URL } from './apiService';
+import { apiAuthRequest, MEMBERSHIP_API_URL } from '../../shared/services/apiService';
 import { useAuthStore } from '../../auth/store/auth';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 let stripePromise: Promise<Stripe | null> | null = null;
 export function getStripe() {
   if (!stripePromise) {
     const pk = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-    if (!pk) console.warn('VITE_STRIPE_PUBLIC_KEY no configurada');
     stripePromise = loadStripe(pk);
   }
   return stripePromise!;

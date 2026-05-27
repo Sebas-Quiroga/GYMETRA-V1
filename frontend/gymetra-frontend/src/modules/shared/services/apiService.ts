@@ -78,7 +78,7 @@ export const apiAuthRequest = async <T = any>(
       const session = await fetchAuthSession();
       authToken = session.tokens?.idToken?.toString();
     } catch (err) {
-      console.warn('⚠️ No se pudo obtener sesión de Cognito para la petición');
+      // Silently fail if Cognito session is not found, will fail downstream if auth is required
     }
   }
   const headers: Record<string, string> = { ...((options.headers as any) || {}) };

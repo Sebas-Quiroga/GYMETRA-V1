@@ -1,5 +1,5 @@
 import { reactive } from 'vue';
-import { checkmarkCircle, alertCircle, warningOutline, informationCircle } from 'ionicons/icons';
+import { toast } from 'vue3-toastify';
 
 interface NotificationState {
   show: boolean;
@@ -12,61 +12,35 @@ interface NotificationState {
 }
 
 export const useNotification = () => {
+  // Kept for backwards compatibility with template bindings, but never shown
+  // since vue3-toastify handles the visual overlay globally.
   const notification = reactive<NotificationState>({
     show: false,
     type: 'info',
     title: '',
     message: '',
-    icon: informationCircle,
+    icon: '',
     progress: 0,
-    duration: 5000,
+    duration: 3500,
   });
 
-  let notificationTimer: NodeJS.Timeout | null = null;
-  let notificationProgressTimer: NodeJS.Timeout | null = null;
-
   const dismissNotification = () => {
-    if (notificationTimer) clearTimeout(notificationTimer);
-    if (notificationProgressTimer) clearInterval(notificationProgressTimer);
-    notification.show = false;
-    notification.progress = 0;
+    toast.clearAll();
   };
 
   const showNotification = (
     type: NotificationState['type'],
     title: string,
     message: string,
-    duration: number = 5000
+    duration: number = 3500
   ) => {
-    if (notificationTimer) clearTimeout(notificationTimer);
-    if (notificationProgressTimer) clearInterval(notificationProgressTimer);
-
-    const icons = {
-      success: checkmarkCircle,
-      error: alertCircle,
-      warning: warningOutline,
-      info: informationCircle,
-    };
-
-    notification.type = type;
-    notification.title = title;
-    notification.message = message;
-    notification.icon = icons[type];
-    notification.duration = duration;
-    notification.progress = 0;
-    notification.show = true;
-
-    const progressInterval = 50;
-    const progressStep = (progressInterval / duration) * 100;
-
-    notificationProgressTimer = setInterval(() => {
-      notification.progress += progressStep;
-      if (notification.progress >= 100) {
-        dismissNotification();
-      }
-    }, progressInterval);
-
-    notificationTimer = setTimeout(dismissNotification, duration);
+    const content = title ? `${title}: ${message}` : message;
+    toast(content, {
+      type,
+      autoClose: duration,
+      theme: 'auto',
+      position: 'top-right',
+    });
   };
 
   return {

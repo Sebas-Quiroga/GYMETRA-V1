@@ -98,18 +98,14 @@ const form = reactive({ roleName: '' })
 
 const handleSubmit = async () => {
   if (!form.roleName.trim()) return
-  try {
+
     submitting.value = true
     const success = await userService.createRole({ roleName: form.roleName.trim() })
     if (success) {
       successMessage.value = 'Rol creado exitosamente'
       setTimeout(() => router.push('/adminroles'), 2000)
     }
-  } catch (error) {
-    console.error(error)
-  } finally {
     submitting.value = false
-  }
 }
 
 const goBack = () => router.push('/adminroles')
@@ -121,43 +117,4 @@ const navigateToPayments = () => router.push('/adminpagos')
 const navigateToRoles = () => router.push('/adminroles')
 </script>
 
-<style scoped>
-@import '../../../theme/AddUserPage.css';
-
-.back-btn-kinetic {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: white;
-  border: 1px solid var(--admin-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: var(--admin-transition);
-}
-
-.back-btn-kinetic:hover {
-  background: #f8fbff;
-  border-color: var(--ion-color-primary);
-  color: var(--ion-color-primary);
-}
-
-.success-message-kinetic {
-  padding: 16px;
-  border-radius: 12px;
-  background: #e7f9f7;
-  color: #27ae60;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 600;
-}
-
-.spin-kinetic {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-</style>
+<style scoped src="../../../theme/AddRolePage.css"></style>

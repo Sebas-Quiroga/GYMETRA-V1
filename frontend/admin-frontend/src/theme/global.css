@@ -1,0 +1,119 @@
+/* Gymetra Admin Unified Global Layout and Theme */
+
+.main-content {
+  margin-left: var(--admin-sidebar-width);
+  padding: 40px;
+  background-color: var(--admin-bg-page);
+  height: 100vh;
+  overflow-y: auto;
+  transition: var(--admin-transition);
+}
+
+.sidebar-collapsed-active .main-content {
+  margin-left: var(--admin-sidebar-collapsed-width);
+}
+
+.main-content-mobile {
+  margin-left: 0 !important;
+  padding: 80px 20px 40px;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.status-active, .status-completed {
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+}
+
+.status-suspended, .status-failed, .status-expired {
+  background: rgba(186, 26, 26, 0.1);
+  color: #ba1a1a;
+}
+
+.status-pending {
+  background: rgba(255, 152, 0, 0.1);
+  color: #f39c12;
+}
+
+/* Loading Spinner */
+.loading-row td {
+  background: var(--admin-bg-subtle);
+  color: var(--admin-text-sub);
+}
+
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--admin-accent-soft);
+  border-top-color: var(--admin-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Table Design */
+.users-table-container, .table-container-kinetic {
+  background: var(--admin-bg-card);
+  border-radius: var(--admin-radius-lg);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-md);
+  overflow-x: auto;
+}
+
+.users-table, .payments-history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th, .payments-history-table th {
+  padding: 16px 24px;
+  text-align: left;
+  background: var(--admin-bg-subtle);
+  color: var(--admin-text-sub);
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.users-table td, .payments-history-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text-main);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.users-table tr:hover td, .payments-history-table tr:hover td {
+  background: rgba(4, 184, 229, 0.02);
+}
+
+/* Common Table Action Buttons */
+.action-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg-subtle);
+  color: var(--admin-text-sub);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:hover { color: var(--brand-primary); border-color: var(--brand-primary); }
+.delete-btn:hover { color: #c62828; border-color: #c62828; }

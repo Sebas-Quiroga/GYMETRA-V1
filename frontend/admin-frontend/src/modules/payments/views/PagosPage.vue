@@ -300,6 +300,7 @@ import KineticLoading from '../../../components/KineticLoading.vue'
 import Pagination from '../../../components/Pagination.vue'
 import { membershipService, type Payment as ApiPayment, type UserMembership as ApiUserMembership, type Membership } from '../services/membershipService'
 import { userService } from '../../../modules/users/services/userService'
+import type { Payment } from '../../../types/reports'
 import {
   createOutline,
   trashOutline,
@@ -320,18 +321,6 @@ onMounted(() => {
   window.addEventListener('resize', checkMobile)
 })
 
-// Interface para definir la estructura de datos de pago
-interface Payment {
-  id?: number
-  idPago: string
-  identificacion: string
-  persona: string
-  fechaPago: Date | string
-  costo: number
-  plan: string
-  estado: 'Completado' | 'Pendiente' | 'Fallido'
-  metodoPago?: string
-}
 
 // ✅ Mapeo corregido para que muestre nombre completo y plan por membershipId
 const mapApiPaymentToLocal = (apiPayment: ApiPayment, usersMap: Map<number, any>): Payment => {
@@ -432,7 +421,7 @@ const monthlyRevenue = computed(() => {
   })
   return monthlyPayments.reduce((sum, p) => sum + p.costo, 0).toLocaleString()
 })
-const updateMonthlyRevenue = () => { console.log('Actualizando ingresos mensuales:', selectedMonthYear.value) }
+const updateMonthlyRevenue = () => {}
 
 // ✅ Ajuste de carga de datos
 const loadPayments = async () => {
@@ -465,34 +454,25 @@ const loadPayments = async () => {
       payments.value = []
     }
 
-    // Resto de mapeos (membresías, usuarios)
+    // Mapeo de membresías activas de los usuarios
     if (Array.isArray(apiUserMemberships)) {
       userMemberships.value = apiUserMemberships.map(userMembership => {
         const user = usersMap.get(userMembership.userId)
         const userName = user ? `${user.firstName} ${user.lastName}` : `Usuario ${userMembership.userId}`
-        const membership = apiMemberships.find(m => m.userMemberships?.some(um => um.id === userMembership.id))
         return {
           ...userMembership,
           userName,
-          membership: membership || {
-            membershipId: 0,
-            planName: 'Sin plan',
-            price: 0,
-            durationDays: 0,
-            status: 'unknown',
-            training: false,
-            nutrition: false
-          }
         }
       })
+    } else {
+      userMemberships.value = []
     }
 
     memberships.value = Array.isArray(apiMemberships) ? apiMemberships : []
     connectionStatus.value = 'connected'
-  } catch (error) {
-    console.error('❌ Error cargando datos:', error)
+  } catch {
     connectionStatus.value = 'disconnected'
-    alert('Error conectando con el backend. Revisa la consola para más detalles.')
+    alert('Error conectando con el backend.')
   } finally {
     loading.value = false
   }
@@ -533,9 +513,9 @@ const formatPrice = (price: number): string => price.toString().replace(/\B(?=(\
 
 const logout = () => authLogout()
 const navigateToUsers = () => router.push('/adminpanel')
-const navigateToReports = () => console.log('Navegando a reportes')
+const navigateToReports = () => router.push('/adminreportes')
 const navigateToCharts = () => router.push('/adminmetricas')
-const navigateToPayments = () => console.log('Navegando a pagos')
+const navigateToPayments = () => router.push('/adminpagos')
 
 // Modal methods
 const openCreateModal = () => {
@@ -594,9 +574,8 @@ const saveMembership = async () => {
     memberships.value = Array.isArray(updatedMemberships) ? updatedMemberships : []
 
     closeModal()
-  } catch (error) {
-    console.error('Error saving membership:', error)
-    alert('Error al guardar la membresía. Revisa la consola para más detalles.')
+  } catch {
+    alert('Error al guardar la membresía.')
   } finally {
     saving.value = false
   }
@@ -628,8 +607,7 @@ const toggleMembershipStatus = async (membership: Membership) => {
     // No need to reload all memberships - just update the local one
     // The table will reflect the change immediately
 
-  } catch (error) {
-    console.error('Error toggling membership status:', error)
+  } catch {
     alert('Error al cambiar el estado de la membresía.')
   } finally {
     statusUpdating.value = false
@@ -661,8 +639,7 @@ const hideMembership = async (membership: Membership) => {
 
       alert('Membresía ocultada de la vista de usuarios.')
 
-    } catch (error) {
-      console.error('Error hiding membership:', error)
+    } catch {
       alert('Error al ocultar la membresía.')
     }
   }
@@ -679,8 +656,7 @@ const deleteMembership = async (membership: Membership) => {
 
       alert('Membresía eliminada permanentemente.')
 
-    } catch (error) {
-      console.error('Error deleting membership:', error)
+    } catch {
       alert('Error al eliminar la membresía.')
     }
   }
@@ -698,414 +674,4 @@ const getToggleIcon = (status: string): string => {
 onMounted(() => loadPayments())
 </script>
 
-<style scoped>
-@import '../../../theme/PagosPage.css';
-
-.no-data {
-  text-align: center;
-  color: var(--admin-text-sub);
-  font-style: italic;
-  padding: 20px;
-}
-
-.month-selector {
-  margin-top: 10px;
-  display: flex;
-  justify-content: center;
-  position: relative;
-  z-index: 10;
-}
-
-.month-selector input[type="month"] {
-  padding: 8px 12px;
-  border: 1px solid var(--admin-border);
-  border-radius: var(--admin-radius-md);
-  background: var(--admin-bg-card);
-  font-size: 0.9rem;
-  cursor: pointer;
-  min-width: 160px;
-  font-family: var(--app-font-family);
-  color: var(--admin-text-main);
-  font-weight: 700;
-}
-
-.month-selector input[type="month"]:focus {
-  outline: none;
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px var(--brand-primary-fade);
-}
-
-.month-selector input[type="month"]:hover {
-  border-color: var(--brand-primary);
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(2px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: var(--admin-bg-card);
-  padding: 24px;
-  border-radius: var(--admin-radius-lg);
-  border: 1px solid var(--admin-border);
-  box-shadow: var(--admin-shadow-lg);
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-content h3 {
-  margin-top: 0;
-  color: var(--admin-text-main);
-  font-family: var(--app-font-brand);
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 800;
-  color: var(--admin-text-sub);
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%;
-  padding: 11px 12px;
-  border: 1px solid var(--admin-border);
-  border-radius: var(--admin-radius-md);
-  font-size: 0.95rem;
-  font-family: var(--app-font-family);
-  background: var(--admin-bg-subtle);
-  color: var(--admin-text-main);
-}
-
-.form-group textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.modal-actions button {
-  min-height: 42px;
-  padding: 0 16px;
-  border: 1px solid transparent;
-  border-radius: var(--admin-radius-md);
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-family: var(--app-font-brand);
-  font-weight: 800;
-}
-
-.modal-actions button[type="button"] {
-  background-color: var(--admin-bg-subtle);
-  color: var(--admin-text-sub);
-  border-color: var(--admin-border);
-}
-
-.modal-actions button[type="submit"] {
-  background-color: var(--brand-primary);
-  color: white;
-}
-
-.modal-actions button[type="submit"]:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.create-membership-btn {
-  background-color: var(--brand-primary);
-  color: white;
-  border: none;
-  min-height: 42px;
-  padding: 0 16px;
-  border-radius: var(--admin-radius-md);
-  cursor: pointer;
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-  font-family: var(--app-font-brand);
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.create-membership-btn ion-icon {
-  font-size: 16px;
-}
-
-/* ============================================
-   TOGGLE SWITCH MODERNO Y ELEGANTE
-   ============================================ */
-
-.status-toggle-wrapper {
-  display: inline-flex;
-  align-items: center;
-}
-
-.status-toggle {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.3s ease;
-}
-
-.status-toggle.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.status-toggle input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: relative;
-  width: 56px;
-  height: 28px;
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  border-radius: 34px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(231, 76, 60, 0.3);
-  overflow: hidden;
-}
-
-.status-toggle input:checked + .toggle-slider {
-  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 2px 8px rgba(39, 174, 96, 0.4);
-}
-
-.toggle-slider::before {
-  content: '';
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  left: 3px;
-  top: 3px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border-radius: 50%;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.25),
-    0 1px 3px rgba(0, 0, 0, 0.15);
-  z-index: 2;
-}
-
-.status-toggle input:checked + .toggle-slider::before {
-  transform: translateX(28px);
-}
-
-.toggle-icon {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  transition: all 0.3s ease;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.icon-suspended {
-  left: 6px;
-  color: #fff;
-  opacity: 1;
-}
-
-.icon-active {
-  right: 6px;
-  color: #fff;
-  opacity: 0;
-}
-
-.status-toggle input:checked ~ .toggle-slider .icon-suspended {
-  opacity: 0;
-}
-
-.status-toggle input:checked ~ .toggle-slider .icon-active {
-  opacity: 1;
-}
-
-.toggle-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #495057;
-  white-space: nowrap;
-  transition: color 0.3s ease;
-  min-width: 75px;
-}
-
-.status-toggle input:checked ~ .toggle-label {
-  color: #27ae60;
-}
-
-.status-toggle input:not(:checked) ~ .toggle-label {
-  color: #e74c3c;
-}
-
-.status-toggle:hover:not(.disabled) .toggle-slider {
-  transform: scale(1.05);
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.status-toggle:hover:not(.disabled) input:checked + .toggle-slider {
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 4px 12px rgba(39, 174, 96, 0.5);
-}
-
-.status-toggle:hover:not(.disabled) input:not(:checked) + .toggle-slider {
-  box-shadow:
-    inset 0 2px 4px rgba(0, 0, 0, 0.2),
-    0 4px 12px rgba(231, 76, 60, 0.5);
-}
-
-.status-toggle:active:not(.disabled) .toggle-slider {
-  transform: scale(0.98);
-}
-
-.status-toggle input:focus + .toggle-slider {
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
-}
-
-.status-toggle.disabled .toggle-slider {
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-/* Botones de acción mejorados */
-.action-buttons {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.action-btn {
-  border: 1px solid var(--admin-border);
-  border-radius: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  transition: var(--admin-transition);
-  box-shadow: none;
-  position: relative;
-  overflow: hidden;
-  background: var(--admin-bg-card);
-}
-
-.edit-btn {
-  color: var(--brand-primary);
-}
-
-.edit-btn:hover {
-  background-color: var(--brand-primary);
-  border-color: var(--brand-primary);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 18px var(--brand-primary-fade);
-}
-
-.delete-btn {
-  color: var(--color-error);
-}
-
-.delete-btn:hover {
-  background-color: var(--color-error);
-  border-color: var(--color-error);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 18px rgba(239, 68, 68, 0.18);
-}
-
-/* Eliminado - ya no se usa */
-
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .toggle-slider {
-    width: 48px;
-    height: 24px;
-  }
-
-  .toggle-slider::before {
-    width: 18px;
-    height: 18px;
-  }
-
-  .status-toggle input:checked + .toggle-slider::before {
-    transform: translateX(24px);
-  }
-
-  .toggle-label {
-    font-size: 11px;
-    min-width: 70px;
-  }
-
-  .toggle-icon {
-    font-size: 12px;
-  }
-}
-
-/* Responsive para botones */
-@media (max-width: 1200px) {
-  .action-buttons {
-    gap: 6px;
-  }
-
-  .action-btn {
-    width: 35px;
-    height: 35px;
-  }
-
-  .action-btn ion-icon {
-    font-size: 14px;
-  }
-}
-</style>
+<style scoped src="../../../theme/PagosPage.css"></style>
