@@ -1,0 +1,196 @@
+.nutr-content {
+  --background: var(--bg-page) !important;
+}
+.nutr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--bg-card);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--border-color);
+}
+.nutr-header-left,
+.nutr-header-right {
+  display: flex;
+  align-items: center;
+  width: 60px;
+}
+.nutr-header-right { justify-content: flex-end; }
+.brand-name-header {
+  font-family: var(--app-font-family);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--brand-secondary);
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+}
+.nutr-back-btn, .nutr-logout-btn {
+  background: var(--bg-subtle);
+  border: none;
+  cursor: pointer;
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  padding: 0.4rem;
+  border-radius: 50%;
+}
+.nutr-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+.header-logo-img { height: 24px; width: auto; }
+.nutr-container {
+  padding: 1.5rem 1rem 7rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.nutr-hero {
+  margin-bottom: 2rem;
+}
+.nutr-hero-eyebrow {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--brand-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.1rem;
+}
+.nutr-hero-title {
+  font-family: var(--app-font-family);
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1;
+  margin: 0;
+  letter-spacing: -1px;
+}
+.nutr-form-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
+}
+.nutr-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.nutr-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+.nutr-select {
+  width: 100%;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 0.8rem 1rem;
+  color: var(--text-main);
+  font-weight: 700;
+  outline: none;
+}
+.nutr-calories-row {
+  display: flex;
+  align-items: center;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.nutr-cal-btn {
+  background: transparent;
+  border: none;
+  padding: 0.8rem;
+  color: var(--brand-primary);
+  cursor: pointer;
+}
+.nutr-calories-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-main);
+  outline: none;
+  width: 100%;
+}
+.nutr-generate-btn {
+  width: 100%;
+  padding: 1rem;
+  background: var(--brand-primary);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 4px 12px var(--brand-primary-fade);
+}
+.nutr-macros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+.nutr-macro-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  text-align: center;
+}
+.nutr-macro-highlight {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-fade);
+}
+.nutr-macro-val {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--brand-primary);
+  display: block;
+}
+.nutr-macro-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.nutr-menu-title {
+  font-family: var(--app-font-family);
+  font-size: 1.25rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+}
+.nutr-meal-item {
+  display: flex;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+.nutr-meal-img-wrap { width: 7rem; height: 7rem; overflow: hidden; }
+.nutr-meal-img { width: 100%; height: 100%; object-fit: cover; }
+.nutr-meal-info { padding: 1rem; flex: 1; }
+.nutr-meal-type { font-size: 0.6rem; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; }
+.nutr-meal-title { font-family: var(--app-font-family); font-size: 1rem; font-weight: 800; margin: 0.25rem 0; line-height: 1.2; }
+.nutr-day-label {
+  font-family: var(--app-font-family);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--brand-secondary);
+  border-bottom: 2px solid var(--brand-primary);
+  padding-bottom: 0.5rem;
+  margin: 2rem 0 1rem;
+}

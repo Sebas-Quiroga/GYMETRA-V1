@@ -7,6 +7,7 @@
 
 <script setup lang="ts">
 import { downloadOutline } from 'ionicons/icons'
+import type { User, Payment } from '../types/reports'
 
 // Props
 interface Props {
@@ -17,31 +18,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-// Interface para definir la estructura de datos de usuario
-interface User {
-  id?: number
-  nombre: string
-  apellido: string
-  correo: string
-  telefono: string
-  identificacion: number
-  estado: 'Activo' | 'Vencido' | 'Suspendido'
-  fechaCreacion: Date | string
-}
-
-// Interface para definir la estructura de datos de pago
-interface Payment {
-  id?: number
-  idPago: string
-  identificacion: string
-  persona: string
-  fechaPago: Date | string
-  costo: number
-  plan: string
-  estado: 'Completado' | 'Pendiente' | 'Fallido'
-  metodoPago?: string
-}
 
 // Función auxiliar para formatear fechas
 const formatDate = (date: Date | string | null | undefined): string => {
@@ -73,8 +49,6 @@ const exportToExcel = async () => {
 // Exportar usuarios a Excel con diseño profesional
 const exportUsersToExcel = async () => {
   try {
-    console.log('📊 Generando reporte Excel con diseño profesional...')
-
     // Verificar que hay datos
     if (!props.users || props.users.length === 0) {
       alert('No hay usuarios para exportar.')
@@ -86,7 +60,6 @@ const exportUsersToExcel = async () => {
     try {
       XLSX = await import('xlsx')
     } catch (error) {
-      console.error('Error al importar XLSX:', error)
       alert('Las dependencias necesarias no están instaladas. Ejecute "npm install xlsx" para instalar las dependencias requeridas.')
       return
     }
@@ -260,20 +233,16 @@ const exportUsersToExcel = async () => {
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
 
-    console.log('✅ Reporte Excel con diseño profesional generado exitosamente:', fileName)
     alert(`🎉 Reporte Ejecutivo Excel generado exitosamente!\n\n📁 Archivo: ${fileName}\n📊 4 hojas con diseño profesional incluido`)
 
-  } catch (error) {
-    console.error('❌ Error generando reporte Excel:', error)
-    alert('Error al generar el reporte Excel. Verifique la consola para más detalles.')
+  } catch {
+    alert('Error al generar el reporte Excel. Verifique que la aplicación no tenga bloqueada las descargas.')
   }
 }
 
 // Exportar pagos a Excel con diseño profesional
 const exportPaymentsToExcel = async () => {
   try {
-    console.log('💳 Generando reporte Excel profesional de pagos...')
-
     // Verificar que hay datos
     if (!props.payments || props.payments.length === 0) {
       alert('No hay pagos para exportar.')
@@ -284,8 +253,7 @@ const exportPaymentsToExcel = async () => {
     let XLSX
     try {
       XLSX = await import('xlsx')
-    } catch (error) {
-      console.error('Error al importar XLSX:', error)
+    } catch {
       alert('Las dependencias necesarias no están instaladas. Ejecute "npm install xlsx" para instalar las dependencias requeridas.')
       return
     }
@@ -475,12 +443,10 @@ const exportPaymentsToExcel = async () => {
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
 
-    console.log('✅ Reporte Excel de pagos generado exitosamente:', fileName)
     alert(`🎉 Reporte Ejecutivo Excel de Pagos generado exitosamente!\n\n📁 Archivo: ${fileName}\n💰 Total de pagos: ${props.payments.length}\n💵 Total ingresos: $${totalAmount.toLocaleString('es-ES')}`)
 
-  } catch (error) {
-    console.error('❌ Error generando reporte Excel de pagos:', error)
-    alert('Error al generar el reporte Excel de pagos. Verifique la consola para más detalles.')
+  } catch {
+    alert('Error al generar el reporte Excel de pagos.')
   }
 }
 </script>
@@ -490,15 +456,13 @@ const exportPaymentsToExcel = async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: #28a745;
-  color: white;
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+  border: 1px solid rgba(39, 174, 96, 0.2);
+  border-radius: 99px;
+  font-family: var(--app-font-brand);
+  font-weight: 850;
+  padding: 10px 20px;
 }
 
 .generate-excel-btn:hover:not(:disabled) {

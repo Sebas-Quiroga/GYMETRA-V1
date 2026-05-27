@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("success", false, "message", msg));
     }
 
-    @ExceptionHandler({UserAlreadyExistsException.class, IllegalArgumentException.class})
+    @ExceptionHandler({UserAlreadyExistsException.class, IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<Map<String,Object>> onBadRequest(RuntimeException ex) {
         return ResponseEntity.badRequest().body(Map.of("success", false, "message", ex.getMessage()));
     }

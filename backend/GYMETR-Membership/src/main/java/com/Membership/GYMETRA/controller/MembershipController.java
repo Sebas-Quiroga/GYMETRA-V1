@@ -5,6 +5,7 @@ import com.Membership.GYMETRA.entity.UserMembership;
 import com.Membership.GYMETRA.service.MembershipService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,37 +14,58 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 @Tag(name = "Membresías", description = "Controlador para gestionar membresías disponibles")
+@RequiredArgsConstructor
 public class MembershipController {
 
     private final MembershipService membershipService;
 
-    public MembershipController(MembershipService membershipService) {
-        this.membershipService = membershipService;
+    // =====================================
+    // CONFIGURACIÓN DINÁMICA DE PERMISOS
+    // =====================================
+
+    @Operation(summary = "Obtener configuración de membresías", description = "Obtiene la configuración de permisos para todas las membresías")
+    @GetMapping("/membership-config")
+    public ResponseEntity<List<Membership>> getMembershipConfig() {
+        return ResponseEntity.ok(membershipService.getAllMemberships());
     }
+
+    @Operation(summary = "Actualizar configuración de membresías", description = "Actualiza los permisos de las membresías de forma masiva")
+    @PutMapping("/membership-config")
+    public ResponseEntity<List<Membership>> updateMembershipConfig(@RequestBody List<Membership> configs) {
+        for (Membership config : configs) {
+            if (config.getMembershipId() != null) {
+                membershipService.getMembershipById(config.getMembershipId()).ifPresent(existing -> {
+                    existing.setTraining(config.getTraining());
+                    existing.setNutrition(config.getNutrition());
+                    membershipService.saveMembership(existing);
+                });
+            }
+        }
+        return ResponseEntity.ok(membershipService.getAllMemberships());
+    }
+
+    // =====================================
+    // ENDPOINTS EXISTENTES
+    // =====================================
 
     // Listar todas las membresías
     @Operation(summary = "Listar membresías", description = "Obtiene una lista de todas las membresías disponibles")
     @GetMapping("/memberships")
     public ResponseEntity<List<Membership>> getAllMemberships() {
-        List<Membership> memberships = membershipService.getAllMemberships();
-        return ResponseEntity.ok(memberships);
+        return ResponseEntity.ok(membershipService.getAllMemberships());
     }
 
     // Endpoint específico para obtener membresías disponibles (filtradas por estado)
     @Operation(summary = "Listar membresías disponibles", description = "Obtiene una lista de membresías disponibles para compra (solo activas)")
     @GetMapping("/memberships/available")
     public ResponseEntity<List<Membership>> getAvailableMemberships() {
-        List<Membership> allMemberships = membershipService.getAllMemberships();
-        // Filtrar solo membresías con estado "available" o "ACTIVE"
-        List<Membership> availableMemberships = allMemberships.stream()
-            .filter(membership -> "available".equals(membership.getStatus()) || "ACTIVE".equals(membership.getStatus()))
-            .collect(java.util.stream.Collectors.toList());
-        return ResponseEntity.ok(availableMemberships);
+        return ResponseEntity.ok(membershipService.getAvailableMemberships());
     }
 
     // Endpoint para obtener todas las membresías de usuario
     @Operation(summary = "Listar todas las membresías de usuario", description = "Obtiene una lista completa de todas las membresías de usuario en el sistema")
     @GetMapping("/user-memberships/all")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<UserMembership>> getAllUserMemberships() {
         List<UserMembership> userMemberships = membershipService.getAllUserMemberships();
         return ResponseEntity.ok(userMemberships);

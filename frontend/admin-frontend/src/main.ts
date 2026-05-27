@@ -5,32 +5,23 @@ import { IonicVue } from '@ionic/vue'
 
 import App from './App.vue'
 import routes from './router'
-import { isAuthenticated } from './services/authService'
+import { isAuthenticatedAsync } from './modules/auth/services/authService'
+import { configureAmplify } from './modules/shared/config/cognito'
 
-/* Core CSS required for Ionic components to work properly */
+configureAmplify();
 
-
-/* COMANDO PARA CORRER EL PROYECTO: npm run dev*/
-
-
-/* Core CSS required for Ionic components to work properly */
 import '@ionic/vue/css/core.css'
-
-/* Basic CSS for apps built with Ionic */
 import '@ionic/vue/css/normalize.css'
 import '@ionic/vue/css/structure.css'
 import '@ionic/vue/css/typography.css'
-
-/* Optional CSS utils that can be commented out */
 import '@ionic/vue/css/padding.css'
 import '@ionic/vue/css/float-elements.css'
 import '@ionic/vue/css/text-alignment.css'
 import '@ionic/vue/css/text-transformation.css'
 import '@ionic/vue/css/flex-utils.css'
 import '@ionic/vue/css/display.css'
-
-/* Theme variables */
 import './theme/variables.css'
+import './theme/global.css'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -39,24 +30,16 @@ const router = createRouter({
   routes
 })
 
-// ===============================
-// 🔒 Router Guard - Protección de Rutas Administrativas
-// ===============================
-router.beforeEach((to, from, next) => {
-  // Si la ruta requiere autenticación
-  if (to.meta.requiresAuth) {
-    // Verificar si el usuario está autenticado como administrador
-    if (isAuthenticated()) {
-      // Usuario autenticado, permitir acceso
-      next()
-    } else {
-      // Usuario no autenticado, redirigir al login de admin
-      console.warn('🚫 Acceso denegado: usuario no autenticado. Redirigiendo al login...')
-      next('/loginadmin')
-    }
+router.beforeEach(async (to, from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const isAuth = await isAuthenticatedAsync();
+
+  if (requiresAuth && !isAuth) {
+    next({ path: '/login' });
+  } else if (!requiresAuth && isAuth && to.path === '/login') {
+    next({ path: '/adminpanel' });
   } else {
-    // Ruta pública, permitir acceso
-    next()
+    next();
   }
 })
 
@@ -64,4 +47,21 @@ app.use(IonicVue)
 app.use(pinia)
 app.use(router)
 
-app.mount('#app')
+const initApp = async () => {
+  try {
+    await router.isReady();
+    app.mount('#app');
+  } catch (error) {
+    // Silent fail
+  }
+};
+
+if (import.meta.env.PROD) {
+  console.log = () => {};
+  console.warn = () => {};
+  console.error = () => {};
+  console.info = () => {};
+  console.debug = () => {};
+}
+
+initApp();

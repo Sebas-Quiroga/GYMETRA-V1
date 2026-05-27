@@ -1,0 +1,172 @@
+/* RolesPage KINETIC Design - Stitch UI Standards */
+
+.roles-container {
+  animation: kinetic-fade-in 0.8s ease-out;
+}
+
+@keyframes kinetic-fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header Section */
+.header-section {
+  padding: 30px 40px;
+  background: linear-gradient(to right, var(--admin-accent-soft), transparent 40%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-lg) var(--admin-radius-lg) 0 0;
+}
+
+.header-titles h2 {
+  font-family: var(--app-font-brand);
+  font-weight: 900;
+  font-size: 1.6rem;
+  color: var(--admin-text-main);
+  margin: 0;
+}
+
+.last-update {
+  font-size: 0.85rem;
+  color: var(--admin-text-sub);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* Add Role Button */
+.add-role-btn {
+  background: var(--admin-accent);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--admin-radius-md);
+  font-family: var(--app-font-brand);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: var(--admin-transition);
+  box-shadow: 0 4px 15px var(--admin-accent-soft);
+}
+
+.add-role-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--admin-accent-soft);
+  filter: brightness(1.1);
+}
+
+/* Table Section */
+.roles-table-container {
+  background: var(--admin-bg-card);
+  border-radius: var(--admin-radius-lg);
+  border: 1px solid var(--admin-border);
+  box-shadow: var(--admin-shadow-md);
+  overflow: hidden;
+}
+
+.roles-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.roles-table th {
+  padding: 16px 30px;
+  text-align: left;
+  background: var(--admin-bg-subtle);
+  color: var(--admin-text-sub);
+  font-weight: 900;
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.roles-table td {
+  padding: 18px 30px;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text-main);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.roles-table tr:hover td {
+  background: rgba(4, 184, 229, 0.02);
+}
+
+/* Actions */
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.edit-btn, .delete-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg-page);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--admin-transition);
+}
+
+.edit-btn { color: var(--admin-accent); }
+.delete-btn { color: #ba1a1a; }
+
+.edit-btn:hover { background: var(--admin-accent); color: #fff; }
+.delete-btn:hover { background: #ba1a1a; color: #fff; }
+
+/* Status Badge */
+.status-badge {
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.status-active {
+  background: var(--admin-accent-soft);
+  color: var(--admin-accent);
+}
+
+/* Empty State */
+.empty-state {
+  padding: 80px 40px;
+  text-align: center;
+  color: var(--admin-text-sub);
+}
+
+.empty-icon {
+  font-size: 60px;
+  color: var(--admin-accent-soft);
+  margin-bottom: 20px;
+}
+
+.empty-state h3 {
+  font-family: var(--app-font-brand);
+  font-weight: 800;
+  color: var(--admin-text-main);
+  margin-bottom: 10px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  
+  .add-role-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -4,6 +4,7 @@ import com.Membership.GYMETRA.client.UserMembershipClient;
 import com.Membership.GYMETRA.client.UserMembershipResponse;
 import com.Membership.GYMETRA.entity.Membership;
 import com.Membership.GYMETRA.entity.UserMembership;
+import com.Membership.GYMETRA.entity.UserMembershipStatus;
 import com.Membership.GYMETRA.entity.Payment;
 import com.Membership.GYMETRA.service.MembershipService;
 import com.Membership.GYMETRA.service.UserMembershipService;
@@ -40,8 +41,7 @@ public class PaymentController {
             EmailService emailService,
             MembershipService membershipService,
             UserMembershipService userMembershipService,
-            PaymentService paymentService
-    ) {
+            PaymentService paymentService) {
         this.stripePaymentService = stripePaymentService;
         this.userMembershipClient = userMembershipClient;
         this.emailService = emailService;
@@ -123,31 +123,31 @@ public class PaymentController {
                 if (membershipOpt.isEmpty()) {
                     return ResponseEntity.badRequest().body("Membresía no encontrada");
                 }
-                
+
                 Membership membership = membershipOpt.get();
-                
+
                 // 3. Crear nueva UserMembership en la base de datos local
                 UserMembership userMembership = UserMembership.builder()
-                    .userId(userId)
-                    .membership(membership)
-                    .status(UserMembership.Status.ACTIVE)
-                    .startDate(LocalDateTime.now().toLocalDate())
-                    .endDate(LocalDateTime.now().plusDays(membership.getDurationDays()).toLocalDate())
-                    .createdAt(LocalDateTime.now())
-                    .build();
-                
+                        .userId(userId)
+                        .membership(membership)
+                        .status(UserMembershipStatus.ACTIVE)
+                        .startDate(LocalDateTime.now().toLocalDate())
+                        .endDate(LocalDateTime.now().plusDays(membership.getDurationDays()).toLocalDate())
+                        .createdAt(LocalDateTime.now())
+                        .build();
+
                 UserMembership savedMembership = userMembershipService.createOrUpdateMembership(userMembership);
-                
+
                 // 4. Crear registro de pago usando JPA simplificado
                 System.out.println("🔄 INICIANDO CREACIÓN DE PAYMENT...");
-                
+
                 // Validar datos antes de procesar
                 System.out.println("🔍 VALIDANDO DATOS PARA PAYMENT:");
                 System.out.println("   - UserMembership ID: " + savedMembership.getId());
                 System.out.println("   - Membership Price: " + membership.getPrice());
                 System.out.println("   - Payment Intent ID: " + paymentIntentId);
                 System.out.println("   - UserMembership Object: " + (savedMembership != null ? "✅ Valid" : "❌ NULL"));
-                
+
                 if (savedMembership == null || savedMembership.getId() == null) {
                     throw new RuntimeException("UserMembership no fue creado correctamente");
                 }
@@ -157,16 +157,15 @@ public class PaymentController {
                 if (paymentIntentId == null || paymentIntentId.trim().isEmpty()) {
                     throw new RuntimeException("PaymentIntent ID no puede ser null o vacío");
                 }
-                
+
                 try {
                     Payment savedPayment = paymentService.savePaymentSimplified(
-                        savedMembership,
-                        membership.getPrice(),
-                        "GATEWAY",
-                        paymentIntentId,
-                        "CONFIRMED"
-                    );
-                    
+                            savedMembership,
+                            membership.getPrice(),
+                            "GATEWAY",
+                            paymentIntentId,
+                            "CONFIRMED");
+
                     System.out.println("✅ PAYMENT PROCESO COMPLETADO:");
                     System.out.println("   📝 Payment ID: " + savedPayment.getId());
                     System.out.println("   🔗 UserMembership ID: " + savedMembership.getId());
@@ -184,14 +183,13 @@ public class PaymentController {
 
                 // 5. Respuesta con información de la membresía creada
                 Map<String, Object> response = Map.of(
-                    "message", "Pago confirmado y membresía activada",
-                    "userMembershipId", savedMembership.getId(),
-                    "userId", userId,
-                    "membershipId", membershipId,
-                    "status", "ACTIVE",
-                    "startDate", savedMembership.getStartDate(),
-                    "endDate", savedMembership.getEndDate()
-                );
+                        "message", "Pago confirmado y membresía activada",
+                        "userMembershipId", savedMembership.getId(),
+                        "userId", userId,
+                        "membershipId", membershipId,
+                        "status", "ACTIVE",
+                        "startDate", savedMembership.getStartDate(),
+                        "endDate", savedMembership.getEndDate());
 
                 return ResponseEntity.ok(response);
             } else {
@@ -209,6 +207,7 @@ public class PaymentController {
      */
     @Operation(summary = "Obtener todos los pagos", description = "Devuelve una lista de todos los pagos registrados en el sistema")
     @GetMapping("/all")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<List<Payment>> getAllPayments() {
         try {
             List<Payment> payments = paymentService.getAllPayments();

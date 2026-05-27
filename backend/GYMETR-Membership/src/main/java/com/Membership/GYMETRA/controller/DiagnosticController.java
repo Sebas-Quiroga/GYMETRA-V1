@@ -2,6 +2,7 @@ package com.Membership.GYMETRA.controller;
 
 import com.Membership.GYMETRA.entity.Payment;
 import com.Membership.GYMETRA.entity.UserMembership;
+import com.Membership.GYMETRA.entity.UserMembershipStatus;
 import com.Membership.GYMETRA.entity.Membership;
 import com.Membership.GYMETRA.service.PaymentService;
 import com.Membership.GYMETRA.service.UserMembershipService;
@@ -57,7 +58,7 @@ public class DiagnosticController {
             UserMembership userMembership = UserMembership.builder()
                 .userId(999) // Usuario de prueba
                 .membership(membership)
-                .status(UserMembership.Status.ACTIVE)
+                .status(UserMembershipStatus.ACTIVE)
                 .startDate(LocalDateTime.now().toLocalDate())
                 .endDate(LocalDateTime.now().plusDays(30).toLocalDate())
                 .createdAt(LocalDateTime.now())

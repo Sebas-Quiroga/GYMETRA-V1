@@ -1,0 +1,110 @@
+# ==================================================
+# GYMETRA — Spring Boot Configuration
+# Auth: AWS Cognito (OAuth2 Resource Server)
+# ==================================================
+
+spring:
+  application:
+    name: gymetraSystem
+  config:
+    import: optional:file:.env.development[.properties]
+
+  # -----------------------------------------------
+  # Base de Datos
+  # -----------------------------------------------
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/gymdb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  # -----------------------------------------------
+  # JPA / Hibernate
+  # -----------------------------------------------
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # -----------------------------------------------
+  # AWS Cognito — OAuth2 Resource Server
+  # -----------------------------------------------
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${COGNITO_ISSUER_URI:}
+          # Explicit JWKS URI avoids cold-start DNS/cache issues
+          jwk-set-uri: ${COGNITO_JWKS_URI:}
+  # -----------------------------------------------
+  # Correo electrónico (SMTP)
+  # -----------------------------------------------
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  # -----------------------------------------------
+  # Multipart
+  # -----------------------------------------------
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# -----------------------------------------------
+# Configuración Unificada de Aplicación
+# -----------------------------------------------
+app:
+  security:
+    cognito:
+      issuer: ${COGNITO_ISSUER_URI:}
+      client-id: ${COGNITO_CLIENT_ID:}
+      # Credenciales para sincronización (Utilizar variables de entorno en producción)
+      access-key: ${AWS_ACCESS_KEY_ID:}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:}
+
+# -----------------------------------------------
+# Servidor
+# -----------------------------------------------
+server:
+  port: 8080
+  address: 0.0.0.0
+
+# -----------------------------------------------
+# Logging
+# -----------------------------------------------
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
+
+# -----------------------------------------------
+# Swagger / OpenAPI
+# -----------------------------------------------
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+    filter: true

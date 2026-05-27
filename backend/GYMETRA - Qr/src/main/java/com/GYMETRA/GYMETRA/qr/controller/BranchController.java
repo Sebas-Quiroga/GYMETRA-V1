@@ -2,25 +2,30 @@ package com.GYMETRA.GYMETRA.qr.controller;
 
 import com.GYMETRA.GYMETRA.qr.entity.Branch;
 import com.GYMETRA.GYMETRA.qr.service.BranchService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/branches")
+@Tag(name = "Sucursales", description = "Controlador para gestionar las sedes del gimnasio")
+@RequiredArgsConstructor
 public class BranchController {
+    
     private final BranchService branchService;
 
-    public BranchController(BranchService branchService) {
-        this.branchService = branchService;
-    }
-
+    @Operation(summary = "Listar sucursales", description = "Obtiene la lista de todas las sedes registradas")
     @GetMapping
-    public List<Branch> getAllBranches() {
-        return branchService.getAllBranches();
+    public ResponseEntity<List<Branch>> getAllBranches() {
+        return ResponseEntity.ok(branchService.getAllBranches());
     }
 
+    @Operation(summary = "Crear sucursal", description = "Registra una nueva sede en el sistema")
     @PostMapping
-    public Branch createBranch(@RequestBody Branch branch) {
-        return branchService.saveBranch(branch);
+    public ResponseEntity<Branch> createBranch(@RequestBody Branch branch) {
+        return ResponseEntity.ok(branchService.saveBranch(branch));
     }
 }

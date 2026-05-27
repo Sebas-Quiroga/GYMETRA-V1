@@ -6,7 +6,7 @@
   "scripts": {
     "build": "run-p type-check \"build-only {@}\" --",
     "build-only": "vite build",
-    "dev": "vite --port 8101",
+    "dev": "vite",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
     "preview": "vite preview",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@ionic/vue": "^7.0.0",
     "@ionic/vue-router": "^7.0.0",
+    "aws-amplify": "^6.16.4",
     "axios": "^1.13.1",
     "ionicons": "^7.0.0",
     "jspdf": "^3.0.3",

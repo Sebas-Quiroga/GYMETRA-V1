@@ -1,0 +1,166 @@
+:root {
+  --ion-color-primary: #00ACC1;
+  --ion-color-primary-rgb: 0, 172, 193;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0098aa;
+  --ion-color-primary-tint: #1ab4c7;
+  --ion-color-secondary: #263238;
+  --ion-color-secondary-rgb: 38, 50, 56;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #212c31;
+  --ion-color-secondary-tint: #3c474c;
+  --ion-color-tertiary: #FFB300;
+  --ion-color-tertiary-rgb: 255, 179, 0;
+  --app-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  --app-font-brand: 'Outfit', sans-serif;
+  --ion-font-family: var(--app-font-family);
+  --bg-page: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f3f4;
+  --text-main: #1c1c1c;
+  --text-sub: #4b5563;
+  --text-muted: #9ca3af;
+  --brand-primary: #00ACC1;
+  --brand-secondary: #263238;
+  --brand-accent: #FFB300;
+  --border-color: #e5e7eb;
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --radius-xl: 1.5rem;
+  --radius-lg: 1rem;
+  --radius-md: 0.75rem;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --brand-primary-fade: rgba(0, 172, 193, 0.15);
+  --logo-filter: brightness(0);
+
+  /* Global Input Variables (Light Mode) */
+  --input-bg: rgba(0, 0, 0, 0.03);
+  --input-bg-focus: rgba(0, 172, 193, 0.05);
+  --input-border: rgba(0, 0, 0, 0.1);
+  --input-border-focus: var(--brand-primary);
+  --input-text: #1c1c1c;
+  --input-placeholder: rgba(0, 0, 0, 0.4);
+  --input-icon: rgba(0, 0, 0, 0.5);
+  --input-icon-focus: var(--brand-primary);
+  --input-shadow-focus: 0 0 0 3px rgba(0, 172, 193, 0.2);
+
+  /* Global Button Variables (Light Mode) */
+  --btn-auth-bg: linear-gradient(135deg, var(--brand-primary) 0%, #0098aa 100%);
+  --btn-auth-text: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #0f172a;
+    --bg-card: #1e293b;
+    --bg-subtle: #111827;
+    --text-main: #f8fafc;
+    --text-sub: #cbd5e1;
+    --text-muted: #64748b;
+    --brand-primary: #22d3ee;
+    --brand-secondary: #38bdf8;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --brand-primary-fade: rgba(34, 211, 238, 0.1);
+    --logo-filter: none;
+
+    /* Global Input Variables (Dark Mode) */
+    --input-bg: rgba(255, 255, 255, 0.03);
+    --input-bg-focus: rgba(255, 255, 255, 0.06);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-border-focus: var(--brand-primary);
+    --input-text: #ffffff;
+    --input-placeholder: rgba(255, 255, 255, 0.4);
+    --input-icon: rgba(255, 255, 255, 0.5);
+    --input-icon-focus: var(--brand-primary);
+    --input-shadow-focus: 0 0 0 3px rgba(34, 211, 238, 0.2);
+
+    /* Global Button Variables (Dark Mode) */
+    --btn-auth-bg: linear-gradient(135deg, var(--brand-primary) 0%, #00d2ff 100%);
+    --btn-auth-text: #000000;
+  }
+}
+
+/* ========================================================
+   GLOBAL AUTH STYLES (Applies to Login and Register)
+   ======================================================== */
+
+.input-card ion-item,
+.register-card ion-item,
+.verification-item {
+  --background: var(--input-bg) !important;
+  --border-radius: 12px !important;
+  --padding-start: 1.25rem !important;
+  --inner-padding-end: 1.25rem !important;
+  --highlight-height: 0;
+  --border-width: 0 !important;
+  --inner-border-width: 0 !important;
+  margin: 0 0 1rem 0;
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  width: 100%;
+  min-height: 52px;
+  box-shadow: none !important;
+}
+
+.input-card ion-item:focus-within,
+.register-card ion-item:focus-within,
+.verification-item:focus-within {
+  border-color: var(--input-border-focus);
+  background: var(--input-bg-focus) !important;
+  box-shadow: var(--input-shadow-focus) !important;
+  transform: translateY(-2px);
+}
+
+.input-card ion-input,
+.register-card ion-input,
+.code-input {
+  --color: var(--input-text) !important;
+  --placeholder-color: var(--input-placeholder) !important;
+  font-family: var(--app-font-family);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.input-card ion-icon,
+.register-card ion-icon,
+.verification-item ion-icon {
+  color: var(--input-icon);
+  transition: color 0.3s ease;
+  margin-right: 12px;
+  font-size: 1.2rem;
+}
+
+.input-card ion-item:focus-within ion-icon,
+.register-card ion-item:focus-within ion-icon,
+.verification-item:focus-within ion-icon {
+  color: var(--input-icon-focus);
+}
+
+.login-btn,
+.register-btn {
+  --background: var(--btn-auth-bg) !important;
+  --color: var(--btn-auth-text) !important;
+  --border-radius: 12px !important;
+  --box-shadow: 0 8px 24px var(--brand-primary-fade);
+  height: 3.5rem;
+  font-family: var(--app-font-brand);
+  font-weight: 900;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  transition: transform 0.2s;
+  width: 100%;
+}
+
+.login-btn:active,
+.register-btn:active {
+  transform: scale(0.98);
+}
+
