@@ -1,0 +1,1023 @@
+openapi: 3.0.3
+info:
+  title: API GYMETRA-Qr
+  version: 1.0.0
+  description: |
+    Servicio de acceso, ejercicios y nutrición de GYMETRA.
+
+    Gestiona los códigos QR de acceso de cada socio, el registro de entradas y salidas,
+    las sedes del gimnasio, el catálogo de ejercicios (sincronizado de ExerciseDB) y el
+    generador de planes nutricionales (basado en Spoonacular).
+
+    ⚠️ **Aviso de seguridad:** en la implementación actual todo lo bajo
+    `/api/exercises/**` y `/api/nutrition/**` está en `permitAll()`, lo que incluye
+    `POST /api/exercises/sync/clear-and-force`, que borra el catálogo completo. Ver
+    riesgo R-19.
+  contact:
+    name: Equipo GYMETRA
+
+servers:
+  - url: http://localhost:8090
+    description: Desarrollo local
+  - url: http://localhost:8090
+    description: "Producción (sin TLS. Ver RNF-11)"
+
+tags:
+  - name: QR
+    description: Códigos QR de acceso por socio
+  - name: Accesos
+    description: Registro de entradas y salidas
+  - name: Sedes
+    description: Sedes del gimnasio
+  - name: Ejercicios
+    description: Catálogo de ejercicios — público
+  - name: Nutrición
+    description: Planes nutricionales y recetas — público
+  - name: Proxy
+    description: Consultas a GYMETR-Membership
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/qr-access/me:
+    get:
+      tags: [QR]
+      summary: Obtener el QR del usuario autenticado
+      description: |
+        Devuelve el QR del socio identificado por el token. Si no tiene QR, lo genera.
+      operationId: obtenerMiQr
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: QR del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrAccess'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/qr-access/user/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [QR]
+      summary: Obtener el QR de un usuario
+      operationId: obtenerQrDeUsuario
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: QR del socio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrAccess'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/qr-access/all/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [QR]
+      summary: Historial de QR de un usuario
+      operationId: listarQrDeUsuario
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Historial de QR
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QrAccess'
+
+  /api/qr-access:
+    post:
+      tags: [QR]
+      summary: Generar un QR
+      description: |
+        Crea o renueva el QR de un socio. El token resultante tiene una **validez de 12
+        horas** (regla R-AC-5): pasado ese tiempo hay que regenerarlo.
+      operationId: generarQr
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: integer
+                  format: int64
+      responses:
+        '200':
+          description: QR generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrAccess'
+
+  /api/access-log:
+    get:
+      tags: [Accesos]
+      summary: Listar registros de acceso
+      description: |
+        Devuelve **todos** los registros de acceso, sin paginación ni filtros.
+
+        ⚠️ `access_log` es la tabla que más crece. Con volumen alto la respuesta puede
+        ser muy grande. Además, solo contiene accesos **concedidos**: los denegados no se
+        registran. Ver riesgo R-14.
+      operationId: listarAccesos
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Lista de accesos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccessLog'
+
+  /api/access-log/entrada:
+    post:
+      tags: [Accesos]
+      summary: Registrar una entrada
+      description: |
+        Registra la entrada de un socio al gimnasio. Aplica las reglas:
+
+        - **R-ACC-1:** sin membresía `ACTIVE` no hay acceso.
+        - **R-ACC-2:** no puede haber una segunda entrada abierta en el mismo turno.
+        - **R-ACC-3:** los turnos son 06:00–12:00 y 12:00–22:00.
+        - **R-ACC-4:** la salida debe cerrar una entrada previa del mismo día.
+        - **R-MB-4:** el permiso `QR_READ` se valida consultando a GYMETR-Membership.
+
+        ⚠️ Si Membership no responde, la validación falla y el usuario recibe un error.
+        No hay degradación a caché. Ver
+        [ADR-006](../../../05-arquitectura/decisiones/registros/ADR-006-proxy-validacion-membresia.md).
+      operationId: registrarEntrada
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  format: int64
+                qrId:
+                  type: integer
+                  format: int64
+                branchId:
+                  type: integer
+                  format: int64
+      responses:
+        '200':
+          description: Entrada registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessLog'
+        '400':
+          description: |
+            Regla de negocio violada: sin membresía activa, fuera de turno o ya hay una
+            entrada abierta en el mismo turno.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ya existe una entrada abierta en este turno
+
+  /api/access-log/salida:
+    post:
+      tags: [Accesos]
+      summary: Registrar una salida
+      description: |
+        Cierra la entrada abierta del socio, rellenando `exit_time` en el mismo registro
+        (no crea uno nuevo). Regla R-ACC-4.
+      operationId: registrarSalida
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  format: int64
+      responses:
+        '200':
+          description: Salida registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessLog'
+        '404':
+          description: No hay una entrada abierta para ese usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/branches:
+    get:
+      tags: [Sedes]
+      summary: Listar sedes
+      operationId: listarSedes
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Lista de sedes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Branch'
+    post:
+      tags: [Sedes]
+      summary: Crear una sede
+      operationId: crearSede
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchRequest'
+      responses:
+        '200':
+          description: Sede creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Branch'
+
+  /api/memberships-proxy/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [Proxy]
+      summary: Consultar la membresía de un usuario en Membership
+      description: |
+        Proxy hacia `GET /api/user-memberships/user/{userId}` de GYMETR-Membership.
+
+        Existe para que el navegador no tenga que llamar directamente al servicio de
+        membresías y para mantener la autorización en un solo lugar.
+      operationId: proxyMembresia
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Membresía del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMembershipProxy'
+        '502':
+          description: GYMETR-Membership no responde
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/memberships-proxy/{userId}/check-permission/{permission}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+      - name: permission
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [QR_READ, TRAINING_READ, NUTRITION_READ]
+          example: QR_READ
+    get:
+      tags: [Proxy]
+      summary: Verificar un permiso a través de Membership
+      description: |
+        Proxy hacia `GET /api/user-memberships/user/{userId}/permission/{permission}`.
+
+        Este es el endpoint que hace que GYMETRA-Qr dependa de GYMETR-Membership en el
+        camino crítico de cada escaneo. Ver
+        [ADR-006](../../../05-arquitectura/decisiones/registros/ADR-006-proxy-validacion-membresia.md).
+      operationId: proxyVerificarPermiso
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Resultado de la verificación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  granted:
+                    type: boolean
+        '502':
+          description: GYMETR-Membership no responde
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/exercises:
+    get:
+      tags: [Ejercicios]
+      summary: Listar ejercicios
+      description: |
+        Devuelve el catálogo completo de ejercicios sincronizado de ExerciseDB
+        (~1.300 registros). Traducido al español.
+
+        **Endpoint público.**
+      operationId: listarEjercicios
+      security: []
+      responses:
+        '200':
+          description: Lista de ejercicios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exercise'
+
+  /api/exercises/bodyPart/{bodyPart}:
+    parameters:
+      - $ref: '#/components/parameters/BodyPart'
+    get:
+      tags: [Ejercicios]
+      summary: Ejercicios por parte del cuerpo
+      operationId: ejerciciosPorParteDelCuerpo
+      security: []
+      responses:
+        '200':
+          description: Ejercicios filtrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exercise'
+
+  /api/exercises/target/{target}:
+    parameters:
+      - $ref: '#/components/parameters/Target'
+    get:
+      tags: [Ejercicios]
+      summary: Ejercicios por músculo objetivo
+      operationId: ejerciciosPorMusculo
+      security: []
+      responses:
+        '200':
+          description: Ejercicios filtrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exercise'
+
+  /api/exercises/equipment/{equipment}:
+    parameters:
+      - name: equipment
+        in: path
+        required: true
+        schema:
+          type: string
+          example: barra
+    get:
+      tags: [Ejercicios]
+      summary: Ejercicios por equipamiento
+      operationId: ejerciciosPorEquipamiento
+      security: []
+      responses:
+        '200':
+          description: Ejercicios filtrados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exercise'
+
+  /api/exercises/exercise/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identificador externo de ExerciseDB
+        schema:
+          type: string
+          example: '0001'
+    get:
+      tags: [Ejercicios]
+      summary: Obtener un ejercicio por ID
+      operationId: obtenerEjercicioPorId
+      security: []
+      responses:
+        '200':
+          description: Datos del ejercicio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exercise'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/exercises/name/{name}:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+          example: Sentadilla
+    get:
+      tags: [Ejercicios]
+      summary: Obtener un ejercicio por nombre
+      operationId: obtenerEjercicioPorNombre
+      security: []
+      responses:
+        '200':
+          description: Ejercicios con ese nombre
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exercise'
+
+  /api/exercises/targetList:
+    get:
+      tags: [Ejercicios]
+      summary: Valores distintos de músculo objetivo
+      description: Alimenta el selector de filtros de la interfaz.
+      operationId: listarMusculos
+      security: []
+      responses:
+        '200':
+          description: Lista de músculos objetivo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example: [piernas, espalda, pecho, hombros]
+
+  /api/exercises/bodyPartList:
+    get:
+      tags: [Ejercicios]
+      summary: Valores distintos de parte del cuerpo
+      operationId: listarPartesDelCuerpo
+      security: []
+      responses:
+        '200':
+          description: Lista de partes del cuerpo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /api/exercises/equipmentList:
+    get:
+      tags: [Ejercicios]
+      summary: Valores distintos de equipamiento
+      operationId: listarEquipamientos
+      security: []
+      responses:
+        '200':
+          description: Lista de equipamientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
+  /api/exercises/{id}/gif:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: '0001'
+    get:
+      tags: [Ejercicios]
+      summary: Descargar la animación GIF de un ejercicio
+      description: |
+        Devuelve el binario GIF almacenado en la columna `exercises.gif_data` (tipo
+        `bytea`).
+      operationId: obtenerGifEjercicio
+      security: []
+      responses:
+        '200':
+          description: Binario GIF
+          content:
+            image/gif:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/exercises/sync/force:
+    post:
+      tags: [Ejercicios]
+      summary: Forzar la sincronización del catálogo
+      description: |
+        Relanza la descarga de ejercicios desde ExerciseDB vía RapidAPI, con un retardo
+        de 200 ms entre peticiones y traducción al español.
+
+        **Endpoint público.** No debería estarlo. Ver riesgo R-19.
+      operationId: forzarSincronizacion
+      security: []
+      responses:
+        '200':
+          description: Sincronización iniciada
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/exercises/sync/clear-and-force:
+    post:
+      tags: [Ejercicios]
+      summary: Borrar el catálogo y resincronizar
+      description: |
+        🔴 **El endpoint más expuesto del sistema.**
+
+        No requiere autenticación y ejecuta `exerciseRepository.deleteAll()` seguido de una
+        resincronización completa de ~1.300 ejercicios. Cualquier persona que conozca la
+        URL puede:
+
+        1. Borrar el catálogo de ejercicios.
+        2. Forzar ~1.300 peticiones a RapidAPI y agotar la cuota del proyecto.
+        3. Durante la ventana de sincronización, dejar a los socios sin rutinas.
+
+        **Corrección recomendada:** restringir a `POST` autenticado con rol `Admin`, y en
+        su defecto, al menos a autenticación.
+      operationId: borrarYSincronizar
+      security: []
+      responses:
+        '200':
+          description: Catálogo borrado y sincronización iniciada
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/nutrition/generate:
+    get:
+      tags: [Nutrición]
+      summary: Generar un plan nutricional
+      description: |
+        Genera un plan de comidas con la distribución **25 % desayuno / 45 % comida /
+        30 % cena** (regla R-BE-1), eligiendo recetas de `recipes` según el `dietType`
+        pedido.
+
+        La selección de recetas depende de `NutritionSyncService`, que sincroniza desde
+        Spoonacular al arrancar. Si la tabla `recipes` está vacía o la cuota de
+        Spoonacular se agotó, el generador no tiene con qué trabajar. Ver riesgo R-01.
+
+        **Endpoint público.**
+      operationId: generarPlanNutricional
+      security: []
+      parameters:
+        - name: dietType
+          in: query
+          required: false
+          description: Tipo de dieta
+          schema:
+            type: string
+            enum: [ketogenic, vegetarian, vegan, paleo]
+        - name: calories
+          in: query
+          required: false
+          description: Objetivo de calorías diarias
+          schema:
+            type: integer
+            example: 2000
+      responses:
+        '200':
+          description: Plan generado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NutritionPlan'
+        '503':
+          description: No hay recetas disponibles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/nutrition/recipes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Identificador de Spoonacular
+        schema:
+          type: integer
+          example: 654321
+    get:
+      tags: [Nutrición]
+      summary: Obtener una receta
+      operationId: obtenerReceta
+      security: []
+      responses:
+        '200':
+          description: Datos de la receta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/nutrition/recipes/{id}/image:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          example: 654321
+    get:
+      tags: [Nutrición]
+      summary: Descargar la imagen de una receta
+      description: Devuelve el binario almacenado en `recipes.image_data` (tipo `bytea`).
+      operationId: obtenerImagenReceta
+      security: []
+      responses:
+        '200':
+          description: Binario de la imagen
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/nutrition/sync:
+    post:
+      tags: [Nutrición]
+      summary: Sincronizar recetas con Spoonacular
+      description: |
+        Descarga recetas de Spoonacular y las traduce al español.
+
+        **Endpoint público.** No debería estarlo. Ver riesgo R-19.
+      operationId: sincronizarRecetas
+      security: []
+      responses:
+        '200':
+          description: Sincronización iniciada
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT emitido por AWS Cognito.
+    adminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        **Requiere rol `Admin`.** La implementación actual solo exige un token válido
+        (`anyRequest().authenticated()`) sin comprobar el rol. Ver riesgo R-16.
+
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: Identificador del socio
+      schema:
+        type: integer
+        format: int64
+        example: 1
+    BodyPart:
+      name: bodyPart
+      in: path
+      required: true
+      schema:
+        type: string
+        example: pierna
+    Target:
+      name: target
+      in: path
+      required: true
+      schema:
+        type: string
+        example: piernas
+
+  responses:
+    Unauthorized:
+      description: Token ausente, inválido o expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: El recurso no existe
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    QrAccess:
+      type: object
+      properties:
+        qrId:
+          type: integer
+          format: int64
+          example: 1
+        userId:
+          type: integer
+          format: int64
+          example: 1
+        qrCode:
+          type: string
+          nullable: true
+          maxLength: 1024
+          description: Token del QR. El frontend lo convierte en imagen con `qrcode.vue`.
+        generatedAt:
+          type: string
+          format: date-time
+          description: |
+            Momento de generación. El QR se considera **expirado** pasado más de
+            **12 horas** (regla R-AC-5).
+        status:
+          type: string
+          enum: [active, inactive, expired]
+          example: active
+
+    AccessLog:
+      type: object
+      properties:
+        logId:
+          type: integer
+          format: int64
+          example: 1
+        userId:
+          type: integer
+          format: int64
+          example: 1
+        qrId:
+          type: integer
+          format: int64
+          example: 1
+        branchId:
+          type: integer
+          format: int64
+          example: 1
+        eventTs:
+          type: string
+          format: date-time
+        entryTime:
+          type: string
+          format: date-time
+          nullable: true
+        exitTime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Se rellena en el mismo registro al registrar la salida.
+        result:
+          type: string
+          enum: [granted, denied]
+          example: granted
+          description: |
+            La columna acepta `denied`, pero en la práctica solo se registran accesos
+            concedidos. Ver riesgo R-14.
+        notes:
+          type: string
+          nullable: true
+
+    Branch:
+      type: object
+      properties:
+        branchId:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: GYMETRA Centro
+        address:
+          type: string
+          example: Calle 100 #20-30
+        city:
+          type: string
+          example: Bogotá
+        capacity:
+          type: integer
+          nullable: true
+          example: 150
+          description: |
+            Aforo máximo. ⚠️ **No hay ninguna regla de negocio que lo valide** contra los
+            accesos concurrentes. Ver riesgo R-11.
+
+    BranchRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        capacity:
+          type: integer
+
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identificador externo de ExerciseDB
+          example: '0001'
+        name:
+          type: string
+          example: Sentadilla
+        gifUrl:
+          type: string
+          nullable: true
+          description: URL de la animación. La columna en la base es `gif_url`; el campo JSON es `gifUrl`.
+        target:
+          type: string
+          nullable: true
+          example: piernas
+        equipment:
+          type: string
+          nullable: true
+          example: barra
+        bodyPart:
+          type: string
+          nullable: true
+          example: pierna
+
+    Recipe:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador de Spoonacular
+          example: 654321
+        title:
+          type: string
+          example: Ensalada de pollo
+        summary:
+          type: string
+          nullable: true
+        instructions:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        readyInMinutes:
+          type: integer
+          nullable: true
+          example: 25
+        servings:
+          type: integer
+          nullable: true
+          example: 4
+        calories:
+          type: number
+          format: double
+          nullable: true
+          example: 450
+        protein:
+          type: number
+          format: double
+          nullable: true
+          example: 35
+        fat:
+          type: number
+          format: double
+          nullable: true
+          example: 12
+        carbs:
+          type: number
+          format: double
+          nullable: true
+          example: 40
+        dietType:
+          type: string
+          nullable: true
+          enum: [ketogenic, vegetarian, vegan, paleo]
+        dishType:
+          type: string
+          nullable: true
+          description: |
+            Tipo de plato, **en inglés** (`breakfast`, `main course`, `side dish`).
+            El generador filtra por este valor y traduce al español al final.
+          example: main course
+
+    NutritionPlan:
+      type: object
+      properties:
+        totalCalories:
+          type: integer
+          example: 2000
+        meals:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [desayuno, comida, cena]
+                example: desayuno
+              percentage:
+                type: integer
+                example: 25
+              recipes:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recipe'
+
+    UserMembershipProxy:
+      type: object
+      description: Estructura devuelta por GYMETR-Membership, reenviada por el proxy.
+      properties:
+        userId:
+          type: integer
+          format: int32
+        memberships:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int32
+              status:
+                type: string
+                enum: [PENDING, ACTIVE, SUSPENDED, CANCELED, EXPIRED]
+              startDate:
+                type: string
+                format: date
+              endDate:
+                type: string
+                format: date
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: Bad Request
+        message:
+          type: string
+          example: 'Acceso denegado: la membresía no está activa'
+        path:
+          type: string
+          example: /api/access-log/entrada
+        timestamp:
+          type: string
+          format: date-time

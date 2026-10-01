@@ -1,0 +1,225 @@
+﻿@startuml
+' ===========================================================
+' GYMETRA - Diagrama de paquetes
+' Como se organizan las dependencias entre modulos Java.
+' Revela el acoplamiento real del backend.
+' Nombres verificados contra el codigo de los tres servicios.
+'
+' Nota de layout: una subclase por paquete duplicaba el ancho
+' y PlantUML recortaba el PNG en el limite de 4096 px, asi que
+' las clases van directamente dentro de la capa.
+' ===========================================================
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 55
+skinparam wrapWidth 260
+
+left to right direction
+
+' ---------- CAPA DE PRESENTACION (controladores) ----------
+
+package "controller" {
+  class AuthController
+  class MeController
+  class RoleController
+  class MembershipController
+  class UserMembershipController
+  class PaymentController
+  class DiagnosticController
+  class TableInspectorController
+  class ExerciseController
+  class NutritionController
+  class AccessLogController
+  class QrAccessController
+  class MembershipProxyController
+  class BranchController
+}
+
+' ---------- CAPA DE SERVICIO (reglas de negocio) ----------
+
+package "service" {
+  class UserService
+  class CognitoUserSyncService
+  class RoleService
+  class MembershipService
+  class UserMembershipService
+  class PaymentService
+  class StripePaymentService
+  class QrAccessService
+  class QrBusinessService
+  class AccessLogService
+  class AccessLogBusinessService
+  class BranchService
+  class ExerciseSyncService
+  class NutritionSyncService
+  class TranslationService
+  class LocalNutritionService
+  class MembershipProxyService
+}
+
+' ---------- CLIENTE HTTP INTERNO ----------
+
+package "client" {
+  class UserMembershipClient
+  class UserMembershipResponse
+}
+
+' ---------- CAPA DE PERSISTENCIA ----------
+
+package "repository" {
+  class UserRepository
+  class RoleRepository
+  class UserRoleRepository
+  class PasswordResetTokenRepository
+  class MembershipRepository
+  class UserMembershipRepository
+  class PaymentRepository
+  class QrAccessRepository
+  class AccessLogRepository
+  class BranchRepository
+  class ExerciseRepository
+  class RecipeRepository
+  class UserMinRepository
+}
+
+' ---------- ENTIDADES ----------
+
+package "entity" {
+  class User
+  class Role
+  class UserRole
+  class PasswordResetToken
+  class Membership
+  class UserMembership
+  class UserMembershipStatus
+  class Payment
+  class QrAccess
+  class AccessLog
+  class Branch
+  class Exercise
+  class Recipe
+  class UserMin
+}
+
+' ---------- CONFIGURACION ----------
+
+package "config" {
+  class SecurityConfig
+  class DataInitializer
+  class OpenApiConfig
+  class RestTemplateConfig
+  class SwaggerConfig
+  class BranchDataInitializer
+}
+
+' ---------- DTOs ----------
+
+package "dto" {
+  class EditUserRequest
+  class RoleRequest
+  class RoleResponse
+  class AccessLogResponse
+  class EntradaSalidaRequest
+  class LoginRequest <<codigo muerto>>
+  class LoginResponse <<codigo muerto>>
+  class JwtResponse <<codigo muerto>>
+  class RegisterRequest <<codigo muerto>>
+}
+
+' ---------- DEPENDENCIAS ----------
+
+AuthController --> UserService
+AuthController --> CognitoUserSyncService
+MeController --> UserService
+RoleController --> RoleService
+MembershipController --> MembershipService
+UserMembershipController --> UserMembershipService
+PaymentController --> PaymentService
+DiagnosticController --> Membership
+TableInspectorController --> Payment
+ExerciseController --> ExerciseSyncService
+NutritionController --> LocalNutritionService
+AccessLogController --> AccessLogBusinessService
+QrAccessController --> QrBusinessService
+MembershipProxyController --> MembershipProxyService
+BranchController --> BranchService
+
+UserService --> UserRepository
+UserService --> PasswordResetTokenRepository
+CognitoUserSyncService --> UserRepository
+CognitoUserSyncService --> RoleRepository
+CognitoUserSyncService --> UserRoleRepository
+RoleService --> RoleRepository
+RoleService --> UserRoleRepository
+MembershipService --> MembershipRepository
+UserMembershipService --> UserMembershipRepository
+UserMembershipService --> MembershipRepository
+PaymentService --> PaymentRepository
+StripePaymentService --> PaymentRepository
+QrAccessService --> QrAccessRepository
+QrBusinessService --> QrAccessRepository
+QrBusinessService --> UserMembershipClient
+AccessLogService --> AccessLogRepository
+AccessLogBusinessService --> AccessLogRepository
+AccessLogBusinessService --> BranchRepository
+BranchService --> BranchRepository
+ExerciseSyncService --> ExerciseRepository
+TranslationService --> Exercise
+LocalNutritionService --> RecipeRepository
+NutritionSyncService --> TranslationService
+MembershipProxyService --> UserMembershipClient
+UserMembershipClient --> UserMembershipResponse
+
+UserRepository --> User
+RoleRepository --> Role
+UserRoleRepository --> UserRole
+PasswordResetTokenRepository --> PasswordResetToken
+MembershipRepository --> Membership
+UserMembershipRepository --> UserMembership
+UserMembershipRepository --> UserMembershipStatus
+PaymentRepository --> Payment
+QrAccessRepository --> QrAccess
+AccessLogRepository --> AccessLog
+BranchRepository --> Branch
+ExerciseRepository --> Exercise
+RecipeRepository --> Recipe
+UserMinRepository --> UserMin
+
+DataInitializer --> MembershipRepository
+BranchDataInitializer --> BranchRepository
+
+note bottom of dto
+  9 DTOs en total.
+  4 no los usa nadie:
+  LoginRequest, LoginResponse,
+  JwtResponse y RegisterRequest.
+  El registro se hace con
+  parametros sueltos.
+end note
+
+note bottom of AccessLogBusinessService
+  Los BusinessServices
+  dependen de repositorios
+  Spring Data: no hay puertos
+  ni adaptadores, por eso el
+  nucleo no es testeable
+  sin levantar la base (R-24)
+end note
+
+note bottom of PasswordResetToken
+  PasswordResetToken no
+  lo referencia ningun
+  servicio (R-20, R-26)
+end note
+
+note bottom of MembershipProxyService
+  Sin timeout, reintentos
+  ni circuit breaker: si
+  Membership cae, el acceso
+  se deniega (R-12, R-14)
+end note
+
+@enduml

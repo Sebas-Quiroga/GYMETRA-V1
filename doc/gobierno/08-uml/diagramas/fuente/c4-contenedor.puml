@@ -1,0 +1,53 @@
+@startuml
+' ===========================================================
+' GYMETRA - C4 Nivel 2: Contenedor
+' Las aplicaciones que componen el sistema y como se comunican.
+' Los tres backends comparten la misma base de datos (R-12).
+' ===========================================================
+
+!include <C4/C4_Container>
+
+title C4 Nivel 2 - Contenedores de GYMETRA
+
+Person(usuario, "Usuario", "Socio, administrador o personal de sede")
+
+System_Boundary(gymetra, "GYMETRA") {
+  Container(web, "gymetra-frontend", "Vue 3 + Ionic 8 + Vite + Capacitor", "App movil y web del socio. Habla con los tres servicios.")
+  Container(adm, "admin-frontend", "Vue 3 + Ionic 7 + Vite", "Panel web de administracion: usuarios, roles, pagos, metricas y reportes.")
+  Container(login, "GYMETR-login", "Spring Boot 3.2.0 / Java 17", "Usuarios, roles, perfil, sincronizacion con Cognito. Puerto 8080.")
+  Container(memb, "GYMETR-Membership", "Spring Boot 3.5.5 / Java 17", "Planes, membresias, pagos y permisos. Puerto 8081.")
+  Container(qr, "GYMETRA-Qr", "Spring Boot 3.5.5 / Java 17", "QR, accesos, sedes, ejercicios y nutricion. Puerto 8090.")
+  ContainerDb(db, "gymdb", "PostgreSQL 15", "Base unica compartida por los tres servicios. 10 tablas por el script SQL, 12 si Hibernate crea exercises y recipes.")
+}
+
+System_Ext(cognito, "AWS Cognito", "Autenticacion y JWT")
+System_Ext(stripe, "Stripe", "Pagos")
+System_Ext(exercisedb, "ExerciseDB (RapidAPI)", "Catalogo de ejercicios")
+System_Ext(spoonacular, "Spoonacular", "Recetas")
+System_Ext(mymemory, "MyMemory", "Traduccion")
+
+Rel(usuario, web, "Usa", "HTTPS")
+Rel(usuario, adm, "Administra", "HTTPS")
+
+Rel(web, login, "/api/auth", "JSON")
+Rel(web, memb, "/api", "JSON")
+Rel(web, qr, "/api", "JSON")
+Rel(adm, login, "/api", "JSON")
+Rel(adm, memb, "/api", "JSON")
+Rel(adm, qr, "/api", "JSON")
+
+Rel(login, db, "Lee y escribe user, role, user_role", "JDBC")
+Rel(memb, db, "Lee y escribe membership, user_membership, payment", "JDBC")
+Rel(qr, db, "Lee y escribe qr_access, access_log, branch, exercise, recipe", "JDBC")
+
+Rel(qr, memb, "GET /api/user-memberships/user/{userId} (sincrono, sin token, sin circuit breaker)", "JSON")
+Rel(login, cognito, "Valida JWT y sincroniza usuarios", "HTTPS")
+Rel(memb, cognito, "Valida JWT", "HTTPS")
+Rel(qr, cognito, "Valida JWT", "HTTPS")
+Rel(memb, stripe, "Cobros (declarado en dependencias)", "HTTPS")
+Rel(qr, exercisedb, "Sincroniza catalogo", "HTTPS")
+Rel(qr, spoonacular, "Sincroniza recetas", "HTTPS")
+Rel(qr, mymemory, "Traduce ejercicios", "HTTPS")
+
+SHOW_LEGEND()
+@enduml

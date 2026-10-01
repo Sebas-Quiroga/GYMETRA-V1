@@ -1,0 +1,106 @@
+@startuml
+' ===========================================================
+' GYMETRA - Diagrama de despliegue
+' Fuente generada a partir de docker-compose.yml, Jenkinsfile
+' y los archivos de configuracion de los tres servicios.
+' ===========================================================
+
+skinparam shadowing false
+skinparam rectangle {
+  BorderColor #00ACC1
+  BackgroundColor #f8f9fa
+}
+
+node "Servidor / Host\n(Windows o Linux con Docker)" {
+
+  node "Docker Compose: proyecto gymetra" {
+
+    node "Contenedor: database" as DB {
+      artifact "PostgreSQL 15 alpine\ncontenedor gymetra_database\npuerto 5000 -> 5432\nvolumen postgres_data\nscript de inicializacion montado" as PG
+    }
+
+    node "Contenedor: backend" as BE {
+      artifact "GYMETR-login\nSpring Boot 3.2.0 / Java 17\npuerto 8080\nperfil prod\n-Xmx512m -Xms256m" as LOGIN
+    }
+
+    node "Contenedor: frontend" as FE {
+      artifact "gymetra-frontend\nVue 3 + Ionic 8 / Vite\npuerto 8100 -> 80\nnode: serve" as FRONT
+    }
+  }
+
+  node "Fuera de Docker" as HOST {
+    artifact "GYMETR-Membership :8081\n(ejecutado con mvn spring-boot:run)" as MEMB
+    artifact "GYMETRA-Qr :8090\n(ejecutado con mvn spring-boot:run)" as QRS
+    artifact "Jenkins\npolling H/5 sobre develop\ndespliega con docker-compose" as JEN
+  }
+}
+
+node "AWS" as AWS {
+  artifact "Cognito User Pool\nus-east-2\nissuer + JWKS" as COG
+  artifact "S3 (opcional)\npara fotos de perfil" as S3
+}
+
+node "Servicios de terceros" as THIRD {
+  artifact "RapidAPI / ExerciseDB\nejercicios" as RAPID
+  artifact "Spoonacular\nrecetas y planes" as SPOON
+  artifact "MyMemory\ntraduccion" as MEM
+  artifact "Stripe\npagos" as STRIPE
+}
+
+node "Desarrollador" as DEV {
+  artifact "Navegador\nhttp://localhost:8100" as BROWSER
+  artifact "http://localhost:8080/swagger-ui.html\nhttp://localhost:8081/swagger-ui.html\nhttp://localhost:8090/swagger-ui.html" as SWAGGER
+}
+
+DB --> LOGIN : jdbc:postgresql
+LOGIN --> COG : HTTPS (validacion JWT)
+LOGIN --> S3 : fotos de perfil
+LOGIN --> STRIPE : (configurado, no implementado)
+MEMB --> COG : HTTPS
+MEMB --> STRIPE : API de cobros
+QRS --> COG : HTTPS
+QRS --> RAPID : catalogos
+QRS --> SPOON : recetas
+QRS --> MEM : traduccion
+QRS --> MEMB : HTTP a localhost:8081/api
+BROWSER --> FRONT : HTTP
+BROWSER --> LOGIN : /api/auth
+BROWSER --> MEMB : /api
+BROWSER --> QRS : /api
+SWAGGER --> LOGIN
+SWAGGER --> MEMB
+SWAGGER --> QRS
+JEN --> DB : docker-compose up
+JEN --> BE : docker-compose up
+
+note bottom of DB
+  El puerto publicado es 5000, no 5432.
+  La contrasena del compose NO es la
+  misma que la de
+  application-prod.properties: el
+  perfil prod no conecta (R-15).
+  No se reproducen los valores aqui.
+end note
+
+note bottom of BE
+  docker-compose solo construye
+  2 de los 5 proyectos del
+  repositorio (R-17)
+end note
+
+note bottom of BE
+  El health check del Jenkinsfile
+  consulta /actuator/health, pero
+  ningun pom.xml incluye
+  spring-boot-starter-actuator:
+  la comprobacion siempre falla
+end note
+
+note bottom of MEMB
+  Configuracion prod ausente:
+  el contenedor usa el
+  application.yml por defecto
+  con ddl-auto: update
+end note
+
+@enduml

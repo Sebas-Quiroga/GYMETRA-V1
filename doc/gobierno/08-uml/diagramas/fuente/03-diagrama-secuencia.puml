@@ -1,0 +1,190 @@
+@startuml
+' ===========================================================
+' GYMETRA - Diagramas de secuencia
+' Tres flujos criticos del sistema, fiel al codigo:
+'   A) Acceso al gimnasio (API sin pantalla conectada)
+'   B) Registro y sincronizacion con Cognito
+'   C) Sincronizacion del catalogo de ejercicios
+' ===========================================================
+
+title A) Acceso al gimnasio - flujo completo
+
+autonumber
+actor "Terminal / curl\n(sin pantalla conectada)" as Socio
+participant "GYMETRA-Qr\n:8090" as QR
+participant "GYMETR-Membership\n:8081" as MB
+database "gymdb" as DB
+
+note over Socio
+  Ningun frontend llama a
+  POST /api/access-log/entrada.
+  El flujo existe como API y hoy
+  solo se puede disparar a mano.
+end note
+
+Socio -> QR: POST /api/access-log/entrada\n{ userId, branchId }\n(request NO lleva qrCode)
+activate QR
+
+QR -> QR: getOrCreateQrForUser(userId)\nfindFirstByUserIdAndStatus(userId, "active")
+QR -> DB: SELECT * FROM qr_access\nWHERE user_id = ? AND status = 'active'
+DB --> QR: registro (o se crea uno nuevo)
+
+note right of QR
+  Si el registro no existe, se crea con
+  qr_code = Base64(userId:UUID).
+  El QR NO se decodifica: el cliente
+  envia userId y branchId directos.
+end note
+
+QR -> QR: generado hace mas de 12h?
+alt QR antiguo o recien creado
+  QR -> MB: GET /api/user-memberships/user/{userId}\n(devuelve TODAS las membresias)
+  activate MB
+  MB -> DB: SELECT * FROM user_membership\nWHERE user_id = ?
+  DB --> MB: filas (cualquier estado)
+  MB --> QR: [ {status: "ACTIVE"}, ... ]
+  QR -> QR: filtro EN MEMORIA:\nalguna status == "ACTIVE"?
+  note right of MB
+    No hay filtro de estado en SQL.
+    Membership carga todas las filas y
+    QR decide en memoria (R-05).
+  end note
+  deactivate MB
+else QR vigente
+  QR -> QR: no consulta a Membership\n(se guarda hasta 12h)
+end
+
+QR -> QR: qr.status == "active"?
+
+alt qr.status activo
+  QR -> DB: SELECT * FROM access_log   (findAll completo)
+  DB --> QR: todas las filas
+  QR -> QR: filtro EN MEMORIA:\nuserId + branch + sin salida + isSameShift\n(R-03, R-05)
+  alt turno valido
+    QR -> DB: INSERT INTO access_log\n(access_type='ingreso', result='granted')
+    DB --> QR: ok
+    QR --> Socio: 200 { acesso concedido }
+    Socio -> QR: (muestra) Muestra confirmacion
+  else ya hay una entrada abierta en el turno
+    QR -> QR: throw RuntimeException\nnada se guarda
+    QR --> Socio: 400 { acceso denegado }
+    note right of QR
+      El intento denegado NO se
+      registra en access_log (R-14)
+    end note
+    Socio -> QR: (muestra) Muestra motivo
+  end
+else qr.status inactivo
+  QR -> QR: throw "User does not have\nan active membership"\nnada se guarda
+  QR --> Socio: 400 { acceso denegado }
+  note right of QR
+    Igual que arriba: sin fila en
+    access_log (R-14)
+  end note
+  Socio -> QR: (muestra) Muestra motivo
+end
+
+deactivate QR
+
+note over QR,MB
+  Endpoint NO usado en este flujo:
+  GET /api/memberships-proxy/{userId}/check-permission/{permission}
+  esta expuesto en QR pero ni los
+  frontends ni este servicio lo llaman.
+  Quien usa MembershipProxyService es
+  ExerciseController, con permission="training".
+end note
+
+note over QR
+  Puntos debiles documentados:
+  - findAll() + filtro en memoria (R-05)
+  - isSameShift asimetrica (R-03)
+  - no valida branch.capacity (R-11)
+  - no marca EXPIRED (R-06)
+end note
+
+@enduml
+
+@startuml
+' ===========================================================
+title B) Registro y primer inicio de sesion
+
+autonumber
+actor Socio
+participant "Frontend\n(RegisterPage.vue)" as FE
+participant "AWS Cognito" as COG
+participant "GYMETR-login\n:8080" as LG
+database "gymdb" as DB
+
+Socio -> FE: Completa el formulario
+FE -> FE: registerValidator.ts\n(valida formato)
+FE -> COG: signUp (AWS Amplify)
+COG --> FE: userSub + confirmacion
+note right of FE
+  NO existe POST /api/auth/users
+  El alta ocurre en Cognito,
+  no en el backend
+end note
+
+Socio -> FE: Confirma el codigo
+FE -> COG: confirmSignUp
+COG --> FE: accessToken
+
+FE -> LG: POST /api/auth/users/sync\n(Authorization: Bearer)
+activate LG
+LG -> COG: Verifica el JWT contra el JWKS
+LG -> DB: SELECT * FROM "user" WHERE email = ?
+DB --> LG: sin fila
+LG -> LG: getOrCreateRoleWithPriority("User")
+LG -> DB: INSERT INTO "user" (...)
+LG -> DB: INSERT INTO user_role (user_id, role_id)
+LG --> FE: 201 { usuario creado }
+deactivate LG
+
+note over LG
+  Mientras el sync no se ejecute,
+  el socio no existe para el sistema
+  y no puede contratar membresia (R-21)
+  El rol asignado es "User";
+  DataInitializer siembra "Admin" y "Client"
+end note
+
+@enduml
+
+@startuml
+' ===========================================================
+title C) Sincronizacion del catalogo de ejercicios
+
+autonumber
+actor Administrador
+participant "GYMETRA-Qr\n:8090" as QR
+participant "ExerciseDB\n(RapidAPI)" as API
+participant "MyMemory\n(traduccion)" as TR
+database "gymdb" as DB
+
+Administrador -> QR: POST /api/exercises/sync/clear-and-force
+note right of QR
+  Sin autenticacion: la ruta esta
+  en permitAll() (R-19)
+end note
+activate QR
+
+QR -> DB: DELETE FROM exercise
+QR -> API: GET /api/v1/exercises?limit=1300
+API --> QR: 1300 ejercicios
+
+loop por cada ejercicio
+  QR -> TR: translate("Bench Press" -> es)
+  TR --> QR: "Press de banca"
+  note right of TR
+    Si se agota la cuota gratuita,
+    devuelve una advertencia y el
+    termino queda en ingles (R-27)
+  end note
+  QR -> DB: INSERT INTO exercise (...)
+end
+
+QR --> Administrador: 200 { catalogo sincronizado }
+deactivate QR
+
+@enduml

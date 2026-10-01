@@ -1,0 +1,61 @@
+@startuml
+' ===========================================================
+' GYMETRA - Diagrama de estados de la membresia
+' El enum UserMembershipStatus tiene seis estados, pero
+' el codigo solo recorre cuatro de ellos (R-06).
+' ===========================================================
+
+title Estados de UserMembership
+
+[*] --> PENDING : POST /api/user-memberships\n(nueva suscripcion)
+
+PENDING --> ACTIVE : PUT /api/user-memberships/{id}/activate\n(confirm-payment: payment_status = CONFIRMED, nace ACTIVE)
+PENDING --> CANCELED : el socio cancela antes de pagar
+PENDING --> DELETED : UserMembershipService.deleteUserMembership\n(setStatus DELETED; sin endpoint que lo llame)
+
+ACTIVE --> SUSPENDED : PUT /api/user-memberships/{id}/suspend
+ACTIVE --> CANCELED : PUT /api/user-memberships/{id}/cancel\n(baja solicitada)
+ACTIVE --> EXPIRED : end_date < fecha actual
+ACTIVE --> DELETED : UserMembershipService.deleteUserMembership\n(borrado logico; sin endpoint que lo llame)
+
+SUSPENDED --> ACTIVE : PUT /api/user-memberships/{id}/activate
+SUSPENDED --> CANCELED : PUT /api/user-memberships/{id}/cancel\n(baja definitiva)
+
+CANCELED --> [*]
+EXPIRED --> [*]
+DELETED --> [*]
+
+state ACCESO {
+  ACTIVE --> ACCESO_PERMITIDO : se concede el ingreso
+  ACCESO_PERMITIDO --> ACCESO_PERMITIDO : isSameShift = true
+  ACCESO_PERMITIDO --> ACCESO_DENEGADO : doble ingreso en el mismo turno
+  ACCESO_DENEGADO --> [*]
+}
+
+ACTIVE --> ACCESO : POST /api/access-log/entrada
+EXPIRED --> ACCESO : (deberia denegar)
+CANCELED --> ACCESO : (deberia denegar)
+
+note right of EXPIRED
+  EN EL CODIGO ACTUAL NUNCA SE ASIGNA
+  Solo existe en el enum
+  UserMembershipStatus; no hay job
+  programado ni logica que lo dispare.
+  Una membresia con end_date vencida
+  sigue en ACTIVE y concede acceso
+  indefinidamente. (R-06)
+end note
+
+note right of SUSPENDED
+  La suspension tampoco tiene efecto
+  sobre Cognito: el usuario sigue
+  podendo autenticarse (R-23)
+end note
+
+note right of ACCESO_DENEGADO
+  El intento denegado no se
+  escribe en access_log, por lo que
+  no queda registro (R-14)
+end note
+
+@enduml

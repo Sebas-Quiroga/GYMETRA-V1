@@ -1,0 +1,146 @@
+@startuml
+' ===========================================================
+' GYMETRA - Diagrama de casos de uso
+' Actores y casos derivados de los 64 endpoints reales
+' (14 controladores: 12 login, 25 membership, 27 QR)
+' ===========================================================
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor Socio as S
+actor Administrador as A
+actor "Personal de sede" as P
+actor "Sistema\n(Cron / CI)" as SYS
+actor "ExerciseDB\nSpoonacular\nMyMemory" as EXT
+
+rectangle "GYMETR-login :8080" {
+  usecase "Registrarse en Cognito" as UC01
+  usecase "Iniciar sesion" as UC02
+  usecase "Verificar codigo" as UC03
+  usecase "Sincronizar usuario" as UC04
+  usecase "Consultar perfil" as UC05
+  usecase "Actualizar perfil" as UC06
+  usecase "Listar usuarios" as UC07
+  usecase "Crear usuario" as UC08
+  usecase "Editar usuario" as UC09
+  usecase "Cambiar estado\n(activar/suspender)" as UC10
+  usecase "Eliminar usuario" as UC11
+  usecase "Cargar foto" as UC12
+}
+
+rectangle "GYMETR-Membership :8081" {
+  usecase "Ver planes" as UC13
+  usecase "Ver configuracion de plan" as UC14
+  usecase "Actualizar configuracion de plan" as UC15
+  usecase "Contratar membresia" as UC16
+  usecase "Ver mis membresias" as UC17
+  usecase "Ver todas las membresias" as UC18
+  usecase "Pagar con Stripe" as UC19
+  usecase "Confirmar pago" as UC20
+  usecase "Ver pagos" as UC21
+  usecase "Ver todos los pagos" as UC22
+  usecase "Cancelar membresia" as UC23
+  usecase "Comprobar permiso" as UC24
+  usecase "Verificar disponibilidad" as UC25
+}
+
+rectangle "GYMETRA-Qr :8090" {
+  usecase "Generar QR" as UC26
+  usecase "Ver mi QR" as UC27
+  usecase "Registrar ingreso" as UC28
+  usecase "Registrar salida" as UC29
+  usecase "Ver historial de accesos" as UC30
+  usecase "Ver catalogo de ejercicios" as UC31
+  usecase "Ver detalle de ejercicio" as UC32
+  usecase "Sincronizar catalogo" as UC33
+  usecase "Ver plan nutricional" as UC34
+  usecase "Ver recetas" as UC35
+  usecase "Ver sedes" as UC36
+  usecase "Diagnosticar esquema" as UC37
+}
+
+' ---------- Actor Socio ----------
+
+S -- UC01
+S -- UC02
+S -- UC03
+S -- UC05
+S -- UC06
+S -- UC13
+S -- UC16
+S -- UC17
+S -- UC19
+S -- UC20
+S -- UC26
+S -- UC27
+S -- UC31
+S -- UC32
+S -- UC34
+S -- UC35
+S -- UC36
+S -- UC12
+
+' ---------- Actor Personal de sede ----------
+
+P -- UC28
+P -- UC29
+P -- UC30
+
+' ---------- Actor Administrador ----------
+
+A -- UC07
+A -- UC08
+A -- UC09
+A -- UC10
+A -- UC11
+A -- UC14
+A -- UC15
+A -- UC18
+A -- UC21
+A -- UC22
+A -- UC23
+A -- UC25
+A -- UC33
+A -- UC37
+note right of UC33
+  Publico y sin rate
+  limiting: borra el
+  catalogo (R-19)
+end note
+
+' ---------- Actor Sistema ----------
+
+SYS -- UC04
+SYS -- UC24
+
+' ---------- Sistemas externos ----------
+
+EXT -- UC33 : descarga catalogo
+EXT -- UC34 : descarga recetas
+
+' ---------- Relaciones de inclusion ----------
+
+UC16 ..> UC19 : <<include>>
+UC28 ..> UC24 : <<include>>
+UC29 ..> UC24 : <<include>>
+UC20 ..> UC21 : <<include>>
+UC33 ..> UC31 : <<actualiza>>
+
+note bottom of UC11
+  Borrado fisico con cascada:
+  arrastra pagos y accesos (R-22)
+end note
+
+note bottom of UC10
+  Solo cambia el estado local;
+  Cognito no se suspende (R-23)
+end note
+
+note bottom of UC24
+  Endpoint publico: permite
+  enumerar socios (R-08)
+end note
+
+@enduml

@@ -1,0 +1,221 @@
+@startuml
+' ===========================================================
+' GYMETRA - Diagrama de clases (dominio y servicios)
+' Fuente generada a partir del codigo real del backend.
+' Actualizar cuando cambie una entidad o una regla de negocio.
+' ===========================================================
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+
+' ---------- ENUMERACIONES ----------
+
+enum UserMembershipStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  CANCELED
+  EXPIRED
+  DELETED
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  GATEWAY
+}
+
+' ---------- CONTEXTO: USUARIOS (GYMETR-login, puerto 8080) ----------
+
+class User {
+  +Long userId
+  +String firstName
+  +String lastName
+  +String email
+  +String phone
+  +Long identification
+  +String photoUrl
+  +String status
+  +String passwordHash
+  +OffsetDateTime createdAt
+  +OffsetDateTime lastLogin
+}
+
+class Role {
+  +Long roleId
+  +String roleName
+  +String description
+}
+
+class PasswordResetToken {
+  +Long id
+  +Long userId
+  +String token
+  +LocalDateTime expiryDate
+  --
+  Sin uso en el codigo (ver R-20, R-26)
+}
+
+class CognitoUserSyncService {
+  +syncUser(cognitoSub, email, names) : User
+  +DEFAULT_ROLE = "User"
+}
+
+' ---------- CONTEXTO: MEMBRESIAS (GYMETR-Membership, puerto 8081) ----------
+
+class Membership {
+  +Integer membershipId
+  +String planName
+  +BigDecimal price
+  +Integer durationDays
+  +String description
+  +String status
+  +Boolean training
+  +Boolean nutrition
+  --
+  training y nutrition siempre false (R-01)
+}
+
+class UserMembership {
+  +Long id
+  +Integer userId
+  +Integer membershipId
+  +UserMembershipStatus status
+  +LocalDate startDate
+  +LocalDate endDate
+}
+
+class Payment {
+  +Long id
+  +Long amount
+  +BigDecimal monto
+  +PaymentMethod paymentMethod
+  +String metodoPago
+  +String transactionReference
+  +PaymentStatus paymentStatus
+  +LocalDateTime paymentDate
+  +LocalDateTime fechaPago
+  --
+  Columnas duplicadas en dos idiomas,
+  las seis son NOT NULL (R-02)
+}
+
+class DataInitializer {
+  +run() : siembra 3 planes
+  --
+  No asigna training ni nutrition
+}
+
+' ---------- CONTEXTO: ACCESO Y EJERCICIOS (GYMETRA-Qr, puerto 8090) ----------
+
+class QrAccess {
+  +Long id
+  +String userId
+  +String qrCode
+  +LocalDateTime generatedAt
+  +LocalDateTime expiresAt
+  +String status
+  --
+  qrCode es texto Base64, no imagen (R-07)
+}
+
+class AccessLog {
+  +Long id
+  +Integer userId
+  +Integer branchId
+  +String accessType
+  +LocalDateTime accessTime
+  +String result
+  +String qrCode
+}
+
+class Branch {
+  +Long branchId
+  +String name
+  +String address
+  +String city
+  +Integer capacity
+  --
+  capacity nunca se lee (R-11)
+}
+
+class Exercise {
+  +Long id
+  +String name
+  +String gifUrl
+  +String imageUrl
+  +String equipment
+  +String target
+  +String muscle
+  +String instructions
+  +String dietType
+}
+
+class QrBusinessService {
+  +getOrCreateQrForUser(userId) : QrAccess
+  -generateQrCode(userId) : String
+  -getMembershipStatus(userId) : boolean
+  --
+  Genera Base64 de userId:UUID
+}
+
+class AccessLogBusinessService {
+  +marcarIngreso(userId, branchId) : AccessLog
+  +marcarSalida(userId, branchId) : AccessLog
+  -isSameShift(t1, t2) : boolean
+  --
+  Usa findAll() y filtra en memoria (R-05)
+  La validacion de turno es asimetrica (R-03)
+  No valida branch.capacity (R-11)
+}
+
+class LocalNutritionService {
+  +generateMealPlan(timeFrame, targetCalories, diet)
+  --
+  El plan semanal sobrescribe el calculo
+  de calorias por dia (R-13)
+}
+
+' ---------- RELACIONES ----------
+
+User "1" -- "*" Role : roles (tabla user_role)
+User "1" -- "0..1" PasswordResetToken : posee
+CognitoUserSyncService ..> User : crea y sincroniza
+
+Membership "1" -- "*" UserMembership :Agrupa
+UserMembership "1" -- "*" Payment : se paga con
+
+User "1" -- "*" QrAccess : posee
+User "1" -- "*" AccessLog : registra
+Branch "1" -- "*" AccessLog : recibe
+QrAccess "1" -- "0..1" AccessLog : valida
+
+QrBusinessService ..> QrAccess : gestiona
+AccessLogBusinessService ..> AccessLog : registra
+AccessLogBusinessService ..> Branch : deberia validar aforo
+LocalNutritionService ..> Exercise : consulta catalogo
+
+note bottom of UserMembership
+  userId es Integer, pero en
+  GYMETR-login el userId es Long
+end note
+
+note bottom of AccessLog
+  Solo se registran los accesos
+  permitidos; los denegados se
+  pierden (R-14)
+end note
+
+note bottom of Exercise
+  Catalogo descargado de
+  ExerciseDB (RapidAPI)
+end note
+
+@enduml

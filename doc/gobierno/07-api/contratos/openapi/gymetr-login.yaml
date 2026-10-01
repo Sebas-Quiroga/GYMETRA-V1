@@ -1,0 +1,472 @@
+openapi: 3.0.3
+info:
+  title: API GYMETR-login
+  version: 1.0.0
+  description: |
+    Servicio de identidad y usuarios de GYMETRA.
+
+    Gestiona el registro de socios y administradores, la sincronización con AWS Cognito,
+    los roles de autorización y la recuperación de contraseñas.
+
+    **Todos los endpoints requieren un token JWT válido de AWS Cognito.**
+    No hay endpoints funcionales públicos; solo la documentación de la API.
+  contact:
+    name: Equipo GYMETRA
+  license:
+    name: Proyecto interno
+
+servers:
+  - url: http://localhost:8080
+    description: Desarrollo local
+  - url: http://localhost:8080
+    description: "Producción (mismo puerto, sin TLS. Ver RNF-11)"
+
+tags:
+  - name: Usuarios
+    description: Registro, consulta, actualización y borrado de usuarios
+  - name: Roles
+    description: Catálogo de roles de autorización
+  - name: Perfil
+    description: Datos del usuario autenticado
+  - name: Sincronización
+    description: Sincronización con AWS Cognito
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/auth/users:
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios
+      operationId: listarUsuarios
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Lista de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/auth/users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [Usuarios]
+      summary: Obtener un usuario
+      operationId: obtenerUsuario
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Datos del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Usuarios]
+      summary: Actualizar un usuario
+      operationId: actualizarUsuario
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Usuarios]
+      summary: Eliminar un usuario
+      description: |
+        **Borrado físico de la fila** (`userRepository.deleteById`).
+
+        No existe baja lógica ni estado `DELETED`. Como `user_membership.user_id` no
+        declara clave foránea, sus membresías, pagos y accesos quedan **huérfanos** al
+        borrar el usuario. Ver hallazgo H-01 en la documentación de datos.
+      operationId: eliminarUsuario
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Usuario eliminado
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Usuario eliminado exitosamente
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/auth/users/{userId}/status:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+      - name: status
+        in: query
+        required: true
+        description: Estado de la cuenta. Solo se aceptan dos valores.
+        schema:
+          type: string
+          enum: [active, suspended]
+          example: active
+    patch:
+      tags: [Usuarios]
+      summary: Cambiar el estado de la cuenta
+      description: |
+        Activa o suspende una cuenta. El servicio valida que `status` sea exactamente
+        `active` o `suspended`; cualquier otro valor devuelve `400`.
+      operationId: cambiarEstadoUsuario
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Estado no válido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/auth/users/sync:
+    post:
+      tags: [Sincronización]
+      summary: Sincronizar usuario con Cognito
+      description: |
+        Localiza al usuario por su claim `cognito:username` (el `sub` del token JWT) y
+        sincroniza sus atributos de Cognito con la fila local.
+
+        Si el usuario no existe localmente, lo crea con el rol por defecto `Client`.
+      operationId: sincronizarUsuario
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usuario sincronizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/me:
+    get:
+      tags: [Perfil]
+      summary: Obtener el perfil del usuario autenticado
+      description: |
+        Devuelve los datos del usuario identificado por el claim `cognito:username` del
+        token. No requiere parámetro alguno: el usuario es el del token.
+      operationId: obtenerMiPerfil
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil del usuario autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/roles:
+    get:
+      tags: [Roles]
+      summary: Listar roles
+      operationId: listarRoles
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Lista de roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Roles]
+      summary: Crear un rol
+      operationId: crearRol
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+      responses:
+        '201':
+          description: Rol creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          description: El nombre del rol ya existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/roles/{roleId}:
+    parameters:
+      - $ref: '#/components/parameters/RoleId'
+    get:
+      tags: [Roles]
+      summary: Obtener un rol
+      operationId: obtenerRol
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Datos del rol
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Roles]
+      summary: Actualizar un rol
+      operationId: actualizarRol
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+      responses:
+        '200':
+          description: Rol actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Roles]
+      summary: Eliminar un rol
+      operationId: eliminarRol
+      security:
+        - bearerAuth: []
+        - adminAuth: []
+      responses:
+        '200':
+          description: Rol eliminado
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT emitido por AWS Cognito. Se envía en la cabecera `Authorization`.
+    adminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        **Requiere rol `Admin`.** Este contrato documenta la intención de diseño; la
+        implementación actual solo exige un token válido (`anyRequest().authenticated()`)
+        sin comprobar el rol en la mayoría de los endpoints. Ver riesgo R-16.
+
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: Identificador interno del usuario
+      schema:
+        type: integer
+        format: int64
+        example: 1
+    RoleId:
+      name: roleId
+      in: path
+      required: true
+      description: Identificador del rol
+      schema:
+        type: integer
+        format: int32
+        example: 1
+
+  responses:
+    BadRequest:
+      description: Petición malformada o faltan campos obligatorios
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Token ausente, inválido o expirado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: El token no tiene permisos suficientes
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: El recurso no existe
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+          example: 1
+        firstName:
+          type: string
+          example: María
+        lastName:
+          type: string
+          example: García
+        email:
+          type: string
+          format: email
+          example: maria.garcia@correo.com
+        cognitoSub:
+          type: string
+          nullable: true
+          description: Subject de Cognito. `null` si el usuario aún no se ha emparejado.
+          example: a1b2c3d4-5678-90ef-ghij-klmnopqrstuv
+        phone:
+          type: string
+          nullable: true
+          example: "+57 300 1234567"
+        status:
+          type: string
+          enum: [active, suspended]
+          example: active
+        identification:
+          type: integer
+          format: int64
+          example: 100200300
+        photoUrl:
+          type: string
+          nullable: true
+          example: https://cdn.ejemplo.com/foto.jpg
+        createdAt:
+          type: string
+          format: date-time
+        lastLogin:
+          type: string
+          format: date-time
+          nullable: true
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        photoUrl:
+          type: string
+
+    Role:
+      type: object
+      properties:
+        roleId:
+          type: integer
+          format: int32
+          example: 1
+        roleName:
+          type: string
+          example: Admin
+        description:
+          type: string
+          example: Administrador del sistema
+        priority:
+          type: integer
+          nullable: true
+
+    RoleRequest:
+      type: object
+      required: [roleName]
+      properties:
+        roleName:
+          type: string
+        description:
+          type: string
+        priority:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: Not Found
+        message:
+          type: string
+          example: Usuario no encontrado
+        path:
+          type: string
+          example: /api/auth/users/999
+        timestamp:
+          type: string
+          format: date-time

@@ -1,0 +1,37 @@
+@startuml
+' ===========================================================
+' GYMETRA - C4 Nivel 1: Contexto
+' Que sistemas externos externos interactuan con GYMETRA
+' y quien lo usa.
+' ===========================================================
+
+!include <C4/C4_Context>
+
+title C4 Nivel 1 - Contexto de GYMETRA
+
+Person(socio, "Socio", "Se registra, paga una membresia, entra al gimnasio con QR y consulta rutinas y planes de nutricion")
+Person(administrador, "Administrador", "Gestiona socios, membresias, pagos, catalogos y usuarios")
+Person(personal, "Personal de sede", "Registra ingresos y salidas leyendo el QR del socio")
+
+System(gymetra, "GYMETRA", "Gestion de socios, membresias, pagos y acceso por QR. Tres servicios Spring Boot y dos frontends Vue.")
+
+System_Ext(cognito, "AWS Cognito", "Registro, autenticacion, emision y validacion de JWT (us-east-2)", "OAuth2 / OIDC")
+System_Ext(stripe, "Stripe", "Procesamiento de pagos con tarjeta", "API REST")
+System_Ext(exercisedb, "ExerciseDB (RapidAPI)", "Catalogo de ~1300 ejercicios con GIF e imagenes", "API REST")
+System_Ext(spoonacular, "Spoonacular", "Recetas e informacion nutricional", "API REST")
+System_Ext(mymemory, "MyMemory", "Traduccion automatica de nombres de ejercicios", "API REST")
+System_Ext(gmail, "Gmail SMTP", "Envio de correo (configurado, sin uso)", "SMTP")
+
+Rel(socio, gymetra, "Usa", "HTTPS / JSON")
+Rel(administrador, gymetra, "Administra", "HTTPS / JSON")
+Rel(personal, gymetra, "Registra accesos", "HTTPS / JSON")
+
+Rel(gymetra, cognito, "Valida JWT contra JWKS y sincroniza usuarios", "HTTPS")
+Rel(gymetra, stripe, "Procesa cobros (integracion declarada, no implementada)", "HTTPS")
+Rel(gymetra, exercisedb, "Descarga el catalogo de ejercicios", "HTTPS")
+Rel(gymetra, spoonacular, "Descarga recetas y calcula planes", "HTTPS")
+Rel(gymetra, mymemory, "Traduce nombres de ejercicios", "HTTPS")
+Rel(gymetra, gmail, "Correo saliente (configurado, sin uso)", "SMTP 587")
+
+SHOW_LEGEND()
+@enduml

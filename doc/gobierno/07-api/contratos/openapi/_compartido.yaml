@@ -1,0 +1,171 @@
+openapi: 3.0.3
+info:
+  title: Componentes compartidos
+  version: 1.0.0
+  description: |
+    Componentes compartidos entre los contratos API de GYMETRA.
+    Referencia estos componentes en tus contratos con:
+    `$ref: './_compartido.yaml#/components/...'`
+
+    **Sobre los contratos existentes:** `gymetr-login.yaml`, `gymetr-membership.yaml` y
+    `gymetra-qr.yaml` definen sus componentes de forma inline (cada uno repite `Error`,
+    `bearerAuth` y `adminAuth`). Este archivo es la fuente canónica para **contratos nuevos**;
+    migrar los tres contratos existentes a `$ref` externo es una tarea pendiente.
+
+    **No hay componentes de paginación:** la API de GYMETRA no pagina
+    (`GET /api/payments/all` y `GET /api/access-log` devuelven el conjunto completo).
+    Ver el riesgo registrado en [`07-api/README.md`](../../README.md).
+components:
+
+  # ─── Schemas ─────────────────────────────────────────────────────────────
+  schemas:
+    Error:
+      type: object
+      description: |
+        Formato de error definido por los contratos de los tres servicios.
+        **Divergencia real:** el manejador global de Membership y QR emite
+        `timestamp`, `status`, `error` y `message` (sin `path`); `path` aparece en la
+        respuesta por defecto de Spring Security/Boot. GYMETR-login usa un formato
+        distinto en sus 400 — ver `ErrorValidacion`.
+      properties:
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: Not Found
+        message:
+          type: string
+          example: Usuario no encontrado
+        path:
+          type: string
+          example: /api/auth/users/999
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorValidacion:
+      type: object
+      description: |
+        Formato real de los errores 400 de **GYMETR-login**
+        (`GlobalExceptionHandler` de `com.login.GYMETRA.controller`): no sigue `Error`.
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Datos inválidos o duplicados (por ej., identificación/email único).
+
+    Timestamp:
+      type: string
+      format: date-time
+      example: '2026-09-20T10:30:00'
+
+  # ─── Parámetros reutilizables ───────────────────────────────────────────
+  parameters:
+    IdNumerico:
+      name: id
+      in: path
+      required: true
+      description: |
+        ID numérico del recurso (`BIGINT`). Es el patrón dominante en GYMETRA.
+        Excepción: `exercises` usa `id` de tipo texto (ID de la API de terceros).
+      schema:
+        type: integer
+        format: int64
+        example: 1
+
+  # ─── Respuestas reutilizables ───────────────────────────────────────────
+  responses:
+    BadRequest:
+      description: |
+        Petición malformada o faltan campos obligatorios.
+        GYMETR-login responde `{success, message}`; Membership y QR responden `Error`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            login:
+              summary: Formato real de GYMETR-login
+              value:
+                success: false
+                message: Datos inválidos o duplicados (por ej., identificación/email único.)
+            membershipQr:
+              summary: Formato de Membership y QR
+              value:
+                status: 400
+                error: Bad Request
+                message: Datos de entrada inválidos
+                path: /api/memberships
+                timestamp: '2026-09-20T10:30:00'
+
+    Unauthorized:
+      description: Token ausente, inválido o expirado (JWT de AWS Cognito)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: 401
+            error: Unauthorized
+            path: /api/memberships
+            timestamp: '2026-09-20T10:30:00'
+
+    Forbidden:
+      description: 'El token no tiene permisos suficientes (ver riesgo R-16: el rol no se comprueba)'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: 403
+            error: Forbidden
+            message: 'Acceso denegado: la membresía no está activa'
+            path: /api/access-log/entrada
+            timestamp: '2026-09-20T10:30:00'
+
+    NotFound:
+      description: El recurso no existe
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            status: 404
+            error: Not Found
+            message: Usuario no encontrado
+            path: /api/auth/users/999
+            timestamp: '2026-09-20T10:30:00'
+
+    InternalError:
+      description: Error interno (único caso que el manejador global de Membership y QR documenta con el cuerpo completo)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            timestamp: '2026-09-20T10:30:00'
+            status: 500
+            error: Internal Server Error
+            message: Ha ocurrido un error inesperado en el sistema.
+
+  # ─── Seguridad ──────────────────────────────────────────────────────────
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token JWT emitido por AWS Cognito. Se envía en la cabecera
+        `Authorization: Bearer <token>`.
+    adminAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        **Intención: requiere rol `Admin`.** La implementación actual solo exige un token
+        válido (`anyRequest().authenticated()`) sin comprobar el rol en la mayoría de los
+        endpoints. Ver riesgo R-16.

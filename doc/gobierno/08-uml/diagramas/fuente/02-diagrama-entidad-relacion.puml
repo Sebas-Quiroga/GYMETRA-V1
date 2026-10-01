@@ -1,0 +1,162 @@
+@startuml
+' ===========================================================
+' GYMETRA - Diagrama entidad-relacion
+' Fuente generada a partir de:
+'   data/Database-Setup/database_ Initial.sql   (base creada por el script)
+'   data/Database-Setup/test_data.sql            (datos de prueba)
+'   entidades JPA de los tres servicios          (columnas que espera el codigo)
+' ===========================================================
+
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+
+entity "user" as user {
+  * user_id : BIGSERIAL <<PK>>
+  --
+  first_name : VARCHAR(100)
+  last_name : VARCHAR(100)
+  email : VARCHAR(150) <<UQ>>
+  password_hash : VARCHAR(255) <<NOT NULL, nunca escrita>>
+  phone : VARCHAR(30)
+  status : VARCHAR(20) default 'active'
+  identification : BIGINT <<UQ, NOT NULL>>
+  photo_url : TEXT
+  created_at : TIMESTAMPTZ
+  last_login : TIMESTAMPTZ
+}
+
+entity "role" as role {
+  * role_id : BIGSERIAL <<PK>>
+  --
+  role_name : VARCHAR(50) <<UQ, NOT NULL>>
+  description : TEXT
+}
+
+entity "user_role" as user_role {
+  * user_role_id : BIGSERIAL <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  role_id : BIGINT <<FK>>
+  note: UNIQUE(user_id, role_id)
+}
+
+entity "password_reset_token" as prt {
+  * id : BIGSERIAL <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  token : VARCHAR
+  expiry_date : TIMESTAMP
+  note: tabla sin uso (R-20, R-26)
+}
+
+entity "membership" as membership {
+  * membership_id : BIGSERIAL <<PK>>
+  --
+  plan_name : VARCHAR(100)
+  price : DECIMAL(10,2)
+  duration_days : INTEGER
+  description : TEXT
+  status : VARCHAR(20) default 'active'
+  features : TEXT
+  training : BOOLEAN default false <<solo en la entidad>>
+  nutrition : BOOLEAN default false <<solo en la entidad>>
+}
+
+entity "user_membership" as user_membership {
+  * id : BIGSERIAL <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  membership_id : BIGINT <<FK>>
+  status : VARCHAR(20) default 'PENDING'
+  start_date : DATE
+  end_date : DATE
+  created_at : TIMESTAMP
+  note: en la entidad userId es Integer
+}
+
+entity "payment" as payment {
+  * id : BIGSERIAL <<PK>>
+  --
+  user_membership_id : BIGINT <<FK>>
+  amount : DECIMAL(10,2) <<NOT NULL>>
+  payment_method : VARCHAR(50)
+  gateway_reference : VARCHAR(255)
+  status : VARCHAR(20) default 'PENDING'
+  created_at : TIMESTAMP
+  monto : DECIMAL(10,2) <<NOT NULL, solo en la entidad>>
+  metodo_pago : VARCHAR(20) <<NOT NULL, solo en la entidad>>
+  fecha_pago : TIMESTAMP <<NOT NULL, solo en la entidad>>
+  transaction_reference : VARCHAR(255) <<solo en la entidad>>
+  payment_status : VARCHAR(20) <<NOT NULL, solo en la entidad>>
+  updated_at : TIMESTAMP <<NOT NULL, solo en la entidad>>
+}
+
+entity "branch" as branch {
+  * branch_id : BIGSERIAL <<PK>>
+  --
+  name : VARCHAR(100)
+  address : TEXT
+  city : VARCHAR(100)
+  phone : VARCHAR(30) <<solo en el script>>
+  status : VARCHAR(20) default 'active' <<solo en el script>>
+  capacity : INTEGER <<solo en la entidad>>
+}
+
+entity "qr_access" as qr_access {
+  * id : BIGSERIAL <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  qr_code : TEXT <<Base64 de userId:UUID>>
+  generated_at : TIMESTAMP
+  expires_at : TIMESTAMP
+  status : VARCHAR(20) default 'active'
+}
+
+entity "access_log" as access_log {
+  * id : BIGSERIAL <<PK>>
+  --
+  user_id : BIGINT <<FK>>
+  branch_id : BIGINT <<FK>>
+  access_type : VARCHAR(20) <<'ingreso' | 'salida'>>
+  access_time : TIMESTAMP
+  qr_code : TEXT
+  result : VARCHAR <<solo en la entidad, default 'granted'>>
+  note: los accesos denegados no se registran (R-14)
+}
+
+' ---------- RELACIONES DECLARADAS EN EL SCRIPT SQL ----------
+
+user ||--o{ user_role : "ON DELETE CASCADE"
+role ||--o{ user_role : "ON DELETE CASCADE"
+user ||--o{ password_reset_token : "ON DELETE CASCADE"
+user ||--o{ user_membership : "ON DELETE CASCADE"
+membership ||--o{ user_membership : "ON DELETE CASCADE"
+user_membership ||--o{ payment : "ON DELETE CASCADE"
+user ||--o{ qr_access : "ON DELETE CASCADE"
+user ||--o{ access_log : "ON DELETE CASCADE"
+branch ||--o{ access_log : "ON DELETE CASCADE"
+
+' ---------- DIVERGENCIA CRITICA ----------
+' Con ddl-auto:update sobre una base vacia, Hibernate NO crea
+' claves foraneas: el resultado es el contrario al del script
+' (filas huerfanas en vez de borrado en cascada). Ver R-12 y R-22.
+
+note bottom of payment
+  Doble divergencia:
+  1) el script NO crea monto, metodo_pago,
+     fecha_pago, transaction_reference,
+     payment_status ni updated_at
+  2) la entidad NO conoce gateway_reference
+     ni status
+  Con ddl-auto:update, Hibernate agrega las
+  columnas faltantes como NOT NULL, lo que
+  falla si la tabla ya tiene filas (R-02)
+end note
+
+note bottom of branch
+  El script crea phone y status;
+  la entidad no los conoce y anade capacity
+end note
+
+@enduml

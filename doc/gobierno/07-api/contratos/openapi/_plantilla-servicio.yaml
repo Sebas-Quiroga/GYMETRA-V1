@@ -1,0 +1,185 @@
+openapi: 3.0.3
+info:
+  title: "[NombreServicio] API"
+  version: 1.0.0
+  description: |
+    API de [nombre-servicio].
+
+    ## Autenticación
+    Todos los endpoints exigen un JWT de AWS Cognito:
+    ```
+    Authorization: Bearer <token>
+    ```
+    Si el endpoint es público, añade `security: []` y comprueba que esté en la lista
+    `permitAll()` del `SecurityConfig` del servicio.
+
+    ## Manejo de errores
+    Los errores referencian los componentes de `_compartido.yaml`. Antes de documentar un
+    error, verifica en el código qué cuerpo devuelve realmente (los tres servicios hoy no
+    usan el mismo formato).
+
+    ## Paginación
+    🔴 **No implementada en GYMETRA.** Los endpoints de lista devuelven el conjunto
+    completo como array. No inventes `page`/`limit` en el contrato.
+
+    ## Convenciones (ver `07-api/directrices-api.md`)
+    - Prefijo `/api`, recursos en plural, sin versionado (`/v1` no existe)
+    - `DELETE` responde `200` con texto plano, no `204`
+    - Este archivo es una plantilla: borra las secciones que no apliquen y **no dejes
+      marcadores `[...]`** en el contrato final
+
+servers:
+  - url: http://localhost:{port}
+    description: Desarrollo local (8080 login · 8081 membership · 8090 qr)
+    variables:
+      port:
+        default: '8080'
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: '[Recurso]'
+    description: Operaciones sobre [recurso]
+
+paths:
+  /api/[recursos]:
+    get:
+      tags: ['[Recurso]']
+      summary: Listar [recursos]
+      description: Devuelve la lista completa de [recursos] (sin paginación).
+      operationId: listar[Recursos]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de [recursos]
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/[Recurso]'
+        '401':
+          $ref: './_compartido.yaml#/components/responses/Unauthorized'
+
+    post:
+      tags: ['[Recurso]']
+      summary: Crear [recurso]
+      operationId: crear[Recurso]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/[Recurso]Request'
+      responses:
+        '200':
+          description: '[Recurso] creado (verifica el código: GYMETRA devuelve el objeto)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/[Recurso]'
+        '400':
+          $ref: './_compartido.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './_compartido.yaml#/components/responses/Unauthorized'
+
+  /api/[recursos]/{id}:
+    parameters:
+      - $ref: './_compartido.yaml#/components/parameters/IdNumerico'
+
+    get:
+      tags: ['[Recurso]']
+      summary: Obtener [recurso]
+      operationId: obtener[Recurso]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: '[Recurso] encontrado'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/[Recurso]'
+        '401':
+          $ref: './_compartido.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './_compartido.yaml#/components/responses/NotFound'
+
+    put:
+      tags: ['[Recurso]']
+      summary: Actualizar [recurso]
+      operationId: actualizar[Recurso]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/[Recurso]Request'
+      responses:
+        '200':
+          description: '[Recurso] actualizado'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/[Recurso]'
+        '400':
+          $ref: './_compartido.yaml#/components/responses/BadRequest'
+        '404':
+          $ref: './_compartido.yaml#/components/responses/NotFound'
+
+    delete:
+      tags: ['[Recurso]']
+      summary: Eliminar [recurso]
+      operationId: eliminar[Recurso]
+      security:
+        - bearerAuth: []
+      responses:
+        # Convención real de GYMETRA: 200 con texto plano (no 204). Ver directrices-api.md §3.2
+        '200':
+          description: Mensaje de confirmación en texto plano
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "[Recurso] eliminado exitosamente"
+        '401':
+          $ref: './_compartido.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './_compartido.yaml#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: './_compartido.yaml#/components/securitySchemes/bearerAuth'
+    adminAuth:
+      $ref: './_compartido.yaml#/components/securitySchemes/adminAuth'
+
+  schemas:
+    '[Recurso]Request':
+      type: object
+      description: Datos para crear o actualizar un [recurso]
+      required:
+        - [campoObligatorio]
+      properties:
+        '[campoObligatorio]':
+          type: string
+          description: "[Descripción — verifica el tipo real en la entidad]"
+          example: "[valor]"
+
+    '[Recurso]':
+      type: object
+      description: Representación de [recurso] tal como la devuelve el servicio
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        '[campo]':
+          type: string
+          example: "[valor]"
